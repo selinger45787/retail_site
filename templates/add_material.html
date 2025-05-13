@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Додати матеріал{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/main.css', v=range(1, 1000) | random) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/sidebarLeft.css', v=range(1, 1000) | random) }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Додати новий матеріал</h2>
+    <form method="POST" enctype="multipart/form-data" id="addMaterialForm">
+        {% if show_brand_select %}
+        <div class="form-group mb-3">
+            <label for="brand_id">Бренд</label>
+            <select class="form-control" id="brand_id" name="brand_id" required>
+                <option value="">Виберіть бренд</option>
+                {% for brand in brands %}
+                <option value="{{ brand.id }}">{{ brand.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="form-group mb-3">
+            <label for="title">Назва матеріалу</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="category_id">Категорія</label>
+            <select class="form-control" id="category_id" name="category_id" required>
+                <option value="">Виберіть категорію</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="description">Опис</label>
+            <textarea class="form-control" id="description" name="description" required></textarea>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="image">Головне зображення</label>
+            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+            <div id="imagePreview"></div>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="additional_images">Додаткові зображення</label>
+            <input type="file" class="form-control" id="additional_images" name="additional_images" accept="image/*" multiple>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Опублікувати</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/add_material.css', v=range(1, 1000) | random) }}">
+<style>
+    #description {
+        height: 750px !important;
+    }
+    .ck-editor__editable {
+        height: 750px !important;
+    }
+    #imagePreview img {
+        max-width: 300px;
+        max-height: 300px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/decoupled-document/ckeditor.js"></script>
+<script src="{{ url_for('static', filename='js/add_material.js', v=range(1, 1000) | random) }}"></script>
+{% endblock %}

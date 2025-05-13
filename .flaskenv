@@ -1,0 +1,9 @@
+FLASK_APP=app.py
+FLASK_ENV=development
+FLASK_DEBUG=True
+SECRET_KEY=your-secret-key-change-in-production
+DATABASE_URL=postgresql://postgres:4578736@localhost:5432/postgres
+WERKZEUG_RELOADER_TYPE=watchdog
+FLASK_RUN_EXTRA_FILES=static/css/style/*.css,templates/*.html
+FLASK_RUN_RELOAD=True
+FLASK_RUN_DEBUG=True 

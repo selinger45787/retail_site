@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Обучающие материалы{% endblock %}
+
+{% block content %}
+<div class="materials-section">
+    <div class="brand-header">
+        <div class="brand-info">
+            <h1 class="content-title">{{ brand.name }}</h1>
+            {% if brand.image_path %}
+            <img src="{{ url_for('static', filename=brand.image_path) }}" alt="{{ brand.name }}" class="brand-logo">
+            {% endif %}
+        </div>
+        {% if current_user.is_authenticated and current_user.role == 'admin' %}
+        <div class="brand-actions">
+            <button class="action-btn primary" onclick="openModal('addMaterialModal')">
+                <img src="{{ url_for('static', filename='img/icons/add.svg') }}" alt="Додати" class="btn-icon">
+                Додати матеріал
+            </button>
+            <button class="action-btn secondary" onclick="openModal('editBrandModal')">
+                <img src="{{ url_for('static', filename='img/icons/edit.svg') }}" alt="Редагувати" class="btn-icon">
+                Редагувати бренд
+            </button>
+            <button class="action-btn secondary" onclick="openModal('brandStatsModal')">
+                <img src="{{ url_for('static', filename='img/icons/stats.svg') }}" alt="Статистика" class="btn-icon">
+                Статистика
+            </button>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="materials-grid">
+        {% for material in materials %}
+        <a href="{{ url_for('view_material', material_id=material.id) }}" class="material-link">
+            <div class="material-card">
+                <div class="material-image">
+                    <img src="{{ url_for('static', filename='img/materials/' + material.image) }}" alt="{{ material.title }}">
+                </div>
+                <div class="material-content">
+                    <h3 class="material-title">{{ material.title }}</h3>
+                    <p class="material-description">{{ material.description }}</p>
+                    <div class="material-meta">
+                        <span class="material-date">{{ material.date.strftime('%d.%m.%Y') }}</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Модальное окно добавления материала -->
+<div id="addMaterialModal" class="modal">
+    <div class="modal-box">
+        <button class="close">&times;</button>
+        <h2>Додати новий матеріал</h2>
+        <form id="addMaterialForm" method="POST" action="{{ url_for('add_material', brand_id=brand.id) }}" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="title">Назва</label>
+                <input type="text" id="title" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Опис</label>
+                <textarea id="description" name="description" rows="4" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="file">Файл</label>
+                <input type="file" id="file" name="file" required>
+            </div>
+            <button type="submit" class="submit-btn">Додати матеріал</button>
+        </form>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования бренда -->
+<div id="editBrandModal" class="modal">
+    <div class="modal-box">
+        <button class="close">&times;</button>
+        <h2>Редагувати бренд</h2>
+        <form id="editBrandForm" method="POST" action="{{ url_for('edit_brand', brand_id=brand.id) }}" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="brand_name">Назва бренду</label>
+                <input type="text" id="brand_name" name="name" value="{{ brand.name }}" required>
+            </div>
+            <div class="form-group">
+                <label for="brand_image">Логотип</label>
+                <input type="file" id="brand_image" name="image">
+            </div>
+            <button type="submit" class="submit-btn">Зберегти зміни</button>
+        </form>
+    </div>
+</div>
+
+<!-- Модальное окно статистики -->
+<div id="brandStatsModal" class="modal">
+    <div class="modal-box">
+        <button class="close">&times;</button>
+        <h2>Статистика бренду</h2>
+        <div class="stats-content">
+            <div class="stat-item">
+                <h3>Загальна кількість матеріалів</h3>
+                <p class="stat-value">{{ materials|length }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function generateTest(materialId) {
+    fetch(`/test/generate/${materialId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка при генерации теста');
+    });
+}
+</script>
+{% endblock %} 

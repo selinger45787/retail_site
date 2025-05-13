@@ -1,0 +1,238 @@
+/* Base Styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Header Styles */
+header {
+    background-color: #000000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    height: 72px;
+    display: flex;
+    align-items: center;
+}
+
+.header-content {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.site-title {
+    position: absolute;
+    left: 0;
+    width: 280px;
+    padding-left: 0;
+    z-index: 1001;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.site-title a {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-left: 2rem;
+}
+
+.header-logo {
+    height: 40px;
+    width: auto;
+}
+
+.auth-buttons {
+    position: absolute;
+    right: 2rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.login-btn, .logout-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.2s;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.login-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.login-btn:hover {
+    background-color: #0056b3;
+}
+
+.logout-btn {
+    background-color: transparent;
+    color: white;
+    border: 1px solid white;
+}
+
+.logout-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-info {
+    color: white;
+    font-weight: 500;
+    margin-right: 1rem;
+}
+
+/* Layout Styles */
+.layout {
+    display: flex;
+    margin-top: 72px;
+    min-height: calc(100vh - 72px);
+    position: relative;
+}
+
+/* Main Content Styles */
+.main-content {
+    flex: 1;
+    margin-left: 280px;
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1100;
+}
+
+.modal-box {
+    position: relative;
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 2rem;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: #666;
+}
+
+.error-text {
+    color: #dc3545;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .header-content {
+        padding: 0 1rem;
+    }
+    
+    .site-title {
+        width: auto;
+        padding-left: 0;
+    }
+    
+    .auth-buttons {
+        margin-right: 0;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 0.5rem;
+    }
+}
+
+.brand-title-framed {
+    display: inline-block;
+    padding: 0.4em 1.2em;
+    border: 2.5px solid #6c757d;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #23272b 60%, #495057 100%);
+    color: #e0e0e0;
+    font-weight: 700;
+    font-size: 1.35em;
+    letter-spacing: 0.04em;
+    box-shadow: 0 2px 12px rgba(60,60,60,0.10);
+    margin-bottom: 0.7em;
+    text-shadow: 0 1px 2px #222a, 0 0px 1px #fff2;
+}
+
+.action-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: none;
+    background: linear-gradient(145deg, #2c3e50, #34495e);
+    color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(145deg, #34495e, #2c3e50);
+}
+
+.action-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-button img {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+}
+
+.action-button.add-brand {
+    background: linear-gradient(145deg, #27ae60, #2ecc71);
+}
+
+.action-button.add-brand:hover {
+    background: linear-gradient(145deg, #2ecc71, #27ae60);
+}
+
+.action-button.add-material {
+    background: linear-gradient(145deg, #2980b9, #3498db);
+}
+
+.action-button.add-material:hover {
+    background: linear-gradient(145deg, #3498db, #2980b9);
+} 

@@ -1,0 +1,513 @@
+/* Общие настройки */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+}
+
+/* Заголовок */
+.brand-header {
+    margin: 1rem 0;
+    padding: 0 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: center;
+}
+
+.brand-header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.brand-header h1 {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    font-weight: 500;
+}
+
+.brand-name {
+    color: #d35400;
+    font-weight: 600;
+    margin-left: 0.3em;
+}
+
+/* Кнопка добавления материала */
+.brand-header-content .btn.btn-primary {
+    background: linear-gradient(145deg, #2c3e50, #34495e) !important;
+    color: #fff !important;
+    border: none !important;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.brand-header-content .btn.btn-primary:hover {
+    background: linear-gradient(145deg, #34495e, #2c3e50) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.brand-header-content .btn.btn-primary .btn-icon {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Секция материалов */
+.materials-section {
+    padding: 1.5rem 1rem;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.materials-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(320px, 400px));
+    gap: 1rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    max-width: 1800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Карточка */
+.material-card {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #eee;
+    width: 100%;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.material-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-color: #ddd;
+}
+
+.material-link {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Изображение */
+.material-image {
+    aspect-ratio: 1;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+}
+
+.material-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.material-card:hover .material-image img {
+    transform: scale(1.05);
+}
+
+/* Контент карточки */
+.material-content {
+    padding: 0.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #fff;
+    min-height: 36px;
+}
+
+.material-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem;
+    color: #111;
+    line-height: 1.4;
+}
+
+.material-category {
+    color: #555;
+    font-size: 0.9rem;
+    margin: 0 0 0.25rem;
+    line-height: 1.4;
+}
+
+.material-description {
+    color: #555;
+    font-size: 1.235rem;
+    margin: 0 0 1.3rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+}
+
+.material-meta {
+    font-size: 0.8rem;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.25rem;
+    border-top: 1px solid #eee;
+    margin-top: 0.25rem;
+}
+
+/* Действия */
+.material-actions {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.75rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 5;
+}
+
+.material-card:hover .material-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn img {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn:hover img {
+    transform: scale(1.1);
+}
+
+.action-btn.edit {
+    background-color: #e3f2fd;
+}
+
+.action-btn.edit:hover {
+    background-color: #bbdefb;
+}
+
+.action-btn.delete {
+    background-color: #ffebee;
+}
+
+.action-btn.delete:hover {
+    background-color: #ffcdd2;
+}
+
+/* Пустое состояние */
+.no-materials {
+    text-align: center;
+    padding: 4rem 0;
+    color: #666;
+}
+
+.no-materials-icon {
+    width: 150px;
+    height: 150px;
+    margin-bottom: 1.5rem;
+    opacity: 0.6;
+}
+
+.no-materials p {
+    font-size: 1.1rem;
+    color: #555;
+}
+
+/* Модалка */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-box {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+}
+
+/* Форма */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.submit-btn {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Адаптивность */
+@media (max-width: 1800px) {
+    .materials-grid {
+        grid-template-columns: repeat(4, minmax(320px, 400px));
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 1600px) {
+    .materials-grid {
+        grid-template-columns: repeat(3, minmax(320px, 400px));
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 1400px) {
+    .materials-grid {
+        grid-template-columns: repeat(2, minmax(320px, 400px));
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .brand-header-content {
+        gap: 1rem;
+    }
+
+    .content-title {
+        font-size: 1.75rem;
+    }
+
+    .material-actions {
+        opacity: 1;
+    }
+
+    .materials-grid {
+        grid-template-columns: minmax(320px, 400px);
+        gap: 1rem;
+    }
+}
+
+.brand-title-framed {
+    display: inline-block;
+    padding: 0.5em 1.5em;
+    border: 2.5px solid #6c757d;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #23272b 60%, #495057 100%);
+    color: #e0e0e0;
+    font-weight: 600;
+    font-size: 1.25em;
+    letter-spacing: 0.04em;
+    box-shadow: 0 2px 12px rgba(60,60,60,0.10);
+    margin-bottom: 0.7em;
+    text-shadow: 0 1px 2px #222a, 0 0px 1px #fff2;
+    text-align: center;
+    line-height: 1.4;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: 500;
+}
+
+.brand-title {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: 500;
+}
+
+.brand-title strong {
+    color: #d35400;
+    font-weight: 600;
+    margin-left: 0.3em;
+}
+
+.brand-name-framed {
+    display: inline;
+    color: #d35400;
+    font-weight: 600;
+    font-size: 1.5rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin-left: 0.3em;
+}
+
+.brand-name-framed:hover {
+    background: rgba(108, 117, 125, 0.15);
+    border-color: #495057;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2rem 0;
+    gap: 0.5rem;
+}
+
+.page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: #333;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.page-link:hover {
+    background-color: #f5f5f5;
+    border-color: #ccc;
+}
+
+.page-link.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.page-link.disabled {
+    color: #999;
+    cursor: not-allowed;
+}
+
+/* Контент карточки */
+.materials-section .material-card .material-content {
+    padding: 0.75rem !important;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #fff;
+    min-height: 48px;
+}
+
+.materials-section .material-card .material-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem !important;
+    color: #111;
+    line-height: 1.4;
+}
+
+.materials-section .material-card .material-category {
+    color: #555;
+    font-size: 0.9rem;
+    margin: 0 0 0.25rem !important;
+    line-height: 1.4;
+}
+
+.materials-section .material-card .material-meta {
+    font-size: 0.8rem;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.25rem !important;
+    border-top: 1px solid #eee;
+    margin-top: 0.25rem !important;
+}

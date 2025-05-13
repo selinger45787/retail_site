@@ -1,0 +1,168 @@
+/* Общие настройки */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+}
+
+/* Заголовок */
+.material-header {
+    margin: 1rem 0;
+    padding: 0 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: center;
+}
+
+.material-header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.material-header h1 {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Кнопка редактирования */
+.material-header-content .btn.btn-primary {
+    background: linear-gradient(145deg, #2c3e50, #34495e) !important;
+    color: #fff !important;
+    border: none !important;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.material-header-content .btn.btn-primary:hover {
+    background: linear-gradient(145deg, #34495e, #2c3e50) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.material-header-content .btn.btn-primary .btn-icon {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Секция материала */
+.material-section {
+    padding: 1.5rem 1rem;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.material-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+/* Изображение */
+.material-image {
+    aspect-ratio: 1;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.material-image img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Информация о материале */
+.material-info {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.material-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 1rem;
+}
+
+.material-category {
+    color: #555;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.material-description {
+    color: #333;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.material-meta {
+    font-size: 0.9rem;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .material-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .material-header-content {
+        gap: 1rem;
+    }
+
+    .material-info {
+        padding: 1.5rem;
+    }
+
+    .material-title {
+        font-size: 1.3rem;
+    }
+
+    .material-category {
+        font-size: 1rem;
+    }
+
+    .material-description {
+        font-size: 1rem;
+    }
+} 

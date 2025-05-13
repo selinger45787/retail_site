@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Головна{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="welcome-section">
+        <h1>Ласкаво просимо до навчальної платформи</h1>
+        <p class="lead">Тут ви знайдете навчальні матеріали та тести для підвищення вашої кваліфікації.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .welcome-section {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin: 2rem 0;
+    }
+
+    .welcome-section h1 {
+        color: #2c3e50;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .welcome-section .lead {
+        color: #6c757d;
+        font-size: 1.25rem;
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function showLoginModal() {
+    const modal = document.getElementById('loginModal');
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('visible'), 10);
+  }
+  
+  function closeLoginModal() {
+    const modal = document.getElementById('loginModal');
+    modal.classList.remove('visible');
+    setTimeout(() => modal.style.display = 'none', 300);
+  }
+  
+  function submitLoginForm() {
+    const formData = new FormData(document.getElementById('login-form'));
+    const errorElement = document.getElementById('login-error');
+    errorElement.innerText = '';
+    
+    fetch("/login_modal", {
+      method: "POST",
+      body: formData,
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        closeLoginModal();
+        window.location.reload();
+      } else {
+        errorElement.innerText = data.message || 'Помилка входу';
+      }
+    })
+    .catch(error => {
+      console.error('Ошибка при отправке формы:', error);
+      errorElement.innerText = 'Помилка з\'єднання з сервером. Спробуйте пізніше.';
+    });
+  }
+</script>
+{% endblock %}
