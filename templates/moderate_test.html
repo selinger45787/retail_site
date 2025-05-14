@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Модерація тесту - {{ material.title }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Модерація тесту для "{{ material.title }}"</h1>
+    
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% for question in material.unmoderated_tests %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Питання {{ loop.index }}</h5>
+                <div class="mb-3">
+                    <label for="q{{ loop.index0 }}" class="form-label">Питання</label>
+                    <input type="text" class="form-control" id="q{{ loop.index0 }}" name="q{{ loop.index0 }}" 
+                           value="{{ question.question }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="c{{ loop.index0 }}" class="form-label">Правильна відповідь</label>
+                    <input type="text" class="form-control" id="c{{ loop.index0 }}" name="c{{ loop.index0 }}" 
+                           value="{{ question.correct_answer }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="w{{ loop.index0 }}1" class="form-label">Неправильна відповідь 1</label>
+                    <input type="text" class="form-control" id="w{{ loop.index0 }}1" name="w{{ loop.index0 }}1" 
+                           value="{{ question.wrong_1 }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="w{{ loop.index0 }}2" class="form-label">Неправильна відповідь 2</label>
+                    <input type="text" class="form-control" id="w{{ loop.index0 }}2" name="w{{ loop.index0 }}2" 
+                           value="{{ question.wrong_2 }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="w{{ loop.index0 }}3" class="form-label">Неправильна відповідь 3</label>
+                    <input type="text" class="form-control" id="w{{ loop.index0 }}3" name="w{{ loop.index0 }}3" 
+                           value="{{ question.wrong_3 }}" required>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('view_material', material_id=material.id) }}" class="btn btn-secondary">Скасувати</a>
+            <button type="submit" class="btn btn-primary">Підтвердити тест</button>
+        </div>
+    </form>
+</div>
+{% endblock %} 

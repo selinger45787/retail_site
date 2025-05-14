@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="result-container">
+    <h1>Результати тесту: {{ material.title }}</h1>
+    
+    <div class="result-card">
+        <div class="result-header">
+            <h2>{{ result }}</h2>
+        </div>
+        
+        <div class="result-details">
+            <div class="score-circle">
+                <span class="score">{{ "%.1f"|format(score) }}%</span>
+            </div>
+            
+            <div class="stats">
+                <p>Правильних відповідей: <strong>{{ correct_answers }}</strong> з <strong>{{ total_questions }}</strong></p>
+            </div>
+        </div>
+        
+        <div class="result-message">
+            {% if score >= 80 %}
+                <p>Вітаємо! Ви відмінно знаєте матеріал.</p>
+            {% elif score >= 60 %}
+                <p>Добре! Але є ще що повторити.</p>
+            {% else %}
+                <p>Рекомендуємо повторити матеріал для кращого розуміння.</p>
+            {% endif %}
+        </div>
+        
+        <div class="result-actions">
+            <a href="{{ url_for('view_material', material_id=material.id) }}" class="btn">Повернутися до матеріалу</a>
+            <a href="{{ url_for('take_test', material_id=material.id) }}" class="btn">Спробувати ще раз</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.result-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.result-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    text-align: center;
+}
+
+.result-header h2 {
+    color: #333;
+    margin-bottom: 2rem;
+}
+
+.result-details {
+    margin: 2rem 0;
+}
+
+.score-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: #4CAF50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+}
+
+.score {
+    color: white;
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.stats {
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.result-message {
+    margin: 2rem 0;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.result-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    background: #4CAF50;
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn:hover {
+    background: #45a049;
+}
+</style>
+{% endblock %} 
