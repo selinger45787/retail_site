@@ -1,6 +1,46 @@
 {% extends "base.html" %}
 
-{% block title %}{{ material.title }} - {{ material.brand.name }}{% endblock %}
+{% block title %}
+    {{ material.title }} - {{ material.brand.name }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/material.css') }}">
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-box {
+        background-color: white;
+        padding: 20px;
+        border-radius: 5px;
+        min-width: 300px;
+        max-width: 500px;
+        text-align: center;
+    }
+
+    .modal-actions {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .modal-actions button {
+        min-width: 100px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style/material.css') }}">
@@ -8,16 +48,56 @@
 <div class="material-header">
     <div class="material-header-content">
         <h1>{{ material.brand.name }}</h1>
-        {% if current_user.is_authenticated and current_user.id == material.brand.user_id %}
-        <a href="{{ url_for('edit_material', material_id=material.id) }}" class="btn btn-primary">
-            <img src="{{ url_for('static', filename='images/edit.svg') }}" alt="Edit" class="btn-icon">
-            Редагувати матеріал
-        </a>
+        {% if current_user.is_authenticated and current_user.role == 'admin' %}
+        <div class="material-actions">
+            <a href="{{ url_for('edit_material', material_id=material.id) }}" class="btn btn-primary">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Редагувати матеріал
+            </a>
+            <button type="button" class="btn btn-danger" onclick="showDeleteModal()">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Видалити матеріал
+            </button>
+        </div>
         {% endif %}
     </div>
 </div>
 
+<!-- Модальное окно подтверждения удаления -->
+<div id="deleteModal" class="modal">
+    <div class="modal-box">
+        <h2>Підтвердження видалення</h2>
+        <p>Ви впевнені, що хочете видалити цей матеріал?</p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Скасувати</button>
+            <form id="deleteForm" action="{{ url_for('delete_material', material_id=material.id) }}" method="POST" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger">Видалити</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="container mt-4">
+    <!-- Кнопка возврата -->
+    <div class="back-button-container mb-4">
+        <a href="{{ url_for('brand', brand_id=material.brand.id) }}" class="btn btn-back">
+            <svg class="back-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Повернутись до матеріалів
+        </a>
+    </div>
+
+    {% if material.image_path or material.images %}
     <!-- Галерея изображений -->
     <div class="material-gallery mb-4">
         <!-- Главное изображение -->
@@ -38,8 +118,8 @@
             </div>
             
             <!-- Дополнительные изображения -->
-            {% if material.additional_images %}
-                {% for image in material.additional_images %}
+            {% if material.images %}
+                {% for image in material.images %}
                 <div class="thumbnail-item" onclick="changeMainImage(this)">
                     <img src="{{ url_for('static', filename='img/materials/' + image.image_path) }}" 
                          alt="{{ material.title }}" 
@@ -49,6 +129,7 @@
             {% endif %}
         </div>
     </div>
+    {% endif %}
 
     <!-- Информация о материале -->
     <div class="material-content">
@@ -61,94 +142,6 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .material-gallery {
-        background: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .main-image-container {
-        width: 100%;
-        height: 500px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f8f9fa;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .main-image {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-    }
-
-    .thumbnail-gallery {
-        display: flex;
-        gap: 10px;
-        overflow-x: auto;
-        padding: 10px 0;
-    }
-
-    .thumbnail-item {
-        width: 100px;
-        height: 100px;
-        cursor: pointer;
-        border: 2px solid transparent;
-        border-radius: 4px;
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }
-
-    .thumbnail-item:hover {
-        border-color: #007bff;
-    }
-
-    .thumbnail-item.active {
-        border-color: #007bff;
-    }
-
-    .thumbnail-item img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .material-content {
-        background: #fff;
-        padding: 30px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .material-title {
-        font-size: 32px;
-        margin-bottom: 20px;
-        color: #333;
-    }
-
-    .material-meta {
-        margin-bottom: 30px;
-        color: #6c757d;
-        font-size: 16px;
-    }
-
-    .material-description {
-        font-size: 16px;
-        line-height: 1.6;
-        color: #444;
-    }
-
-    .material-description p {
-        margin-bottom: 1em;
-    }
-</style>
 {% endblock %}
 
 {% block scripts %}
@@ -167,5 +160,53 @@
         const thumbnailImage = element.querySelector('img');
         mainImage.src = thumbnailImage.src;
     }
+
+    function showDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    // Закрытие модалки при клике вне её
+    window.onclick = function(event) {
+        const modal = document.getElementById('deleteModal');
+        if (event.target == modal) {
+            closeDeleteModal();
+        }
+    }
+
+    // Обработка формы удаления
+    document.getElementById('deleteForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                window.location.href = data.redirect;
+            } else {
+                alert(data.error || 'Помилка при видаленні матеріалу');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Помилка при видаленні матеріалу');
+        });
+    });
 </script>
 {% endblock %} 

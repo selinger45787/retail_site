@@ -1,91 +1,95 @@
 {% extends "base.html" %}
 
+{% block title %}{{ brand.name }}{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style/brand.css', v=range(1, 1000) | random) }}">
 {% endblock %}
 
 {% block content %}
-<div class="brand-header">
-    <div class="brand-header-content">
-        <h1>Навчальний матеріал бренду <span class="brand-name">{{ brand.name }}</span></h1>
-        {% if current_user.is_authenticated and current_user.role == 'admin' %}
-        <div class="brand-actions">
-            <a href="{{ url_for('add_material', brand_id=brand.id) }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Додати матеріал
-            </a>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<div class="materials-section">
-    {% if materials %}
-        <div class="materials-grid">
-            {% for material in materials %}
-            <div class="material-card fade-in">
-                <a href="{{ url_for('view_material', material_id=material.id) }}" class="material-link">
-                    <div class="material-image">
-                        <img src="{{ url_for('static', filename='img/materials/' + material.image_path) if material.image_path else url_for('static', filename='img/matertial_logo.png') }}" 
-                             alt="{{ material.title }}"
-                             onerror="this.src='{{ url_for('static', filename='img/matertial_logo.png') }}'">
-                    </div>
-                    <div class="material-content">
-                        <h3 class="material-title">{{ material.title }}</h3>
-                        <p class="material-category">Категорія: {{ material.category.name }}</p>
-                        <div class="material-meta">
-                            <span class="material-date">📅 {{ material.date.strftime('%d.%m.%Y') }}</span>
-                        </div>
-                    </div>
+<div class="container mt-4">
+    <div class="brand-header">
+        <div class="brand-header-content">
+            <h1>Навчальний матеріал бренду <span class="brand-name">{{ brand.name }}</span></h1>
+            {% if current_user.is_authenticated and current_user.role == 'admin' %}
+            <div class="brand-actions">
+                <a href="{{ url_for('add_material', brand_id=brand.id) }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Додати матеріал
                 </a>
-                {% if current_user.is_authenticated and current_user.role == 'admin' %}
-                <div class="material-actions">
-                    <button class="action-btn edit" title="Редагувати" data-material-id="{{ material.id }}">
-                        <img src="{{ url_for('static', filename='img/icons/edit.svg') }}" alt="Edit">
-                    </button>
-                    <button class="action-btn delete" title="Видалити" data-material-id="{{ material.id }}">
-                        <img src="{{ url_for('static', filename='img/icons/delete.svg') }}" alt="Delete">
-                    </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="materials-section">
+        {% if materials %}
+            <div class="materials-grid">
+                {% for material in materials %}
+                <div class="material-card fade-in">
+                    <a href="{{ url_for('view_material', material_id=material.id) }}" class="material-link">
+                        <div class="material-image">
+                            <img src="{{ url_for('static', filename='img/materials/' + material.image_path) if material.image_path else url_for('static', filename='img/matertial_logo.png') }}" 
+                                 alt="{{ material.title }}"
+                                 onerror="this.src='{{ url_for('static', filename='img/matertial_logo.png') }}'">
+                        </div>
+                        <div class="material-content">
+                            <h3 class="material-title">{{ material.title }}</h3>
+                            <p class="material-category">Категорія: {{ material.category.name }}</p>
+                            <div class="material-meta">
+                                <span class="material-date">📅 {{ material.date.strftime('%d.%m.%Y') }}</span>
+                            </div>
+                        </div>
+                    </a>
+                    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                    <div class="material-actions">
+                        <button class="action-btn edit" title="Редагувати" onclick="window.location.href='{{ url_for('edit_material', material_id=material.id) }}'">
+                            <img src="{{ url_for('static', filename='img/icons/edit.svg') }}" alt="Edit">
+                        </button>
+                        <button class="action-btn delete" title="Видалити" onclick="deleteMaterial({{ material.id }})">
+                            <img src="{{ url_for('static', filename='img/icons/delete.svg') }}" alt="Delete">
+                        </button>
+                    </div>
+                    {% endif %}
                 </div>
+                {% endfor %}
+            </div>
+
+            {% if pagination and pagination.pages > 1 %}
+            <div class="pagination">
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('brand', brand_id=brand.id, page=pagination.prev_num) }}" class="page-link">
+                    &laquo; Попередня
+                </a>
+                {% endif %}
+
+                {% for page in pagination.iter_pages() %}
+                    {% if page %}
+                        {% if page != pagination.page %}
+                        <a href="{{ url_for('brand', brand_id=brand.id, page=page) }}" class="page-link">
+                            {{ page }}
+                        </a>
+                        {% else %}
+                        <span class="page-link active">{{ page }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="page-link disabled">...</span>
+                    {% endif %}
+                {% endfor %}
+
+                {% if pagination.has_next %}
+                <a href="{{ url_for('brand', brand_id=brand.id, page=pagination.next_num) }}" class="page-link">
+                    Наступна &raquo;
+                </a>
                 {% endif %}
             </div>
-            {% endfor %}
-        </div>
-
-        {% if pagination and pagination.pages > 1 %}
-        <div class="pagination">
-            {% if pagination.has_prev %}
-            <a href="{{ url_for('brand', brand_id=brand.id, page=pagination.prev_num) }}" class="page-link">
-                &laquo; Попередня
-            </a>
             {% endif %}
 
-            {% for page in pagination.iter_pages() %}
-                {% if page %}
-                    {% if page != pagination.page %}
-                    <a href="{{ url_for('brand', brand_id=brand.id, page=page) }}" class="page-link">
-                        {{ page }}
-                    </a>
-                    {% else %}
-                    <span class="page-link active">{{ page }}</span>
-                    {% endif %}
-                {% else %}
-                    <span class="page-link disabled">...</span>
-                {% endif %}
-            {% endfor %}
-
-            {% if pagination.has_next %}
-            <a href="{{ url_for('brand', brand_id=brand.id, page=pagination.next_num) }}" class="page-link">
-                Наступна &raquo;
-            </a>
-            {% endif %}
+        {% else %}
+        <div class="no-materials">
+            <p>Поки що немає матеріалів для цього бренду</p>
         </div>
         {% endif %}
-
-    {% else %}
-    <div class="no-materials">
-        <p>Поки що немає матеріалів для цього бренду</p>
     </div>
-    {% endif %}
 </div>
 {% endblock %}
 

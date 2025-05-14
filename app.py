@@ -9,6 +9,8 @@ from config import config
 from datetime import datetime
 from flask_migrate import Migrate
 import bleach
+from html import unescape
+from flask_wtf.csrf import CSRFProtect
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -19,6 +21,9 @@ app = Flask(__name__)
 
 # Базовые настройки
 app.config.from_object(config['development'])
+
+# Инициализация CSRF-защиты
+csrf = CSRFProtect(app)
 
 # Создаем необходимые папки
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -97,7 +102,7 @@ def index():
 def brand(brand_id):
     brand = Brand.query.get_or_404(brand_id)
     page = request.args.get('page', 1, type=int)
-    per_page = 9  # Количество материалов на странице
+    per_page = 12  # Количество материалов на странице
     
     # Получаем материалы с пагинацией, сортируем по дате в обратном порядке
     materials_pagination = Material.query.filter_by(brand_id=brand_id)\
@@ -131,13 +136,20 @@ def add_material(brand_id):
         logger.info(f"Files: {request.files}")
         
         title = request.form.get('title')
-        description = request.form.get('description')
+        raw_description = request.form.get('description') or ''
+        description = unescape(raw_description)
+        
+        logger.info("=== Декодирование HTML ===")
+        logger.info(f"Исходный HTML: {raw_description}")
+        logger.info(f"Декодированный HTML: {description}")
+        logger.info("========================")
+        
         category_id = request.form.get('category_id')
         main_image = request.files.get('image')
         additional_images = request.files.getlist('additional_images')
         
         logger.info(f"Полученные данные: title={title}, category_id={category_id}")
-        logger.info(f"Описание материала (raw): {description}")
+        logger.info(f"Описание материала (raw): {raw_description}")
         
         # Если brand_id не передан в URL, берем его из формы
         if brand_id is None:
@@ -151,19 +163,12 @@ def add_material(brand_id):
             if not category_id: missing_fields.append('category_id')
             if not brand_id: missing_fields.append('brand_id')
             logger.error(f"Отсутствуют обязательные поля: {missing_fields}")
+            if request.headers.get('Accept') == 'application/json':
+                return jsonify({'error': 'Будь ласка, заповніть всі обов\'язкові поля'}), 400
             flash('Будь ласка, заповніть всі обов\'язкові поля', 'error')
             return redirect(url_for('add_material', brand_id=brand_id))
         
         try:
-            # Очищаем HTML от потенциально опасных тегов и атрибутов
-            cleaned_description = bleach.clean(
-                description,
-                tags=ALLOWED_TAGS,
-                attributes=ALLOWED_ATTRIBUTES,
-                strip=True
-            )
-            logger.info(f"Очищенное описание: {cleaned_description}")
-            
             # Сохраняем главное изображение
             main_image_path = None
             if main_image and main_image.filename:
@@ -174,9 +179,15 @@ def add_material(brand_id):
                 logger.info(f"Сохранено главное изображение: {filename}")
             
             # Создаем новый материал
+            logger.info("=== Начало создания материала ===")
+            logger.info(f"Заголовок: {title}")
+            logger.info(f"Описание (raw): {raw_description}")
+            logger.info(f"Описание (тип): {type(raw_description)}")
+            logger.info(f"Описание (длина): {len(raw_description) if raw_description else 0}")
+            
             material = Material(
                 title=title,
-                description=cleaned_description,  # Используем очищенный HTML
+                description=description,  # Сохраняем HTML как есть
                 image_path=main_image_path,
                 brand_id=brand_id,
                 category_id=category_id
@@ -186,6 +197,8 @@ def add_material(brand_id):
             db.session.flush()
             logger.info(f"Создан новый материал с ID: {material.id}")
             logger.info(f"Сохраненное описание: {material.description}")
+            logger.info(f"Сохраненное описание (тип): {type(material.description)}")
+            logger.info("=== Конец создания материала ===")
             
             # Сохраняем дополнительные изображения
             for image in additional_images:
@@ -199,10 +212,15 @@ def add_material(brand_id):
                         material_id=material.id
                     )
                     db.session.add(material_image)
-                    logger.info(f"Добавлено дополнительное изображение: {filename}")
             
             db.session.commit()
             logger.info("Материал успешно сохранен в базу данных")
+            
+            if request.headers.get('Accept') == 'application/json':
+                return jsonify({
+                    'success': True,
+                    'redirect': url_for('brand', brand_id=brand_id)
+                })
             
             flash('Матеріал успішно додано', 'success')
             return redirect(url_for('brand', brand_id=brand_id))
@@ -210,6 +228,8 @@ def add_material(brand_id):
         except Exception as e:
             db.session.rollback()
             logger.error(f"Ошибка при сохранении материала: {str(e)}")
+            if request.headers.get('Accept') == 'application/json':
+                return jsonify({'error': 'Помилка при додаванні матеріалу'}), 500
             flash('Помилка при додаванні матеріалу', 'error')
             return redirect(url_for('add_material', brand_id=brand_id))
     
@@ -252,11 +272,6 @@ def edit_brand(brand_id):
     
     return redirect(url_for('brand', brand_id=brand_id))
 
-@app.route('/materials')
-def materials():
-    materials = Material.query.all()
-    return render_template('materials.html', materials=materials)
-
 @app.route('/material/<int:material_id>')
 def view_material(material_id):
     material = Material.query.get_or_404(material_id)
@@ -269,28 +284,115 @@ def view_material(material_id):
 @login_required
 def edit_material(material_id):
     material = Material.query.get_or_404(material_id)
-    if request.method == 'POST':
-        material.name = request.form.get('name')
-        material.description = request.form.get('description')
-        if 'image' in request.files:
-            file = request.files['image']
-            if file and file.filename:
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                material.image_path = filename
-        db.session.commit()
-        flash('Материал успешно обновлен', 'success')
+    
+    # Проверяем права доступа (пока только для админа)
+    if not current_user.is_authenticated or current_user.role != 'admin':
+        flash('У вас немає прав для редагування цього матеріалу', 'error')
         return redirect(url_for('view_material', material_id=material.id))
-    return render_template('edit_material.html', material=material)
+    
+    if request.method == 'POST':
+        try:
+            # Обновляем основные данные
+            material.title = request.form.get('title')
+            material.description = request.form.get('description')
+            material.category_id = request.form.get('category_id')
+            
+            # Обрабатываем главное изображение
+            if 'image' in request.files:
+                file = request.files['image']
+                if file and file.filename:
+                    filename = secure_filename(file.filename)
+                    file_path = os.path.join(app.static_folder, 'img', 'materials', filename)
+                    file.save(file_path)
+                    material.image_path = filename
+            
+            # Обрабатываем дополнительные изображения
+            if 'additional_images' in request.files:
+                files = request.files.getlist('additional_images')
+                for file in files:
+                    if file and file.filename:
+                        filename = secure_filename(file.filename)
+                        file_path = os.path.join(app.static_folder, 'img', 'materials', filename)
+                        file.save(file_path)
+                        
+                        material_image = MaterialImage(
+                            image_path=filename,
+                            material_id=material.id
+                        )
+                        db.session.add(material_image)
+            
+            db.session.commit()
+            flash('Матеріал успішно оновлено', 'success')
+            return redirect(url_for('view_material', material_id=material.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Помилка при оновленні матеріалу: {str(e)}")
+            flash('Помилка при оновленні матеріалу', 'error')
+    
+    # Для GET запроса
+    categories = Category.query.all()
+    return render_template('edit_material.html', material=material, categories=categories)
 
 @app.route('/material/<int:material_id>/delete', methods=['POST'])
 @login_required
 def delete_material(material_id):
+    logger.info(f"=== Начало удаления материала {material_id} ===")
+    logger.info(f"Текущий пользователь: {current_user.username}, роль: {current_user.role}")
+    
     material = Material.query.get_or_404(material_id)
-    db.session.delete(material)
-    db.session.commit()
-    flash('Материал успешно удален', 'success')
-    return redirect(url_for('index'))
+    logger.info(f"Материал найден: {material.title}")
+    
+    # Проверяем права доступа (пока только для админа)
+    if not current_user.is_authenticated or current_user.role != 'admin':
+        logger.warning(f"Отказано в доступе для пользователя {current_user.username}")
+        return jsonify({'error': 'У вас немає прав для видалення цього матеріалу'}), 403
+    
+    try:
+        # Сохраняем brand_id для редиректа
+        brand_id = material.brand_id
+        logger.info(f"Brand ID для редиректа: {brand_id}")
+        
+        # Удаляем все изображения материала
+        if material.image_path:
+            try:
+                image_path = os.path.join(app.static_folder, 'img', 'materials', material.image_path)
+                logger.info(f"Удаление главного изображения: {image_path}")
+                os.remove(image_path)
+            except Exception as e:
+                logger.error(f"Помилка при видаленні головного зображення: {str(e)}")
+        
+        # Удаляем дополнительные изображения
+        logger.info(f"Количество дополнительных изображений: {len(material.images)}")
+        for image in material.images:
+            try:
+                image_path = os.path.join(app.static_folder, 'img', 'materials', image.image_path)
+                logger.info(f"Удаление дополнительного изображения: {image_path}")
+                os.remove(image_path)
+            except Exception as e:
+                logger.error(f"Помилка при видаленні додаткового зображення: {str(e)}")
+        
+        # Удаляем материал из базы данных
+        logger.info("Удаление материала из базы данных")
+        db.session.delete(material)
+        db.session.commit()
+        logger.info("Материал успешно удален из базы данных")
+        
+        # Добавляем flash-сообщение
+        flash('Матеріал успішно видалено', 'success')
+        
+        return jsonify({
+            'success': True,
+            'message': 'Матеріал успішно видалено',
+            'redirect': url_for('brand', brand_id=brand_id)
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Помилка при видаленні матеріалу: {str(e)}")
+        logger.error(f"Тип ошибки: {type(e)}")
+        logger.error(f"=== Ошибка при удалении материала {material_id} ===")
+        return jsonify({'error': 'Помилка при видаленні матеріалу'}), 500
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -374,7 +476,17 @@ def add_brand():
         image = request.files.get('image')
         
         if not name:
+            if request.headers.get('Accept') == 'application/json':
+                return jsonify({'error': 'Назва бренду обов\'язкова'}), 400
             flash('Назва бренду обов\'язкова', 'error')
+            return redirect(url_for('index'))
+        
+        # Проверяем, существует ли бренд с таким названием
+        existing_brand = Brand.query.filter_by(name=name).first()
+        if existing_brand:
+            if request.headers.get('Accept') == 'application/json':
+                return jsonify({'error': 'Бренд з такою назвою вже існує'}), 400
+            flash('Бренд з такою назвою вже існує', 'error')
             return redirect(url_for('index'))
         
         # Создаем новый бренд
@@ -396,13 +508,36 @@ def add_brand():
         try:
             db.session.add(brand)
             db.session.commit()
+            
+            # Устанавливаем flash-сообщение перед отправкой JSON-ответа
             flash('Бренд успішно додано', 'success')
+            
+            if request.headers.get('Accept') == 'application/json':
+                return jsonify({
+                    'success': True,
+                    'message': 'Бренд успішно додано',
+                    'redirect': url_for('index')
+                })
+            
+            return redirect(url_for('index'))
         except Exception as e:
             db.session.rollback()
+            if request.headers.get('Accept') == 'application/json':
+                return jsonify({'error': 'Помилка при додаванні бренду'}), 500
             flash('Помилка при додаванні бренду', 'error')
             app.logger.error(f'Error adding brand: {str(e)}')
-        
-        return redirect(url_for('index'))
+            return redirect(url_for('index'))
+
+@app.route('/login_modal', methods=['POST'])
+def login_modal():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    user = User.query.filter_by(username=username).first()
+    
+    if user and user.check_password(password):
+        login_user(user)
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'message': 'Невірний логін або пароль'})
 
 @app.errorhandler(Exception)
 def handle_error(error):

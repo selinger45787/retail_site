@@ -104,11 +104,15 @@
     background: linear-gradient(145deg, #2c3e50, #34495e);
     color: #fff;
     border: none;
+    transition: all 0.3s ease;
+    padding: 10px 20px;
+    font-weight: 500;
 }
 
 .btn-primary:hover {
     background: linear-gradient(145deg, #34495e, #2c3e50);
     transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
 .btn-secondary {
@@ -120,6 +124,62 @@
 .btn-secondary:hover {
     background: #e9ecef;
     border-color: #ccc;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+    padding: 0.375rem 0.75rem;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.input-group .form-control {
+    flex: 1;
+    border-radius: 6px 0 0 6px;
+}
+
+.input-group .btn-danger {
+    border-radius: 0 6px 6px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.additional-image-input {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.additional-image-input .input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.additional-image-input .btn-danger {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.additional-image-input .btn-danger i {
+    font-size: 14px;
+}
+
+.remove-image {
+    padding: 0.375rem 0.75rem;
 }
 
 /* Стили для CKEditor */
@@ -153,5 +213,37 @@
     .btn {
         width: 100%;
     }
-} 
+}
+
+.btn-add-image {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-add-image:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+.btn-add-image i {
+    font-size: 14px;
+}
+
+.submit-btn {
+    margin-top: 20px;
+    width: 100%;
+    max-width: 200px;
+}
+
+.submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 } 

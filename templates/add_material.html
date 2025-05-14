@@ -10,7 +10,8 @@
 {% block content %}
 <div class="container mt-4">
     <h2>Додати новий матеріал</h2>
-    <form method="POST" enctype="multipart/form-data" id="addMaterialForm">
+    <form id="addMaterialForm" method="POST" action="{{ url_for('add_material', brand_id=brand.id if brand else None) }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         {% if show_brand_select %}
         <div class="form-group mb-3">
             <label for="brand_id">Бренд</label>
@@ -40,7 +41,8 @@
 
         <div class="form-group mb-3">
             <label for="description">Опис</label>
-            <textarea class="form-control" id="description" name="description" required></textarea>
+            <textarea class="form-control" id="description" name="description" style="display: none;"></textarea>
+            <div id="editor"></div>
         </div>
 
         <div class="form-group mb-3">
@@ -50,23 +52,145 @@
         </div>
 
         <div class="form-group mb-3">
-            <label for="additional_images">Додаткові зображення</label>
-            <input type="file" class="form-control" id="additional_images" name="additional_images" accept="image/*" multiple>
+            <label>Додаткові зображення</label>
+            <div id="additionalImagesContainer">
+                <div class="additional-image-input mb-2">
+                    <div class="input-group">
+                        <input type="file" class="form-control" name="additional_images" accept="image/*">
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-add-image mt-2" id="addImageBtn">
+                <i class="fas fa-plus"></i>
+            </button>
         </div>
 
-        <button type="submit" class="btn btn-primary">Опублікувати</button>
+        <button type="submit" class="btn btn-primary submit-btn">Опублікувати</button>
     </form>
 </div>
+
+<script>
+// Добавляем обработчик для кнопки добавления изображения
+document.getElementById('addImageBtn').addEventListener('click', addNewImageField);
+
+function addNewImageField() {
+    try {
+        console.log('Функция addNewImageField вызвана');
+        const container = document.getElementById('additionalImagesContainer');
+        if (!container) {
+            console.error('Контейнер для изображений не найден');
+            return;
+        }
+        const newInput = document.createElement('div');
+        newInput.className = 'additional-image-input mb-2';
+        newInput.innerHTML = `
+            <div class="input-group">
+                <input type="file" class="form-control" name="additional_images" accept="image/*">
+                <button type="button" class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        container.appendChild(newInput);
+        console.log('Новое поле для изображения успешно добавлено');
+    } catch (error) {
+        console.error('Ошибка при добавлении поля для изображения:', error);
+        alert('Виникла помилка при додаванні поля для зображення. Спробуйте оновити сторінку.');
+    }
+}
+
+// Предпросмотр изображения
+document.getElementById('image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('imagePreview').innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+        }
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('imagePreview').innerHTML = '';
+    }
+});
+
+// Обработка отправки формы
+document.getElementById('addMaterialForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Получаем данные из редактора
+    const description = window.editor.getData();
+    document.getElementById('description').value = description;
+    
+    // Проверяем обязательные поля
+    const title = document.getElementById('title').value;
+    const categoryId = document.getElementById('category_id').value;
+    const brandId = document.getElementById('brand_id') ? document.getElementById('brand_id').value : null;
+    
+    if (title && description && categoryId && (brandId || !document.getElementById('brand_id'))) {
+        this.submit();
+    } else {
+        alert('Будь ласка, заповніть всі обов\'язкові поля');
+    }
+});
+</script>
 {% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style/add_material.css', v=range(1, 1000) | random) }}">
 <style>
-    #description {
-        height: 750px !important;
-    }
     .ck-editor__editable {
-        height: 750px !important;
+        min-height: 750px !important;
+        max-height: none !important;
+    }
+    .ck.ck-editor {
+        width: 100%;
+    }
+    .ck.ck-toolbar {
+        border-radius: 4px 4px 0 0;
+        border: 1px solid #ddd;
+        border-bottom: none;
+    }
+    .ck.ck-content {
+        border-radius: 0 0 4px 4px;
+        border: 1px solid #ddd;
+        border-top: none;
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    .ck.ck-content p {
+        margin: 1em 0;
+    }
+    .ck.ck-content h1,
+    .ck.ck-content h2,
+    .ck.ck-content h3,
+    .ck.ck-content h4,
+    .ck.ck-content h5,
+    .ck.ck-content h6 {
+        margin: 1.5em 0 0.5em;
+    }
+    .ck.ck-content ul,
+    .ck.ck-content ol {
+        margin: 1em 0;
+        padding-left: 2em;
+    }
+    .ck.ck-content blockquote {
+        margin: 1em 0;
+        padding: 0.5em 1em;
+        border-left: 4px solid #ccc;
+        background: #f8f9fa;
+    }
+    .ck.ck-content table {
+        margin: 1em 0;
+        border-collapse: collapse;
+        width: 100%;
+    }
+    .ck.ck-content table td,
+    .ck.ck-content table th {
+        border: 1px solid #ddd;
+        padding: 0.5em;
+    }
+    .ck.ck-content table th {
+        background: #f8f9fa;
     }
     #imagePreview img {
         max-width: 300px;
@@ -77,6 +201,45 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/decoupled-document/ckeditor.js"></script>
-<script src="{{ url_for('static', filename='js/add_material.js', v=range(1, 1000) | random) }}"></script>
+<!-- Подключаем CKEditor 5 -->
+<script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/classic/ckeditor.js"></script>
+<script>
+    ClassicEditor
+        .create(document.querySelector('#editor'), {
+            toolbar: {
+                items: [
+                    'heading',
+                    '|',
+                    'bold',
+                    'italic',
+                    'link',
+                    'bulletedList',
+                    'numberedList',
+                    '|',
+                    'outdent',
+                    'indent',
+                    '|',
+                    'blockQuote',
+                    'insertTable',
+                    'undo',
+                    'redo'
+                ]
+            },
+            language: 'uk',
+            table: {
+                contentToolbar: [
+                    'tableColumn',
+                    'tableRow',
+                    'mergeTableCells'
+                ]
+            }
+        })
+        .then(editor => {
+            console.log('Editor initialized', editor);
+            window.editor = editor;
+        })
+        .catch(error => {
+            console.error('Error initializing editor:', error);
+        });
+</script>
 {% endblock %}

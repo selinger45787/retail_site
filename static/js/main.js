@@ -2,46 +2,48 @@
 function showLoginModal() {
     const modal = document.getElementById('loginModal');
     if (modal) {
-        modal.style.display = 'block';
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
     }
 }
 
 function closeLoginModal() {
     const modal = document.getElementById('loginModal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
     }
 }
 
 function submitLoginForm() {
     const form = document.getElementById('login-form');
     const formData = new FormData(form);
+    const errorDiv = document.getElementById('login-error');
+    errorDiv.textContent = '';
     
-    fetch('/login', {
+    fetch('/login_modal', {
         method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        if (response.redirected) {
-            window.location.href = response.url;
-        } else {
-            return response.text();
+        body: formData,
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
+    .then(response => response.json())
     .then(data => {
-        if (data) {
-            const errorDiv = document.getElementById('login-error');
-            if (errorDiv) {
-                errorDiv.textContent = 'Неверный логин или пароль';
-            }
+        if (data.success) {
+            window.location.reload();
+        } else {
+            errorDiv.textContent = data.message || 'Помилка входу';
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        const errorDiv = document.getElementById('login-error');
-        if (errorDiv) {
-            errorDiv.textContent = 'Произошла ошибка при входе';
-        }
+        errorDiv.textContent = 'Помилка з\'єднання з сервером. Спробуйте пізніше.';
     });
 }
 
@@ -164,26 +166,91 @@ function showSuccess(message) {
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
-        modal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
     }
 }
 
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
     }
 }
 
-// Закрытие модального окна при клике вне его содержимого
+// Закрытие модального окна при клике вне его
 window.onclick = function(event) {
     if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
-        document.body.style.overflow = 'auto';
+        const modalId = event.target.id;
+        closeModal(modalId);
     }
 }
+
+// Обработка формы добавления бренда
+document.addEventListener('DOMContentLoaded', function() {
+    const addBrandForm = document.getElementById('addBrandForm');
+    if (addBrandForm) {
+        addBrandForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            const errorDiv = document.getElementById('brand-error');
+            
+            // Очищаем предыдущую ошибку
+            if (errorDiv) {
+                errorDiv.textContent = '';
+            }
+            
+            // Отключаем кнопку и показываем индикатор загрузки
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner"></span> Завантаження...';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Помилка при додаванні бренду');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    throw new Error(data.error || 'Помилка при додаванні бренду');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (errorDiv) {
+                    errorDiv.textContent = error.message;
+                } else {
+                    alert(error.message || 'Помилка при додаванні бренду');
+                }
+            })
+            .finally(() => {
+                // Восстанавливаем кнопку
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+            });
+        });
+    }
+});
 
 // Инициализация TinyMCE для текстовых полей
 document.addEventListener('DOMContentLoaded', function() {
@@ -232,4 +299,43 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
         });
     });
-}); 
+});
+
+// Функции для удаления материала
+let materialToDelete = null;
+
+function showDeleteMaterialModal(materialId) {
+    materialToDelete = materialId;
+    openModal('deleteMaterialModal');
+}
+
+function confirmDeleteMaterial() {
+    if (!materialToDelete) return;
+
+    const formData = new FormData();
+    formData.append('csrf_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+    fetch(`/material/${materialToDelete}/delete`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect;
+        } else {
+            alert(data.error || 'Помилка при видаленні матеріалу');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Помилка при видаленні матеріалу');
+    })
+    .finally(() => {
+        closeModal('deleteMaterialModal');
+        materialToDelete = null;
+    });
+} 

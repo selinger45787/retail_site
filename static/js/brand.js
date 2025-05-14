@@ -5,24 +5,52 @@ function editMaterial(materialId) {
 
 // Удаление материала с подтверждением
 function deleteMaterial(materialId) {
-    if (confirm('Ви впевнені, що хочете видалити цей матеріал?')) {
-        fetch(`/material/${materialId}/delete`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Помилка при видаленні матеріалу');
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Помилка при видаленні');
-        });
-    }
+    // Сохраняем ID материала для удаления
+    window.materialToDelete = materialId;
+    // Показываем модальное окно
+    document.getElementById('deleteMaterialModal').style.display = 'flex';
+}
+
+// Функция для подтверждения удаления
+function confirmDeleteMaterial() {
+    const materialId = window.materialToDelete;
+    if (!materialId) return;
+
+    // Получаем CSRF токен
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch(`/material/${materialId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect;
+        } else {
+            alert(data.error || 'Помилка при видаленні матеріалу');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Помилка при видаленні матеріалу');
+    })
+    .finally(() => {
+        // Закрываем модальное окно
+        document.getElementById('deleteMaterialModal').style.display = 'none';
+        // Очищаем ID материала
+        window.materialToDelete = null;
+    });
 }
 
 // Открытие модального окна
@@ -50,6 +78,15 @@ window.onclick = function(event) {
     }
 };
 
+// Обработчик клика вне модального окна
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('deleteMaterialModal');
+    if (event.target === modal) {
+        modal.style.display = 'none';
+        window.materialToDelete = null;
+    }
+});
+
 // Подключаем обработчики после загрузки страницы
 document.addEventListener('DOMContentLoaded', () => {
     // Кнопки редактирования
@@ -75,21 +112,32 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
 
             const formData = new FormData(this);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            formData.append('csrf_token', csrfToken);
 
             fetch(this.action, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                credentials: 'same-origin'
             })
-            .then(res => res.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    window.location.href = data.redirect || window.location.href;
                 } else {
                     alert(data.message || 'Помилка при додаванні матеріалу');
                 }
             })
-            .catch(err => {
-                console.error(err);
+            .catch(error => {
+                console.error('Error:', error);
                 alert('Помилка при додаванні матеріалу');
             });
         });

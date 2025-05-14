@@ -21,20 +21,19 @@ wheels/
 .installed.cfg
 *.egg
 
+# Flask
+instance/
+.webassets-cache
+
 # Virtual Environment
 venv/
 ENV/
-.venv/
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# Flask
-instance/
-.webassets-cache
 
 # Database
 *.db
@@ -43,15 +42,11 @@ instance/
 # Logs
 *.log
 
-# Environment variables
+# Local development settings
 .env
-.env.*
+.env.local
+.env.*.local
 
-# OS generated files
+# System Files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db 

@@ -117,38 +117,127 @@ header {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1100;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    opacity: 1;
 }
 
 .modal-box {
-    position: relative;
-    background-color: #fff;
-    margin: 15% auto;
+    background: #fff;
     padding: 2rem;
+    border-radius: 12px;
     width: 90%;
-    max-width: 400px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
-.close {
-    position: absolute;
-    right: 1rem;
-    top: 1rem;
+.modal.show .modal-box {
+    transform: translateY(0);
+}
+
+.modal-box h2 {
+    margin: 0 0 1rem;
+    color: #333;
     font-size: 1.5rem;
-    cursor: pointer;
+}
+
+.modal-box p {
+    margin: 0 0 1.5rem;
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.modal-box .close {
+    position: absolute;
+    right: 1.5rem;
+    top: 1.5rem;
+    font-size: 1.5rem;
+    color: #666;
     background: none;
     border: none;
-    color: #666;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.modal-box .close:hover {
+    color: #333;
+}
+
+.modal-box .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.modal-box input[type="text"],
+.modal-box input[type="password"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-box input[type="text"]:focus,
+.modal-box input[type="password"]:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    outline: none;
+}
+
+.modal-box .btn {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-box .btn-primary {
+    background: linear-gradient(145deg, #007bff, #0056b3);
+    color: white;
+}
+
+.modal-box .btn-primary:hover {
+    background: linear-gradient(145deg, #0056b3, #007bff);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+.modal-box .text-center {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.modal-box .text-center a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+}
+
+.modal-box .text-center a:hover {
+    color: #0056b3;
+    text-decoration: underline;
 }
 
 .error-text {
     color: #dc3545;
-    margin-top: 0.5rem;
     font-size: 0.875rem;
+    margin-top: 0.5rem;
+    text-align: center;
 }
 
 /* Responsive Styles */
@@ -235,4 +324,48 @@ header {
 
 .action-button.add-material:hover {
     background: linear-gradient(145deg, #3498db, #2980b9);
+}
+
+/* Стили для модального окна подтверждения удаления */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.modal-actions .btn {
+    padding: 0.5rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+}
+
+.modal-actions .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.modal-actions .btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.modal-actions .btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.modal-actions .btn-danger:hover {
+    background-color: #c82333;
+}
+
+#deleteMaterialModal .modal-box {
+    max-width: 400px;
+    text-align: center;
+}
+
+#deleteMaterialModal .modal-box p {
+    margin: 1rem 0;
+    color: #666;
 } 
