@@ -249,7 +249,7 @@ def add_material(brand_id):
     if brand_id:
         brand = Brand.query.get_or_404(brand_id)
     
-    return render_template('add_material.html', 
+    return render_template('material_add.html', 
                          brand=brand,
                          brands=brands,
                          categories=categories,
@@ -348,7 +348,7 @@ def edit_material(material_id):
     
     # Для GET запроса
     categories = Category.query.all()
-    return render_template('edit_material.html', material=material, categories=categories)
+    return render_template('material_edit.html', material=material, categories=categories)
 
 @app.route('/material/<int:material_id>/delete', methods=['POST'])
 @login_required
@@ -650,7 +650,7 @@ def create_test(material_id):
             flash('Помилка при створенні тесту', 'error')
             return redirect(url_for('view_material', material_id=material_id))
     
-    return render_template('create_test.html', material=material)
+    return render_template('test_create.html', material=material)
 
 @app.route('/material/<int:material_id>/test')
 def take_test(material_id):
@@ -683,7 +683,7 @@ def take_test(material_id):
         random.shuffle(answers)
         question.answers = answers
     
-    return render_template('take_test.html', 
+    return render_template('test_take.html', 
                          material=material,
                          test=test,
                          questions=questions)
@@ -739,7 +739,7 @@ def preview_test(material_id):
         flash('Тест для цього матеріалу не знайдено', 'error')
         return redirect(url_for('view_material', material_id=material_id))
     
-    return render_template('preview_test.html',
+    return render_template('test_preview.html',
                          material=material,
                          questions=questions)
 
@@ -791,7 +791,7 @@ def moderate_test(material_id):
                 return redirect(url_for('moderate_test', material_id=material_id))
         
         # Для GET запроса отображаем форму модерации
-        return render_template("moderate_test.html", 
+        return render_template("test_moderate.html", 
                              material=material)
                              
     except Exception as e:
@@ -872,7 +872,7 @@ def edit_test(material_id):
                 return redirect(url_for('edit_test', material_id=material_id))
         
         # Для GET запроса отображаем форму редактирования
-        return render_template("edit_test.html", 
+        return render_template("test_edit.html", 
                              material=material,
                              test=test,
                              questions=questions)

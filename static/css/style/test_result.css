@@ -1,0 +1,74 @@
+/* Styles for test_result.html */
+
+.result-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.result-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    text-align: center;
+}
+
+.result-header h2 {
+    color: #333;
+    margin-bottom: 2rem;
+}
+
+.result-details {
+    margin: 2rem 0;
+}
+
+.score-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: #4CAF50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+}
+
+.score {
+    color: white;
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.stats {
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.result-message {
+    margin: 2rem 0;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.result-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    background: #4CAF50;
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn:hover {
+    background: #45a049;
+} 

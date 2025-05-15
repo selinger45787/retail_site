@@ -1,3 +1,7 @@
+// JavaScript for material_add.html
+
+// Add your custom scripts here
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM загружен, инициализация формы...');
     

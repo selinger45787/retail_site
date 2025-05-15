@@ -3,7 +3,7 @@
 {% block title %}{{ brand.name }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style/brand.css', v=range(1, 1000) | random) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/brand.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -42,10 +42,10 @@
                     </a>
                     {% if current_user.is_authenticated and current_user.role == 'admin' %}
                     <div class="material-actions">
-                        <button class="action-btn edit" title="Редагувати" onclick="window.location.href='{{ url_for('edit_material', material_id=material.id) }}'">
+                        <button class="action-btn edit" title="Редагувати" data-material-id="{{ material.id }}">
                             <img src="{{ url_for('static', filename='img/icons/edit.svg') }}" alt="Edit">
                         </button>
-                        <button class="action-btn delete" title="Видалити" onclick="deleteMaterial({{ material.id }})">
+                        <button class="action-btn delete" title="Видалити" data-material-id="{{ material.id }}">
                             <img src="{{ url_for('static', filename='img/icons/delete.svg') }}" alt="Delete">
                         </button>
                     </div>
@@ -94,5 +94,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/brand.js', v=range(1, 1000) | random) }}" defer></script>
+<script src="{{ url_for('static', filename='js/brand.js') }}" defer></script>
 {% endblock %}

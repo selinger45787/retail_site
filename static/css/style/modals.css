@@ -1,0 +1,228 @@
+/* Стили для модальных окон */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal.show {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-box {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 30px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+    position: relative;
+}
+
+.modal.show .modal-box {
+    transform: translateY(0);
+}
+
+.modal-box h2 {
+    color: #2c3e50;
+    margin: 0 0 20px;
+    font-size: 24px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.modal-box p {
+    color: #505a68;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+/* Кнопка закрытия */
+.modal-box .close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 28px;
+    color: #a0a0a0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    padding: 0;
+    transition: color 0.2s ease;
+    z-index: 10;
+}
+
+.modal-box .close:hover {
+    color: #333;
+}
+
+/* Стили для форм внутри модалок */
+.modal-box .form-group {
+    margin-bottom: 20px;
+}
+
+.modal-box label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #2c3e50;
+}
+
+.modal-box input[type="text"],
+.modal-box input[type="password"],
+.modal-box input[type="email"],
+.modal-box input[type="file"],
+.modal-box select,
+.modal-box textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background-color: #f9f9f9;
+}
+
+.modal-box input[type="text"]:focus,
+.modal-box input[type="password"]:focus,
+.modal-box input[type="email"]:focus,
+.modal-box input[type="file"]:focus,
+.modal-box select:focus,
+.modal-box textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    background-color: #fff;
+}
+
+.modal-box small.form-text {
+    display: block;
+    margin-top: 5px;
+    color: #6c757d;
+    font-size: 12px;
+}
+
+/* Кнопки в модальных окнах */
+.modal-box .btn,
+.modal-box .submit-btn {
+    display: block;
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: linear-gradient(145deg, #007bff, #0069d9);
+    color: white;
+}
+
+.modal-box .btn:hover,
+.modal-box .submit-btn:hover {
+    background: linear-gradient(145deg, #0069d9, #007bff);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 105, 217, 0.2);
+}
+
+.modal-box .text-center {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.modal-box .text-center a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.modal-box .text-center a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* Сообщения об ошибках */
+.error-text {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 5px;
+    text-align: center;
+}
+
+/* Кнопки действий в футере модального окна */
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.modal-actions .btn {
+    width: auto;
+    min-width: 120px;
+}
+
+.modal-actions .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.modal-actions .btn-secondary:hover {
+    background: #5a6268;
+    box-shadow: 0 4px 12px rgba(90, 98, 104, 0.2);
+}
+
+.modal-actions .btn-danger {
+    background: linear-gradient(145deg, #dc3545, #c82333);
+    color: white;
+}
+
+.modal-actions .btn-danger:hover {
+    background: linear-gradient(145deg, #c82333, #dc3545);
+    box-shadow: 0 4px 12px rgba(200, 35, 51, 0.2);
+}
+
+/* Специфичные стили для модальных окон */
+#deleteMaterialModal .modal-box {
+    max-width: 400px;
+}
+
+#loginModal .modal-box {
+    max-width: 400px;
+}
+
+/* Анимация для спиннера загрузки */
+@keyframes spinner {
+    to {transform: rotate(360deg);}
+}
+
+.spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spinner 0.6s linear infinite;
+    margin-right: 10px;
+} 

@@ -162,35 +162,6 @@ function showSuccess(message) {
     }, 3000);
 }
 
-// Функции для работы с модальными окнами
-function openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'flex';
-        setTimeout(() => {
-            modal.classList.add('show');
-        }, 10);
-    }
-}
-
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('show');
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 300);
-    }
-}
-
-// Закрытие модального окна при клике вне его
-window.onclick = function(event) {
-    if (event.target.classList.contains('modal')) {
-        const modalId = event.target.id;
-        closeModal(modalId);
-    }
-}
-
 // Обработка формы добавления бренда
 document.addEventListener('DOMContentLoaded', function() {
     const addBrandForm = document.getElementById('addBrandForm');

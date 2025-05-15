@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Додати матеріал{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/material_add.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Додати новий матеріал</h2>
+    <form id="addMaterialForm" method="POST" action="{{ url_for('add_material', brand_id=brand.id if brand else None) }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if show_brand_select %}
+        <div class="form-group mb-3">
+            <label for="brand_id">Бренд</label>
+            <select class="form-control" id="brand_id" name="brand_id" required>
+                <option value="">Виберіть бренд</option>
+                {% for brand in brands %}
+                <option value="{{ brand.id }}">{{ brand.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="form-group mb-3">
+            <label for="title">Назва матеріалу</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="category_id">Категорія</label>
+            <select class="form-control" id="category_id" name="category_id" required>
+                <option value="">Виберіть категорію</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="description">Опис</label>
+            <textarea class="form-control" id="description" name="description" style="display: none;"></textarea>
+            <div id="editor"></div>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="image">Головне зображення</label>
+            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+            <div id="imagePreview"></div>
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Додаткові зображення</label>
+            <div id="additionalImagesContainer">
+                <div class="additional-image-input mb-2">
+                    <div class="input-group">
+                        <input type="file" class="form-control" name="additional_images" accept="image/*">
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-add-image mt-2" id="addImageBtn">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <button type="submit" class="btn btn-primary submit-btn">Опублікувати</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Подключаем CKEditor 5 -->
+<script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/classic/ckeditor.js"></script>
+<script src="{{ url_for('static', filename='js/material_add.js') }}" defer></script>
+<script>
+    ClassicEditor
+        .create(document.querySelector('#editor'), {
+            toolbar: {
+                items: [
+                    'heading',
+                    '|',
+                    'bold',
+                    'italic',
+                    'link',
+                    'bulletedList',
+                    'numberedList',
+                    '|',
+                    'outdent',
+                    'indent',
+                    '|',
+                    'blockQuote',
+                    'insertTable',
+                    'undo',
+                    'redo'
+                ]
+            },
+            language: 'uk',
+            table: {
+                contentToolbar: [
+                    'tableColumn',
+                    'tableRow',
+                    'mergeTableCells'
+                ]
+            }
+        })
+        .then(editor => {
+            console.log('Editor initialized', editor);
+            window.editor = editor;
+        })
+        .catch(error => {
+            console.error('Error initializing editor:', error);
+        });
+</script>
+{% endblock %} 
