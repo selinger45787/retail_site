@@ -1,0 +1,511 @@
+{% extends "base.html" %}
+
+{% block title %}Административная панель{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/admin_dashboard.css') }}">
+<!-- Chart.js для графиков -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>Административная панель</h1>
+        <p class="admin-subtitle">Статистика и аналитика тестирования пользователей</p>
+    </div>
+
+    <!-- Общая статистика -->
+    <section class="stats-overview">
+        <h2>Общая статистика</h2>
+        
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ total_attempts }}</div>
+                    <div class="stat-label">Всего попыток</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ avg_score }}%</div>
+                    <div class="stat-label">Средний балл</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ success_rate }}%</div>
+                    <div class="stat-label">Успешные тесты</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- График динамики -->
+        <div class="chart-container">
+            <h3>Динамика тестирования (последние 30 дней)</h3>
+            <canvas id="testsChart"></canvas>
+        </div>
+    </section>
+    
+    <!-- Аналитика проблемных областей -->
+    <section class="analytics-section">
+        <h2>Аналитика</h2>
+        
+        <div class="analytics-grid">
+            <!-- Проблемные тесты -->
+            <div class="analytics-card">
+                <h3>Проблемные тесты</h3>
+                <p class="analytics-description">Тесты с наименьшим средним баллом</p>
+                
+                <table class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>Материал</th>
+                            <th>Средний балл</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in problematic_tests %}
+                        <tr>
+                            <td>{{ item.test.material.title }}</td>
+                            <td class="text-score">{{ item.avg_score|round(1) }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Проблемные пользователи -->
+            <div class="analytics-card">
+                <h3>Проблемные пользователи</h3>
+                <p class="analytics-description">Пользователи с наименьшим средним баллом</p>
+                
+                <table class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>Пользователь</th>
+                            <th>Средний балл</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in problematic_users %}
+                        <tr>
+                            <td>{{ item.user.username }}</td>
+                            <td class="text-score">{{ item.avg_score|round(1) }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Многоуровневая таблица с результатами тестов -->
+    <section class="users-tests-section">
+        <h2>Детальные результаты пользователей</h2>
+        
+        <div class="users-filter">
+            <div class="search-box">
+                <input type="text" id="userSearch" placeholder="Поиск пользователя...">
+                <i class="fas fa-search"></i>
+            </div>
+            
+            <div class="sort-options">
+                <select id="sortBy">
+                    <option value="name">По имени</option>
+                    <option value="tests">По количеству тестов</option>
+                    <option value="score">По среднему баллу</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="nested-table">
+            <table class="users-table" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>Пользователь</th>
+                        <th>Email</th>
+                        <th>Количество тестов</th>
+                        <th>Средний балл</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr class="user-row" data-user-id="{{ user.id }}">
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td class="text-center">-</td>
+                        <td class="text-center">-</td>
+                        <td class="actions">
+                            <button class="btn-expand" onclick="expandUserRow({{ user.id }})">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="details-row" id="user-details-{{ user.id }}">
+                        <td colspan="5" class="details-container">
+                            <div class="loading-indicator">
+                                <div class="spinner"></div>
+                                <p>Загрузка данных...</p>
+                            </div>
+                            
+                            <div class="user-details" style="display: none;">
+                                <!-- Сюда будут загружены детали через AJAX -->
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js для графиков -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+// Данные для графика
+const chartData = {{ chart_data|tojson }};
+
+// Инициализация графика
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('testsChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.map(item => {
+                const date = new Date(item.date);
+                return date.toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'});
+            }),
+            datasets: [{
+                label: 'Средний балл',
+                data: chartData.map(item => item.value),
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Средний балл: ${context.raw.toFixed(1)}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Средний балл (%)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Дата'
+                    }
+                }
+            }
+        }
+    });
+});
+
+// Функция для раскрытия деталей пользователя
+function expandUserRow(userId) {
+    const detailsRow = document.getElementById(`user-details-${userId}`);
+    const detailsContainer = detailsRow.querySelector('.user-details');
+    const loadingIndicator = detailsRow.querySelector('.loading-indicator');
+    const expandButton = document.querySelector(`.user-row[data-user-id="${userId}"] .btn-expand i`);
+    
+    // Переключаем видимость строки с деталями
+    if (detailsRow.classList.contains('expanded')) {
+        detailsRow.classList.remove('expanded');
+        expandButton.classList.remove('fa-chevron-up');
+        expandButton.classList.add('fa-chevron-down');
+        return;
+    }
+    
+    detailsRow.classList.add('expanded');
+    expandButton.classList.remove('fa-chevron-down');
+    expandButton.classList.add('fa-chevron-up');
+    
+    // Если данные уже загружены, просто показываем их
+    if (detailsContainer.children.length > 0) {
+        loadingIndicator.style.display = 'none';
+        detailsContainer.style.display = 'block';
+        return;
+    }
+    
+    // Показываем индикатор загрузки
+    loadingIndicator.style.display = 'flex';
+    detailsContainer.style.display = 'none';
+    
+    // Загружаем данные через AJAX
+    fetch(`/api/admin/user_tests/${userId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Ошибка при загрузке данных');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Скрываем индикатор загрузки
+            loadingIndicator.style.display = 'none';
+            
+            // Генерируем HTML для вложенной таблицы
+            renderUserDetails(detailsContainer, data);
+            
+            // Показываем контейнер с деталями
+            detailsContainer.style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            loadingIndicator.innerHTML = `<p class="error-message">Ошибка при загрузке данных: ${error.message}</p>`;
+        });
+}
+
+// Функция для рендеринга деталей пользователя
+function renderUserDetails(container, data) {
+    const { user, brands } = data;
+    
+    // Если у пользователя нет прохождений тестов
+    if (brands.length === 0) {
+        container.innerHTML = '<p class="no-data">У пользователя нет прохождений тестов</p>';
+        return;
+    }
+    
+    let html = `
+        <div class="nested-details">
+            <h3>Результаты пользователя ${user.username}</h3>
+            <div class="accordion">
+    `;
+    
+    // Генерируем HTML для каждого бренда
+    brands.forEach(brand => {
+        html += `
+            <div class="accordion-item brand-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <i class="fas fa-chevron-right"></i>
+                    <span class="brand-name">${brand.name}</span>
+                </div>
+                <div class="accordion-content">
+        `;
+        
+        // Для каждого материала
+        brand.materials.forEach(material => {
+            html += `
+                <div class="accordion-item material-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <i class="fas fa-chevron-right"></i>
+                        <span class="material-title">${material.title}</span>
+                    </div>
+                    <div class="accordion-content">
+            `;
+            
+            // Для каждого теста
+            material.tests.forEach(test => {
+                html += `
+                    <div class="accordion-item test-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <i class="fas fa-chevron-right"></i>
+                            <span class="test-title">Тест #${test.id}</span>
+                        </div>
+                        <div class="accordion-content">
+                `;
+                
+                // Для каждой попытки прохождения
+                test.attempts.forEach(attempt => {
+                    // Определяем класс для оценки
+                    let scoreClass = 'score-low';
+                    if (attempt.score >= 80) {
+                        scoreClass = 'score-high';
+                    } else if (attempt.score >= 60) {
+                        scoreClass = 'score-medium';
+                    }
+                    
+                    html += `
+                        <div class="attempt-details">
+                            <div class="attempt-summary">
+                                <h4>Результат от ${attempt.date}</h4>
+                                <div class="attempt-stats">
+                                    <span class="attempt-score ${scoreClass}">Оценка: ${attempt.score}%</span>
+                                    <span class="attempt-correct">Правильных: ${attempt.correct_answers}</span>
+                                    <span class="attempt-wrong">Неправильных: ${attempt.wrong_answers}</span>
+                                </div>
+                            </div>
+                    `;
+                    
+                    // Если есть детальная информация по вопросам
+                    if (attempt.question_details && attempt.question_details.length > 0) {
+                        html += `
+                            <div class="accordion-item questions-item">
+                                <div class="accordion-header" onclick="toggleAccordion(this)">
+                                    <i class="fas fa-chevron-right"></i>
+                                    <span>Детальная информация по вопросам</span>
+                                </div>
+                                <div class="accordion-content">
+                                    <table class="questions-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Вопрос</th>
+                                                <th>Ответ пользователя</th>
+                                                <th>Правильный ответ</th>
+                                                <th>Результат</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                        `;
+                        
+                        attempt.question_details.forEach(question => {
+                            html += `
+                                <tr class="${question.is_correct ? 'correct-answer' : 'wrong-answer'}">
+                                    <td>${question.question_text}</td>
+                                    <td>${question.user_answer}</td>
+                                    <td>${question.correct_answer}</td>
+                                    <td>${question.is_correct ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        html += `<p class="no-details">Детальная информация по вопросам недоступна</p>`;
+                    }
+                    
+                    html += `</div>`;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// Функция для переключения аккордеона
+function toggleAccordion(header) {
+    const content = header.nextElementSibling;
+    const chevron = header.querySelector('i');
+    
+    header.parentElement.classList.toggle('expanded');
+    
+    if (header.parentElement.classList.contains('expanded')) {
+        chevron.classList.remove('fa-chevron-right');
+        chevron.classList.add('fa-chevron-down');
+    } else {
+        chevron.classList.remove('fa-chevron-down');
+        chevron.classList.add('fa-chevron-right');
+    }
+}
+
+// Поиск пользователей
+document.getElementById('userSearch').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const userRows = document.querySelectorAll('.user-row');
+    
+    userRows.forEach(row => {
+        const username = row.cells[0].textContent.toLowerCase();
+        const email = row.cells[1].textContent.toLowerCase();
+        const userId = row.getAttribute('data-user-id');
+        const detailsRow = document.getElementById(`user-details-${userId}`);
+        
+        if (username.includes(searchTerm) || email.includes(searchTerm)) {
+            row.style.display = '';
+            if (detailsRow.classList.contains('expanded')) {
+                detailsRow.style.display = '';
+            }
+        } else {
+            row.style.display = 'none';
+            detailsRow.style.display = 'none';
+        }
+    });
+});
+
+// Сортировка пользователей
+document.getElementById('sortBy').addEventListener('change', function() {
+    const sortBy = this.value;
+    const tbody = document.getElementById('usersTable').querySelector('tbody');
+    const rows = Array.from(document.querySelectorAll('.user-row'));
+    
+    // Сортируем строки по выбранному критерию
+    rows.sort((a, b) => {
+        if (sortBy === 'name') {
+            return a.cells[0].textContent.localeCompare(b.cells[0].textContent);
+        } else if (sortBy === 'tests') {
+            const aTests = parseInt(a.cells[2].textContent) || 0;
+            const bTests = parseInt(b.cells[2].textContent) || 0;
+            return bTests - aTests;
+        } else if (sortBy === 'score') {
+            const aScore = parseFloat(a.cells[3].textContent) || 0;
+            const bScore = parseFloat(b.cells[3].textContent) || 0;
+            return bScore - aScore;
+        }
+        return 0;
+    });
+    
+    // Удаляем все строки из таблицы
+    document.querySelectorAll('.user-row, .details-row').forEach(row => {
+        row.remove();
+    });
+    
+    // Добавляем отсортированные строки обратно
+    rows.forEach(row => {
+        const userId = row.getAttribute('data-user-id');
+        const detailsRow = document.getElementById(`user-details-${userId}`);
+        
+        tbody.appendChild(row);
+        tbody.appendChild(detailsRow);
+    });
+});
+</script>
+{% endblock %} 

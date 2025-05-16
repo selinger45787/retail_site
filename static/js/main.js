@@ -272,41 +272,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Функции для удаления материала
-let materialToDelete = null;
-
-function showDeleteMaterialModal(materialId) {
-    materialToDelete = materialId;
-    openModal('deleteMaterialModal');
-}
-
-function confirmDeleteMaterial() {
-    if (!materialToDelete) return;
-
-    const formData = new FormData();
-    formData.append('csrf_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-
-    fetch(`/material/${materialToDelete}/delete`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.href = data.redirect;
-        } else {
-            alert(data.error || 'Помилка при видаленні матеріалу');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Помилка при видаленні матеріалу');
-    })
-    .finally(() => {
-        closeModal('deleteMaterialModal');
-        materialToDelete = null;
-    });
-} 
+// Удаляем старые функции для удаления материала
+// ... existing code ... 

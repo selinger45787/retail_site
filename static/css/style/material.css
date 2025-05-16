@@ -13,6 +13,10 @@ body {
     padding: 0 1rem;
     border-bottom: 1px solid #e0e0e0;
     text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
 }
 
 .material-header-content {
@@ -32,35 +36,97 @@ body {
     font-weight: 500;
 }
 
-/* Кнопка редактирования */
-.material-header-content .btn.btn-primary {
-    background: linear-gradient(145deg, #2c3e50, #34495e) !important;
-    color: #fff !important;
-    border: none !important;
-    padding: 0.8rem 1.5rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 1rem;
-    font-weight: 500;
+/* Общие стили для кнопок на странице материала */
+.material-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    border: none;
+    line-height: 1.5;
+    height: auto;
 }
 
-.material-header-content .btn.btn-primary:hover {
-    background: linear-gradient(145deg, #34495e, #2c3e50) !important;
+.material-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.material-header-content .btn.btn-primary .btn-icon {
-    width: 20px;
-    height: 20px;
-    filter: brightness(0) invert(1);
+.material-btn .btn-icon {
+    width: 16px;
+    height: 16px;
     display: inline-block;
     vertical-align: middle;
+}
+
+.material-btn.btn-primary {
+    background: linear-gradient(145deg, #2c3e50, #34495e);
+    color: #fff;
+}
+
+.material-btn.btn-primary:hover {
+    background: linear-gradient(145deg, #34495e, #2c3e50);
+}
+
+.material-btn.btn-primary .btn-icon {
+    filter: brightness(0) invert(1);
+}
+
+.material-btn.btn-danger {
+    background: linear-gradient(145deg, #c0392b, #e74c3c);
+    color: #fff;
+}
+
+.material-btn.btn-danger:hover {
+    background: linear-gradient(145deg, #e74c3c, #c0392b);
+}
+
+.material-btn.btn-danger .btn-icon {
+    filter: brightness(0) invert(1);
+}
+
+.material-btn.btn-warning {
+    background: linear-gradient(145deg, #f39c12, #f1c40f);
+    color: #fff;
+}
+
+.material-btn.btn-warning:hover {
+    background: linear-gradient(145deg, #f1c40f, #f39c12);
+}
+
+.material-btn.btn-success {
+    background: linear-gradient(145deg, #27ae60, #2ecc71);
+    color: #fff;
+}
+
+.material-btn.btn-success:hover {
+    background: linear-gradient(145deg, #2ecc71, #27ae60);
+}
+
+.material-btn.btn-back {
+    background: linear-gradient(145deg, #2c3e50, #34495e);
+    color: white;
+}
+
+.material-btn.btn-back:hover {
+    background: linear-gradient(145deg, #34495e, #2c3e50);
+}
+
+.material-btn.btn-back .back-icon {
+    width: 16px;
+    height: 16px;
+    stroke: white;
+}
+
+.material-btn.btn-back:hover .back-icon {
+    transform: translateX(-3px);
 }
 
 /* Секция материала */
@@ -93,12 +159,12 @@ body {
 
 .material-image img {
     max-width: 100%;
-    max-height: 100%;
-    width: auto;
     height: auto;
     object-fit: contain;
     display: block;
     margin: 0 auto;
+    border-radius: 8px;
+    margin-bottom: 2rem;
 }
 
 /* Информация о материале */
@@ -195,152 +261,64 @@ body {
     object-fit: cover;
 }
 
-/* Адаптивность */
-@media (max-width: 1200px) {
-    .material-container {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
+/* Дополнительные изображения */
+.additional-images {
+    margin-top: 3rem;
 }
 
-@media (max-width: 768px) {
-    .material-header-content {
-        gap: 1rem;
-    }
-
-    .material-info {
-        padding: 1.5rem;
-    }
-
-    .material-title {
-        font-size: 1.3rem;
-    }
-
-    .material-category {
-        font-size: 1rem;
-    }
-
-    .material-description {
-        font-size: 1rem;
-    }
-
-    .main-image-container {
-        height: 300px;
-    }
-
-    .thumbnail-item {
-        width: 80px;
-        height: 80px;
-    }
-}
-
-.material-actions {
-    display: flex;
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
     margin-top: 1rem;
 }
 
-.material-actions .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.8rem 1.5rem;
+.image-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
     border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.material-actions .btn-primary {
-    background: linear-gradient(145deg, #2c3e50, #34495e);
-    color: #fff;
-    border: none;
+/* Контент материала */
+.material-content {
+    margin-top: 2rem;
 }
 
-.material-actions .btn-primary:hover {
-    background: linear-gradient(145deg, #34495e, #2c3e50);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+/* Материальные действия */
+.material-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
 }
 
-.material-actions .btn-danger {
-    background: linear-gradient(145deg, #c0392b, #e74c3c);
-    color: #fff;
-    border: none;
-}
-
-.material-actions .btn-danger:hover {
-    background: linear-gradient(145deg, #e74c3c, #c0392b);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.material-actions .btn-icon {
-    width: 20px;
-    height: 20px;
-    filter: brightness(0) invert(1);
+/* Кнопка возврата */
+.back-button-container {
+    margin-bottom: 20px;
 }
 
 @media (max-width: 768px) {
     .material-actions {
         flex-direction: column;
-        width: 100%;
+        align-items: stretch;
     }
     
-    .material-actions .btn {
+    .material-btn {
         width: 100%;
         justify-content: center;
+        margin-bottom: 0.5rem;
     }
-}
-
-.back-button-container {
-    display: flex;
-    justify-content: flex-start;
-    margin-bottom: 1.5rem;
-}
-
-.back-button-container .btn-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1.25rem;
-    background: linear-gradient(145deg, #f8f9fa, #e9ecef);
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    color: #495057;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.back-button-container .btn-back:hover {
-    background: linear-gradient(145deg, #e9ecef, #f8f9fa);
-    border-color: #ced4da;
-    color: #212529;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.back-button-container .back-icon {
-    width: 20px;
-    height: 20px;
-    transition: transform 0.3s ease;
-}
-
-.back-button-container .btn-back:hover .back-icon {
-    transform: translateX(-3px);
-}
-
-@media (max-width: 768px) {
+    
     .back-button-container .btn-back {
-        padding: 0.6rem 1rem;
-        font-size: 0.95rem;
+        padding: 8px 15px;
+        font-size: 0.9rem;
     }
     
     .back-button-container .back-icon {
-        width: 18px;
-        height: 18px;
+        width: 16px;
+        height: 16px;
     }
 } 

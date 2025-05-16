@@ -2,53 +2,77 @@
 .modal {
     display: none;
     position: fixed;
-    z-index: 1000;
-    left: 0;
     top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
     align-items: center;
     justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
 }
 
 .modal.show {
     display: flex;
-    opacity: 1;
 }
 
 .modal-box {
-    background-color: #fff;
-    border-radius: 10px;
-    padding: 30px;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
     width: 90%;
     max-width: 500px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    transform: translateY(-20px);
-    transition: transform 0.3s ease;
     position: relative;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
-.modal.show .modal-box {
-    transform: translateY(0);
-}
-
-.modal-box h2 {
-    color: #2c3e50;
-    margin: 0 0 20px;
-    font-size: 24px;
-    font-weight: 600;
-    text-align: center;
+.modal-box h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+    font-size: 1.5rem;
 }
 
 .modal-box p {
-    color: #505a68;
-    font-size: 16px;
-    line-height: 1.6;
-    margin-bottom: 25px;
-    text-align: center;
+    margin: 0 0 1.5rem 0;
+    color: #666;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.modal-actions .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.modal-actions .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.modal-actions .btn-secondary:hover {
+    background: #5a6268;
+    box-shadow: 0 4px 12px rgba(90, 98, 104, 0.2);
+}
+
+.modal-actions .btn-danger {
+    background: linear-gradient(145deg, #dc3545, #c82333);
+    color: white;
+}
+
+.modal-actions .btn-danger:hover {
+    background: linear-gradient(145deg, #c82333, #dc3545);
+    box-shadow: 0 4px 12px rgba(200, 35, 51, 0.2);
 }
 
 /* Кнопка закрытия */
@@ -167,39 +191,6 @@
     font-size: 14px;
     margin-top: 5px;
     text-align: center;
-}
-
-/* Кнопки действий в футере модального окна */
-.modal-actions {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 25px;
-}
-
-.modal-actions .btn {
-    width: auto;
-    min-width: 120px;
-}
-
-.modal-actions .btn-secondary {
-    background: #6c757d;
-    color: white;
-}
-
-.modal-actions .btn-secondary:hover {
-    background: #5a6268;
-    box-shadow: 0 4px 12px rgba(90, 98, 104, 0.2);
-}
-
-.modal-actions .btn-danger {
-    background: linear-gradient(145deg, #dc3545, #c82333);
-    color: white;
-}
-
-.modal-actions .btn-danger:hover {
-    background: linear-gradient(145deg, #c82333, #dc3545);
-    box-shadow: 0 4px 12px rgba(200, 35, 51, 0.2);
 }
 
 /* Специфичные стили для модальных окон */

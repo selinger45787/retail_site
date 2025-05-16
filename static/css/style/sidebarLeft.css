@@ -1,15 +1,15 @@
 /* --- Sidebar Container --- */
 .sidebar-container {
     width: 280px;
-    background: linear-gradient(to bottom, #ffffff, #f9f9f9);
-    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.06);
+    background: linear-gradient(to bottom, #feffff, #c8d0d8);
+    box-shadow: 4px 0 12px rgba(252, 251, 251, 0.15);
     position: fixed;
     top: 72px;
     bottom: 0;
     left: 0;
     overflow-y: auto;
-    border-right: 1px solid #dee2e6;
-    z-index: 900;
+    border-right: 1px solid #d8dce2;
+    z-index: 800;
     transition: transform 0.3s ease;
     border-top-right-radius: 12px;
     display: flex;
@@ -26,6 +26,7 @@
     margin: 0.25rem 0.5rem;
     overflow: hidden;
     transition: background 0.3s ease;
+    box-shadow: 0 2px 6px rgba(163, 26, 26, 0.1);
 }
 
 .menu-title {
@@ -34,17 +35,18 @@
     padding: 0.85rem 1rem;
     font-weight: 600;
     font-size: 15px;
-    color: #333;
+    color: #131212;
     cursor: pointer;
     transition: background-color 0.3s, color 0.3s;
     position: relative;
     border-radius: 10px;
-    background-color: #f8f9fa;
+    background-color: rgba(49, 45, 45, 0.1);
+    border: 1px solid rgba(214, 207, 207, 0.87);
 }
 
 .menu-title:hover {
-    background-color: #e6f0ff;
-    color: #0056b3;
+    background-color: rgba(37, 15, 238, 0.856);
+    color: #2c0be9ef;
 }
 
 .menu-icon {
@@ -60,8 +62,8 @@
     right: 1rem;
     width: 8px;
     height: 8px;
-    border-right: 2px solid #666;
-    border-bottom: 2px solid #666;
+    border-right: 2px solid rgba(5, 5, 5, 0.7);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.7);
     transform: rotate(45deg);
     transition: transform 0.3s ease;
 }
@@ -79,8 +81,9 @@
     }
 
     .menu-item:hover .menu-title {
-        background-color: #e6f0ff;
-        color: #0056b3;
+        background-color: rgba(19, 18, 18, 0.15);
+        color: #161515;
+        border-color: rgba(255, 255, 255, 0.15);
     }
 
     .menu-item:hover .submenu-item {
@@ -95,10 +98,10 @@
     overflow: hidden;
     opacity: 0;
     visibility: hidden;
-    background-color: #fefefe;
+    background-color: rgba(0, 0, 0, 0.15);
     transition: max-height 0.4s ease, opacity 0.3s ease, visibility 0.3s ease;
     padding-left: 0.5rem;
-    border-left: 2px dashed #d0d0d0;
+    border-left: 2px dashed rgba(255, 255, 255, 0.2);
     margin-left: 0.5rem;
     border-radius: 0 0 10px 10px;
 }
@@ -115,35 +118,36 @@
     align-items: center;
     padding: 0.6rem 1rem 0.6rem 2rem;
     font-size: 14px;
-    color: #444;
+    color: #030303;
     text-decoration: none;
     transition: all 0.2s ease;
     border-left: 3px solid transparent;
-    background: #fff;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 6px;
     margin-bottom: 4px;
-    box-shadow: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     font-weight: 400;
     cursor: pointer;
 }
 
 .submenu-item:hover {
-    background-color: #eaf4ff;
-    color: #007bff;
-    border-left-color: #007bff;
+    background-color: rgba(221, 21, 21, 0.1);
+    color: #000000;
+    border-left-color: #340ce6;
     border-color: transparent;
-    box-shadow: none;
+    box-shadow: 0 2px 5px rgba(27, 5, 228, 0.2);
 }
 
 .submenu-icon {
     width: 36px;
     height: 36px;
     margin-right: 0.75rem;
-    opacity: 0.85;
+    opacity: 0.9;
     object-fit: contain;
     border-radius: 4px;
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);
     padding: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 @keyframes slideIn {
@@ -177,11 +181,11 @@
 .admin-actions {
     padding: 1rem;
     margin-bottom: 1rem;
-    background: linear-gradient(145deg, #e0e0e0, #f5f5f5);
+    background: linear-gradient(145deg, #34495e, #2c3e50);
     border-radius: 12px;
     margin: 0.5rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .admin-action-btn {
@@ -190,10 +194,10 @@
     width: 100%;
     padding: 1rem 1.2rem;
     margin-bottom: 0.75rem;
-    background: linear-gradient(145deg, #f5f5f5, #e8e8e8);
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
-    color: #4a4a4a;
+    color: #ecf0f1;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -201,7 +205,7 @@
     position: relative;
     overflow: hidden;
     text-decoration: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .admin-action-btn:last-child {
@@ -209,32 +213,32 @@
 }
 
 .admin-action-btn:hover {
-    background: linear-gradient(145deg, #e8e8e8, #d8d8d8);
-    border-color: rgba(255, 255, 255, 0.9);
-    color: #2c2c2c;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
     transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
 .admin-action-btn:active {
     transform: translateY(0);
-    background: linear-gradient(145deg, #d8d8d8, #e8e8e8);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .admin-action-icon {
     width: 20px;
     height: 20px;
     margin-right: 12px;
-    opacity: 0.8;
+    opacity: 0.9;
     transition: all 0.3s ease;
-    filter: brightness(0.7);
+    filter: brightness(1);
 }
 
 .admin-action-btn:hover .admin-action-icon {
     transform: scale(1.1) rotate(5deg);
     opacity: 1;
-    filter: brightness(0.9);
+    filter: brightness(1.2);
 }
 
 /* Добавляем эффект свечения при наведении */
@@ -245,7 +249,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(145deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+    background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
     opacity: 0;
     transition: opacity 0.3s ease;
 }

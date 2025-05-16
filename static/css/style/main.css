@@ -59,7 +59,7 @@ header {
     align-items: center;
 }
 
-.login-btn, .logout-btn {
+.login-btn, .logout-btn, .admin-link {
     padding: 0.5rem 1rem;
     border-radius: 4px;
     text-decoration: none;
@@ -89,6 +89,39 @@ header {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
+.admin-link {
+    background: linear-gradient(145deg, #3a3e45, #272a30);
+    color: #ffffff;
+    border: 1px solid #4a4e56;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    padding: 0.65rem 1.2rem;
+    border-radius: 10px 10px 0 0;
+    margin-bottom: 0;
+    z-index: 2002;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.15);
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.admin-link:hover {
+    background: linear-gradient(145deg, #45494f, #31343a);
+    color: #ffffff;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.admin-link:before {
+    content: "\f0ad";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+}
+
 .user-info {
     color: white;
     font-weight: 500;
@@ -108,7 +141,7 @@ header {
     flex: 1;
     margin-left: 280px;
     padding: 1rem;
-    background-color: #f8f9fa;
+    background-color: #ffffff;
 }
 
 /* Modal Styles */
@@ -253,21 +286,27 @@ header {
 /* Responsive Styles */
 @media (max-width: 768px) {
     .header-content {
-        padding: 0 1rem;
+        flex-direction: column;
+        align-items: flex-start;
     }
     
     .site-title {
-        width: auto;
-        padding-left: 0;
+        position: relative;
+        width: 100%;
+        padding-left: 1rem;
     }
     
     .auth-buttons {
-        margin-right: 0;
+        position: relative;
+        right: auto;
+        margin-top: 0.5rem;
+        width: 100%;
+        justify-content: flex-end;
+        padding-right: 1rem;
     }
     
     .main-content {
         margin-left: 0;
-        padding: 0.5rem;
     }
 }
 
@@ -378,4 +417,213 @@ header {
 #deleteMaterialModal .modal-box p {
     margin: 1rem 0;
     color: #666;
+}
+
+/* Admin Dropdown Menu Styles */
+.admin-menu-wrapper {
+    position: relative;
+    display: inline-block;
+    z-index: 2000;
+}
+
+/* При наведении на кнопку или само меню показываем меню */
+.admin-menu-wrapper:hover .admin-dropdown-menu,
+.admin-dropdown-menu:hover {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(-1px);
+    pointer-events: auto;
+}
+
+.admin-dropdown-menu {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: linear-gradient(145deg, #31343a, #252830);
+    width: 100%;
+    min-width: max-content;
+    border-radius: 0 0 10px 10px;
+    padding: 0;
+    z-index: 2001;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    transform: translateY(0);
+    transition: visibility 0.2s, opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    margin-top: -1px;
+    border: 1px solid #4a4e56;
+    border-top: none;
+    overflow: hidden;
+}
+
+.admin-dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 0.85rem 1.2rem;
+    color: #e6e8ea;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 14px;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(145deg, #31343a, #252830);
+    justify-content: flex-start;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-dropdown-item:hover {
+    background: linear-gradient(145deg, #45494f, #31343a);
+    color: #ffffff;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.admin-dropdown-item i {
+    margin-right: 12px;
+    width: 20px;
+    text-align: center;
+    color: #b0b4bc;
+    display: inline-block;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    opacity: 0.9;
+}
+
+.admin-dropdown-item:hover i {
+    color: #e6e8ea;
+    transform: scale(1.1) rotate(5deg);
+    opacity: 1;
+}
+
+/* Добавляем эффект свечения при наведении */
+.admin-dropdown-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.admin-dropdown-item:hover::after {
+    opacity: 1;
+}
+
+/* Исправляем выравнивание в подменю */
+.admin-dropdown-submenu > .admin-dropdown-item {
+    justify-content: space-between;
+    padding-right: 10px;
+    text-align: left;
+    display: flex;
+}
+
+.admin-dropdown-submenu > .admin-dropdown-item > span {
+    display: flex;
+    align-items: center;
+}
+
+.admin-dropdown-submenu > .admin-dropdown-item::after {
+    content: '\f054';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 0.7em;
+    margin-left: auto;
+    color: #bdc3c7;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.admin-dropdown-submenu:hover > .admin-dropdown-item::after {
+    color: #ecf0f1;
+    transform: rotate(90deg);
+}
+
+.admin-dropdown-submenu-content {
+    display: none;
+    background: linear-gradient(145deg, #252830, #1d1f24);
+    padding: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+}
+
+.admin-dropdown-submenu-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.2rem 0.75rem 1.2rem;
+    color: #b0b4bc;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    justify-content: flex-start;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-dropdown-submenu-item:last-child {
+    border-bottom: none;
+}
+
+.admin-dropdown-submenu-item:hover {
+    background: linear-gradient(145deg, #31343a, #252830);
+    color: #ffffff;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.admin-dropdown-submenu-item i {
+    margin-right: 12px;
+    width: 20px;
+    text-align: center;
+    color: #8a8e96;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    opacity: 0.9;
+}
+
+.admin-dropdown-submenu-item:hover i {
+    color: #e6e8ea;
+    transform: scale(1.1) rotate(5deg);
+    opacity: 1;
+}
+
+/* Добавляем эффект свечения для подпунктов */
+.admin-dropdown-submenu-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.admin-dropdown-submenu-item:hover::after {
+    opacity: 1;
+}
+
+/* При активном выпадающем меню кнопка должна выглядеть как активная */
+.admin-menu-wrapper:hover .admin-link {
+    background: linear-gradient(145deg, #45494f, #31343a);
+    color: #ffffff;
+}
+
+/* Submenu Styles */
+.admin-dropdown-submenu {
+    position: relative;
+}
+
+.admin-dropdown-submenu:hover .admin-dropdown-submenu-content {
+    display: block;
 } 

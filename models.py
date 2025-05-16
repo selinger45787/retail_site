@@ -81,13 +81,13 @@ class Test(db.Model):
     
     # Связи
     material = db.relationship('Material', backref='tests')
-    questions = db.relationship('Question', backref='test', lazy=True, cascade='all, delete-orphan')
+    questions = db.relationship('TestQuestion', backref='test', lazy=True, cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<Test {self.id} for Material {self.material_id}>'
 
-class Question(db.Model):
-    __tablename__ = 'questions'
+class TestQuestion(db.Model):
+    __tablename__ = 'test_question'
     
     id = db.Column(db.Integer, primary_key=True)
     test_id = db.Column(db.Integer, db.ForeignKey('tests.id'), nullable=False)
@@ -96,21 +96,21 @@ class Question(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Связи
-    answers = db.relationship('Answer', backref='question', lazy=True, cascade='all, delete-orphan')
+    answers = db.relationship('TestAnswer', backref='question', lazy=True, cascade='all, delete-orphan')
     
     def __repr__(self):
-        return f'<Question {self.id}>'
+        return f'<TestQuestion {self.id}>'
 
-class Answer(db.Model):
-    __tablename__ = 'answers'
+class TestAnswer(db.Model):
+    __tablename__ = 'test_answer'
     
     id = db.Column(db.Integer, primary_key=True)
-    question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('test_question.id'), nullable=False)
     text = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     def __repr__(self):
-        return f'<Answer {self.id}>'
+        return f'<TestAnswer {self.id}>'
 
 class TestResult(db.Model):
     __tablename__ = 'test_result'
@@ -123,10 +123,15 @@ class TestResult(db.Model):
     user = db.relationship('User', backref=db.backref('test_results', lazy=True))
     test = db.relationship('Test', backref=db.backref('test_results', lazy=True))
 
-class TestQuestion(db.Model):
-    __tablename__ = 'test_question'
+class TestQuestionResult(db.Model):
+    __tablename__ = 'test_question_result'
     id = db.Column(db.Integer, primary_key=True)
-    test_id = db.Column(db.Integer, db.ForeignKey('tests.id'), nullable=False)
-    question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
-    test = db.relationship('Test', backref=db.backref('test_questions', lazy=True))
-    question = db.relationship('Question', backref=db.backref('test_questions', lazy=True))
+    test_result_id = db.Column(db.Integer, db.ForeignKey('test_result.id'), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('test_question.id'), nullable=False)
+    answer_given = db.Column(db.String(255), nullable=False)
+    is_correct = db.Column(db.Boolean, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    test_result = db.relationship('TestResult', backref=db.backref('question_results', lazy=True))
+    question = db.relationship('TestQuestion', backref=db.backref('question_results', lazy=True))

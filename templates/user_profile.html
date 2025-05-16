@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Особистий кабінет - {{ user.username }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/user_profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="profile-header">
+        <h1>Особистий кабінет користувача</h1>
+    </div>
+    
+    <div class="profile-content">
+        <section id="user-info" class="profile-section">
+            <h2>Информация о пользователе</h2>
+            <div class="user-details">
+                <p><strong>Ім'я користувача:</strong> {{ user.username }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p><strong>Роль:</strong> {{ user.role }}</p>
+                <p><strong>Дата реєстрації:</strong> {{ user.created_at.strftime('%d.%m.%Y') }}</p>
+            </div>
+        </section>
+
+        <section id="test-statistics" class="profile-section">
+            <h2>Статистика тестів</h2>
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <span class="stat-label">Всього тестів пройдено:</span>
+                    <span class="stat-value">{{ total_tests }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Средній бал:</span>
+                    <span class="stat-value">{{ avg_score }}%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Успішні тести:</span>
+                    <span class="stat-value success">{{ passed_tests }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Не пройдено:</span>
+                    <span class="stat-value failure">{{ failed_tests }}</span>
+                </div>
+            </div>
+
+            {% if test_results %}
+            <div class="test-history">
+                <h3>История тестов</h3>
+                <table class="test-table">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Матеріал</th>
+                            <th>Результат</th>
+                            <th>Оцінка</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in test_results %}
+                        <tr>
+                            <td>{{ result.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td>{{ result.test.material.title }}</td>
+                            <td>
+                                {% if result.score >= 80 %}
+                                    <span class="badge bg-success">Відмінно</span>
+                                {% elif result.score >= 60 %}
+                                    <span class="badge bg-warning">Добре</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Треба повторити</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ result.score }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="no-tests">Поки намає пройденних тестів</p>
+            {% endif %}
+        </section>
+
+        {% if current_user.role == 'admin' and all_users_stats %}
+        <section id="all-users-statistics" class="profile-section">
+            <h2>Статистика всех пользователей</h2>
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Користувач</th>
+                        <th>Всього тестів</th>
+                        <th>Средній бал</th>
+                        <th>Пройдено</th>
+                        <th>Не пройдено</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in all_users_stats %}
+                    <tr>
+                        <td>{{ stat.username }}</td>
+                        <td>{{ stat.total_tests }}</td>
+                        <td>{{ stat.avg_score }}%</td>
+                        <td>{{ stat.passed_tests }}</td>
+                        <td>{{ stat.failed_tests }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        <section id="user-settings" class="profile-section">
+            <h2>Налаштування</h2>
+            <div class="settings-options">
+                <button class="btn btn-primary">Змінити пароль</button>
+                <button class="btn btn-secondary">Редагувати профіль</button>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %} 

@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const imagePreview = document.getElementById('imagePreview');
     const addImageBtn = document.getElementById('addImageBtn');
     const additionalImagesContainer = document.getElementById('additionalImagesContainer');
+    const descriptionTextarea = document.getElementById('description');
     let editor = null;
 
     console.log('Элементы формы:', {
@@ -17,12 +18,13 @@ document.addEventListener('DOMContentLoaded', function() {
         imageInput: imageInput,
         imagePreview: imagePreview,
         addImageBtn: addImageBtn,
-        additionalImagesContainer: additionalImagesContainer
+        additionalImagesContainer: additionalImagesContainer,
+        descriptionTextarea: descriptionTextarea
     });
 
     // Инициализация CKEditor
     DecoupledEditor
-        .create(document.querySelector('#description'), {
+        .create(document.querySelector('#editor-container'), {
             language: 'uk',
             toolbar: {
                 items: [
@@ -69,15 +71,16 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('CKEditor успешно инициализирован');
             editor = newEditor;
             
+            // Добавляем панель инструментов в контейнер
             const toolbarContainer = document.querySelector('.toolbar-container');
             toolbarContainer.appendChild(editor.ui.view.toolbar.element);
             
             // Добавляем слушатель изменений
             editor.model.document.on('change:data', () => {
                 const data = editor.getData();
-                console.log('Текущее содержимое редактора:', data);
-                // Обновляем значение textarea
-                document.getElementById('description').value = data;
+                console.log('Содержимое редактора обновлено');
+                // Обновляем скрытое поле textarea с данными для отправки формы
+                descriptionTextarea.value = data;
             });
         })
         .catch(error => {
@@ -96,31 +99,45 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Получаем данные из CKEditor
+        // Получаем данные из CKEditor и обновляем скрытое поле
         const description = editor.getData();
-        console.log('Данные из CKEditor перед отправкой:', description);
+        descriptionTextarea.value = description;
         
         // Проверяем все обязательные поля
-        const title = document.getElementById('title').value;
+        const title = document.getElementById('title').value.trim();
         const categoryId = document.getElementById('category_id').value;
         const brandId = document.getElementById('brand_id') ? document.getElementById('brand_id').value : null;
         
-        console.log('Form data before submit:', {
+        console.log('Данные формы перед отправкой:', {
             title,
             description,
             categoryId,
             brandId
         });
         
-        // Если все поля заполнены, отправляем форму
-        if (title && description && categoryId && (brandId || !document.getElementById('brand_id'))) {
-            // Устанавливаем значение из редактора в textarea
-            document.getElementById('description').value = description;
-            console.log('Submitting form with description:', document.getElementById('description').value);
-            form.submit();
-        } else {
-            alert('Будь ласка, заповніть всі обов\'язкові поля');
+        // Проверяем заполнение всех обязательных полей
+        if (!title) {
+            alert('Будь ласка, введіть назву матеріалу');
+            return;
         }
+        
+        if (!description) {
+            alert('Будь ласка, введіть опис матеріалу');
+            return;
+        }
+        
+        if (!categoryId) {
+            alert('Будь ласка, виберіть категорію');
+            return;
+        }
+        
+        if (document.getElementById('brand_id') && !brandId) {
+            alert('Будь ласка, виберіть бренд');
+            return;
+        }
+        
+        // Если все поля заполнены, отправляем форму
+        form.submit();
     });
 
     // Предпросмотр изображения
@@ -139,17 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Добавление нового поля для изображения
     if (addImageBtn) {
-        console.log('Кнопка добавления изображения найдена');
-        
-        // Проверяем, что обработчик события добавляется
-        addImageBtn.onclick = function(e) {
-            console.log('Кнопка нажата (onclick)');
-            e.preventDefault();
-            e.stopPropagation();
-        };
-
         addImageBtn.addEventListener('click', function(e) {
-            console.log('Кнопка нажата (addEventListener)');
             e.preventDefault();
             e.stopPropagation();
             
@@ -164,20 +171,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
             
-            console.log('Создан новый элемент:', newInput);
             additionalImagesContainer.appendChild(newInput);
-            console.log('Элемент добавлен в контейнер');
 
             // Добавляем обработчик для кнопки удаления
             const removeBtn = newInput.querySelector('.remove-image');
             if (removeBtn) {
                 removeBtn.addEventListener('click', function() {
-                    console.log('Кнопка удаления нажата');
                     newInput.remove();
                 });
             }
         });
-    } else {
-        console.error('Кнопка добавления изображения не найдена');
     }
 }); 

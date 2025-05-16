@@ -1,10 +1,16 @@
 {% extends "base.html" %}
 
+{% block title %}Реєстрація{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/register.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card">
+            <div class="card register-card">
                 <div class="card-header">
                     <h2 class="text-center">Реєстрація</h2>
                 </div>
@@ -74,14 +80,6 @@
         </div>
     </div>
 </div>
-
-<style>
-.alert {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    font-size: 0.875rem;
-}
-</style>
 {% endblock %}
 
 {% block auth_buttons %}{% endblock %}

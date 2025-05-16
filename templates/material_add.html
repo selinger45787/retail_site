@@ -40,8 +40,9 @@
 
         <div class="form-group mb-3">
             <label for="description">Опис</label>
-            <textarea class="form-control" id="description" name="description" style="display: none;"></textarea>
-            <div id="editor"></div>
+            <div class="toolbar-container"></div>
+            <div id="editor-container"></div>
+            <textarea class="form-control" id="description" name="description" style="display: none;" required></textarea>
         </div>
 
         <div class="form-group mb-3">
@@ -70,46 +71,6 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Подключаем CKEditor 5 -->
-<script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/classic/ckeditor.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/decoupled-document/ckeditor.js"></script>
 <script src="{{ url_for('static', filename='js/material_add.js') }}" defer></script>
-<script>
-    ClassicEditor
-        .create(document.querySelector('#editor'), {
-            toolbar: {
-                items: [
-                    'heading',
-                    '|',
-                    'bold',
-                    'italic',
-                    'link',
-                    'bulletedList',
-                    'numberedList',
-                    '|',
-                    'outdent',
-                    'indent',
-                    '|',
-                    'blockQuote',
-                    'insertTable',
-                    'undo',
-                    'redo'
-                ]
-            },
-            language: 'uk',
-            table: {
-                contentToolbar: [
-                    'tableColumn',
-                    'tableRow',
-                    'mergeTableCells'
-                ]
-            }
-        })
-        .then(editor => {
-            console.log('Editor initialized', editor);
-            window.editor = editor;
-        })
-        .catch(error => {
-            console.error('Error initializing editor:', error);
-        });
-</script>
 {% endblock %} 

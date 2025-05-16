@@ -25,7 +25,37 @@
             </div>
             <div class="auth-buttons">
                 {% if current_user.is_authenticated %}
-                    <span class="user-info">{{ current_user.username }}</span>
+                    <a href="{{ url_for('user_profile', user_id=current_user.id) }}" class="user-info">{{ current_user.username }}</a>
+                    {% if current_user.role == 'admin' %}
+                    <div class="admin-menu-wrapper">
+                        <a href="{{ url_for('admin_dashboard') }}" class="admin-link">Панель администратора</a>
+                        <div class="admin-dropdown-menu">
+                            <a href="{{ url_for('admin_dashboard') }}" class="admin-dropdown-item">
+                                <i class="fas fa-chart-bar"></i>
+                                Статистика
+                            </a>
+                            
+                            <div class="admin-dropdown-submenu">
+                                <a href="#" class="admin-dropdown-item">
+                                    <span>
+                                        <i class="fas fa-cogs"></i>
+                                        Управление
+                                    </span>
+                                </a>
+                                <div class="admin-dropdown-submenu-content">
+                                    <a href="{{ url_for('add_material') }}" class="admin-dropdown-submenu-item">
+                                        <i class="fas fa-file-alt"></i>
+                                        Добавить материал
+                                    </a>
+                                    <a href="#" onclick="openModal('addBrandModal'); return false;" class="admin-dropdown-submenu-item">
+                                        <i class="fas fa-tags"></i>
+                                        Добавить бренд
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                     <a href="{{ url_for('logout') }}" class="logout-btn">Вийти</a>
                 {% else %}
                     <button onclick="showLoginModal()" class="login-btn">Увійти</button>
@@ -37,19 +67,6 @@
     <div class="layout">
         <div class="sidebar-container">
             <nav class="sidebar">
-                {% if current_user.is_authenticated %}
-                <div class="admin-actions">
-                    <button onclick="openModal('addBrandModal')" class="admin-action-btn">
-                        <img src="{{ url_for('static', filename='img/icons/add.svg') }}" alt="Додати бренд" class="admin-action-icon">
-                        Додати бренд
-                    </button>
-                    <a href="{{ url_for('add_material') }}" class="admin-action-btn">
-                        <img src="{{ url_for('static', filename='img/icons/add.svg') }}" alt="Додати матеріал" class="admin-action-icon">
-                        Додати матеріал
-                    </a>
-                </div>
-                {% endif %}
-
                 <div class="menu-item">
                     <div class="menu-title">
                         <img src="{{ url_for('static', filename='img/sidebar_left/brand.svg') }}" alt="Бренди" class="menu-icon">
@@ -58,10 +75,10 @@
                     <div class="submenu">
                         {% for brand in brands %}
                         <a href="{{ url_for('brand', brand_id=brand.id) }}" class="submenu-item">
-                            {% if brand.image_path %}
+                            {% if brand.image_path and brand.image_path != 'default.png' %}
                                 <img src="{{ url_for('static', filename='img/brands/' + brand.image_path) }}" alt="{{ brand.name }}" class="submenu-icon">
                             {% else %}
-                                <img src="{{ url_for('static', filename='img/brands/default.png') }}" alt="{{ brand.name }}" class="submenu-icon">
+                                <div class="submenu-icon default-icon">{{ brand.name[0] }}</div>
                             {% endif %}
                             {{ brand.name }}
                         </a>
@@ -118,19 +135,6 @@
                     {% endif %}
                 {% endwith %}
                 
-                <!-- Модальное окно подтверждения удаления -->
-                <div id="deleteMaterialModal" class="modal">
-                    <div class="modal-box">
-                        <button class="close" onclick="closeModal('deleteMaterialModal')">&times;</button>
-                        <h2>Підтвердження видалення</h2>
-                        <p>Ви впевнені, що хочете видалити цей матеріал?</p>
-                        <div class="modal-actions">
-                            <button type="button" class="btn btn-secondary" onclick="closeModal('deleteMaterialModal')">Скасувати</button>
-                            <button type="button" class="btn btn-danger" onclick="confirmDeleteMaterial()">Видалити</button>
-                        </div>
-                    </div>
-                </div>
-
                 {% block content %}{% endblock %}
             </div>
         </main>
@@ -157,7 +161,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно добавления бренда -->
+    <!-- Модальное окно для добавления бренда -->
     <div id="addBrandModal" class="modal">
         <div class="modal-box">
             <button class="close" onclick="closeModal('addBrandModal')">&times;</button>
@@ -165,16 +169,32 @@
             <form id="addBrandForm" method="POST" action="{{ url_for('add_brand') }}" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
-                    <label for="brand_name">Назва бренду</label>
-                    <input type="text" id="brand_name" name="name" required placeholder="Введіть назву бренду" class="form-control">
-                    <div id="brand-error" class="error-text"></div>
+                    <label for="brandName">Назва бренду:</label>
+                    <input type="text" id="brandName" name="name" required>
                 </div>
                 <div class="form-group">
-                    <label for="brand_image">Логотип</label>
-                    <input type="file" id="brand_image" name="image" accept="image/*" class="form-control">
-                    <small class="form-text text-muted">Рекомендований розмір: 200x200 пікселів</small>
+                    <label for="brandImage">Зображення бренду:</label>
+                    <input type="file" id="brandImage" name="image" accept="image/*">
                 </div>
-                <button type="submit" class="submit-btn">Додати бренд</button>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addBrandModal')">Скасувати</button>
+                    <button type="submit" class="btn btn-primary">Додати</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления материала -->
+    <div id="deleteMaterialModal" class="modal">
+        <div class="modal-box">
+            <h3>Підтвердження видалення</h3>
+            <p>Ви впевнені, що хочете видалити цей матеріал? Цю дію неможливо скасувати.</p>
+            <form id="deleteMaterialForm" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('deleteMaterialModal')">Скасувати</button>
+                    <button type="submit" class="btn btn-danger">Видалити</button>
+                </div>
             </form>
         </div>
     </div>
@@ -184,18 +204,8 @@
     <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/sidebarLeft.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/modals.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/base.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/adminSidebar.js') }}" defer></script>
     {% block scripts %}{% endblock %}
-
-    <script>
-        console.log('Base template loaded');
-        window.addEventListener('load', function() {
-            console.log('All resources loaded');
-            // Инициализация всех компонентов Bootstrap
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
-        });
-    </script>
 </body>
 </html> 

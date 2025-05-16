@@ -5,139 +5,36 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style/test_material.css') }}">
-<style>
-    .material-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-    }
-
-    .admin-controls {
-        display: flex;
-        gap: 1rem;
-    }
-
-    .material-content {
-        margin-top: 2rem;
-    }
-
-    .material-image img {
-        max-width: 100%;
-        height: auto;
-        border-radius: 8px;
-        margin-bottom: 2rem;
-    }
-
-    .material-description {
-        line-height: 1.6;
-        margin-bottom: 2rem;
-    }
-
-    .additional-images {
-        margin-top: 3rem;
-    }
-
-    .image-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .image-item img {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-        border-radius: 8px;
-    }
-
-    .test-actions {
-        margin-top: 1rem;
-        padding: 1rem;
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .test-actions .badge {
-        font-size: 1rem;
-        padding: 0.5rem 1rem;
-    }
-
-    .test-actions .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-    }
-
-    .btn-icon {
-        width: 20px;
-        height: 20px;
-    }
-
-    .material-actions {
-        margin-top: 20px;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
-
-    .test-actions {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        margin-left: auto;
-    }
-
-    .badge {
-        font-size: 1em;
-        padding: 8px 12px;
-    }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/material.css') }}">
 {% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style/test_material.css') }}">
-
 <div class="material-header">
     <div class="material-header-content">
         <h1>{{ material.brand.name }}</h1>
         <div class="material-actions">
             {% if current_user.is_authenticated and current_user.role == 'admin' %}
-            <a href="{{ url_for('edit_material', material_id=material.id) }}" class="btn btn-primary">
+            <a href="{{ url_for('edit_material', material_id=material.id) }}" class="material-btn btn-primary">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
                 Редагувати матеріал
             </a>
-            <button type="button" class="btn btn-danger" onclick="deleteMaterial({{ material.id }})">
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Видалити матеріал
+            <button onclick="showDeleteModal({{ material.id }})" class="material-btn btn-danger">
+                <i class="fas fa-trash"></i> Видалити матеріал
             </button>
             {% endif %}
             
             <!-- Тестовые действия -->
-            <div class="test-actions">
-                {% if material.tests|length > 0 %}
-                    <a href="{{ url_for('take_test', material_id=material.id) }}" class="btn btn-primary">Пройти тест</a>
-                    {% if current_user.is_authenticated and current_user.role == 'admin' %}
-                        <a href="{{ url_for('edit_test', material_id=material.id) }}" class="btn btn-warning">Редагувати тест</a>
-                    {% endif %}
-                {% elif current_user.is_authenticated and current_user.role == 'admin' %}
-                    <a href="{{ url_for('create_test', material_id=material.id) }}" class="btn btn-success">Створити тест</a>
+            {% if material.tests|length > 0 %}
+                <a href="{{ url_for('take_test', material_id=material.id) }}" class="material-btn btn-primary">Пройти тест</a>
+                {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                    <a href="{{ url_for('edit_test', material_id=material.id) }}" class="material-btn btn-warning">Редагувати тест</a>
                 {% endif %}
-            </div>
+            {% elif current_user.is_authenticated and current_user.role == 'admin' %}
+                <a href="{{ url_for('create_test', material_id=material.id) }}" class="material-btn btn-success">Створити тест</a>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -145,7 +42,7 @@
 <div class="container mt-4">
     <!-- Кнопка возврата -->
     <div class="back-button-container mb-4">
-        <a href="{{ url_for('brand', brand_id=material.brand.id) }}" class="btn btn-back">
+        <a href="{{ url_for('brand', brand_id=material.brand.id) }}" class="material-btn btn-back">
             <svg class="back-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -167,7 +64,7 @@
         <!-- Галерея миниатюр -->
         <div class="thumbnail-gallery">
             <!-- Главное изображение в галерее -->
-            <div class="thumbnail-item active" onclick="changeMainImage(this)">
+            <div class="thumbnail-item active" data-src="{{ url_for('static', filename='img/materials/' + (material.image_path or 'default.png')) }}">
                 <img src="{{ url_for('static', filename='img/materials/' + (material.image_path or 'default.png')) }}" 
                      alt="{{ material.title }}" 
                      class="img-thumbnail">
@@ -176,7 +73,7 @@
             <!-- Дополнительные изображения -->
             {% if material.images %}
                 {% for image in material.images %}
-                <div class="thumbnail-item" onclick="changeMainImage(this)">
+                <div class="thumbnail-item" data-src="{{ url_for('static', filename='img/materials/' + image.image_path) }}">
                     <img src="{{ url_for('static', filename='img/materials/' + image.image_path) }}" 
                          alt="{{ material.title }}" 
                          class="img-thumbnail">
@@ -211,46 +108,91 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div id="deleteMaterialModal" class="modal">
+    <div class="modal-box">
+        <h3>Підтвердження видалення</h3>
+        <p>Ви впевнені, що хочете видалити цей матеріал? Цю дію неможливо скасувати.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('deleteMaterialModal')">Скасувати</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Видалити</button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/material.js') }}"></script>
+<script src="{{ url_for('static', filename='js/modals.js') }}"></script>
 <script>
-    function changeMainImage(element) {
-        // Убираем активный класс у всех миниатюр
-        document.querySelectorAll('.thumbnail-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        
-        // Добавляем активный класс выбранной миниатюре
-        element.classList.add('active');
-        
-        // Обновляем главное изображение
-        const mainImage = document.getElementById('mainImage');
-        const thumbnailImage = element.querySelector('img');
-        mainImage.src = thumbnailImage.src;
-    }
+let materialToDelete = null;
 
-    function deleteMaterial(materialId) {
-        if (confirm('Ви впевнені, що хочете видалити цей матеріал?')) {
-            fetch(`/material/${materialId}/delete`, {
+// Показать модальное окно удаления
+function showDeleteModal(materialId) {
+    materialToDelete = materialId;
+    const modal = document.getElementById('deleteMaterialModal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+// Закрыть модальное окно
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        if (modalId === 'deleteMaterialModal') {
+            materialToDelete = null;
+        }
+    }, 300);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация кнопки подтверждения удаления
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (!materialToDelete) return;
+            
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            fetch(`/material/${materialToDelete}/delete`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-Token': '{{ csrf_token() }}'
-                }
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    csrf_token: csrfToken
+                })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     window.location.href = data.redirect;
                 } else {
+                    closeModal('deleteMaterialModal');
                     alert(data.error || 'Помилка при видаленні матеріалу');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
+                closeModal('deleteMaterialModal');
                 alert('Помилка при видаленні матеріалу');
             });
-        }
+        });
     }
+
+    // Закрытие модального окна при клике вне его содержимого
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal(modal.id);
+            }
+        });
+    });
+});
 </script>
 {% endblock %} 

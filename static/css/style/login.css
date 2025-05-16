@@ -1,1 +1,61 @@
-/* Styles for login.html */ 
+/* Styles for login.html */
+
+.alert {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.login-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.login-card .card-header {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.login-card .card-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.login-card .card-body {
+    padding: 20px;
+}
+
+.login-card .form-label {
+    font-weight: 500;
+    color: #333;
+}
+
+.login-card .form-control {
+    border-radius: 5px;
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+.login-card .btn-primary {
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.login-card .card-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #eee;
+    padding: 15px;
+}
+
+.login-card .card-footer a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.login-card .card-footer a:hover {
+    text-decoration: underline;
+} 
