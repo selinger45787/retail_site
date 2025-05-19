@@ -526,81 +526,67 @@ def login_modal():
 @app.route('/material/<int:material_id>/create_test', methods=['GET', 'POST'])
 @login_required
 def create_test(material_id):
-    if current_user.role != 'admin':
-        flash('У вас немає прав для створення тестів', 'error')
-        return redirect(url_for('view_material', material_id=material_id))
-    
     material = Material.query.get_or_404(material_id)
+    
+    if current_user.role != 'admin':
+        flash('У вас немає прав для створення тестів', 'danger')
+        return redirect(url_for('view_material', material_id=material_id))
     
     if request.method == 'POST':
         try:
-            logger.info("=== Начало создания теста ===")
-            logger.info(f"Form data: {request.form}")
+            # Проверяем минимальное количество вопросов
+            questions = request.form.getlist('questions[]')
+            if len(questions) < 5:
+                flash('Тест повинен містити мінімум 5 питань', 'danger')
+                return render_template('test_create.html', material=material)
             
             # Создаем новый тест
             test = Test(material_id=material_id)
             db.session.add(test)
             db.session.flush()  # Получаем ID теста
-            logger.info(f"Создан тест с ID: {test.id}")
             
-            # Обрабатываем вопросы
-            questions_data = request.form.getlist('questions[]')
+            # Проверяем уникальность ответов для каждого вопроса
             correct_answers = request.form.getlist('correct_answers[]')
             wrong_answers_1 = request.form.getlist('wrong_answers_1[]')
             wrong_answers_2 = request.form.getlist('wrong_answers_2[]')
             wrong_answers_3 = request.form.getlist('wrong_answers_3[]')
             
-            logger.info(f"Получено вопросов: {len(questions_data)}")
-            logger.info(f"Вопросы: {questions_data}")
-            logger.info(f"Правильные ответы: {correct_answers}")
-            logger.info(f"Неправильные ответы 1: {wrong_answers_1}")
-            logger.info(f"Неправильные ответы 2: {wrong_answers_2}")
-            logger.info(f"Неправильные ответы 3: {wrong_answers_3}")
+            for i in range(len(questions)):
+                answers = [
+                    correct_answers[i],
+                    wrong_answers_1[i],
+                    wrong_answers_2[i],
+                    wrong_answers_3[i]
+                ]
+                if len(set(answers)) != len(answers):
+                    flash('Всі відповіді на одне питання повинні бути унікальними', 'danger')
+                    return render_template('test_create.html', material=material)
+                
+                # Создаем вопрос
+                question = TestQuestion(
+                    test_id=test.id,
+                    question_text=questions[i],
+                    correct_answer=correct_answers[i]
+                )
+                db.session.add(question)
+                db.session.flush()  # Получаем ID вопроса
+                
+                # Создаем неправильные ответы
+                wrong_answers = [
+                    TestAnswer(question_id=question.id, answer_text=wrong_answers_1[i]),
+                    TestAnswer(question_id=question.id, answer_text=wrong_answers_2[i]),
+                    TestAnswer(question_id=question.id, answer_text=wrong_answers_3[i])
+                ]
+                db.session.add_all(wrong_answers)
             
-            for i in range(len(questions_data)):
-                if questions_data[i].strip():  # Проверяем, что вопрос не пустой
-                    logger.info(f"Обработка вопроса {i+1}")
-                    # Создаем вопрос
-                    question = TestQuestion(
-                        test_id=test.id,
-                        text=questions_data[i],
-                        correct_answer=correct_answers[i]
-                    )
-                    db.session.add(question)
-                    db.session.flush()  # Получаем ID вопроса
-                    logger.info(f"Создан вопрос с ID: {question.id}")
-                    logger.info(f"Текст вопроса: {question.text}")
-                    logger.info(f"Правильный ответ: {question.correct_answer}")
-                    
-                    # Создаем все ответы (правильный и неправильные)
-                    all_answers = [
-                        TestAnswer(question_id=question.id, text=correct_answers[i]),  # Правильный ответ
-                        TestAnswer(question_id=question.id, text=wrong_answers_1[i]),
-                        TestAnswer(question_id=question.id, text=wrong_answers_2[i]),
-                        TestAnswer(question_id=question.id, text=wrong_answers_3[i])
-                    ]
-                    db.session.add_all(all_answers)
-                    logger.info(f"Добавлены все ответы для вопроса {question.id}:")
-                    for ans in all_answers:
-                        logger.info(f"- {ans.text}")
-            
-            try:
-                db.session.commit()
-                logger.info("=== Тест успешно сохранен в базу данных ===")
-                flash('Тест успішно створено', 'success')
-                return redirect(url_for('view_material', material_id=material_id))
-            except Exception as commit_error:
-                logger.error(f"Ошибка при сохранении в базу данных: {str(commit_error)}")
-                logger.error(f"Тип ошибки: {type(commit_error)}")
-                raise
+            db.session.commit()
+            flash('Тест успішно створено', 'success')
+            return redirect(url_for('view_material', material_id=material_id))
             
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Error creating test: {str(e)}")
-            logger.error(f"Error type: {type(e)}")
-            logger.error(f"Error details: {e.__dict__}")
-            flash('Помилка при створенні тесту', 'error')
-            return redirect(url_for('view_material', material_id=material_id))
+            flash('Помилка при створенні тесту: ' + str(e), 'danger')
+            return render_template('test_create.html', material=material)
     
     return render_template('test_create.html', material=material)
 
@@ -1167,6 +1153,34 @@ def serve_static(filename):
 def handle_error(error):
     logger.error(f"Произошла ошибка: {str(error)}")
     return render_template('error.html', error=error), 500
+
+@app.route('/material/image/<int:image_id>/delete', methods=['POST'])
+@login_required
+def delete_material_image(image_id):
+    if not current_user.is_authenticated or current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        image = MaterialImage.query.get_or_404(image_id)
+        
+        # Проверяем, принадлежит ли изображение материалу
+        if not image.material:
+            return jsonify({'error': 'Image not found'}), 404
+        
+        # Удаляем файл изображения
+        image_path = os.path.join(app.static_folder, 'img', 'materials', image.image_path)
+        if os.path.exists(image_path):
+            os.remove(image_path)
+        
+        # Удаляем запись из базы данных
+        db.session.delete(image)
+        db.session.commit()
+        
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error deleting material image: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

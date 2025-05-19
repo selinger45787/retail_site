@@ -1,0 +1,60 @@
+.test-table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.test-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+}
+
+.test-table th,
+.test-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.test-table th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa;
+    font-weight: 600;
+    z-index: 1;
+}
+
+.test-table tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.test-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.test-table tbody tr:active {
+    background-color: #e9ecef;
+}
+
+/* Custom scrollbar styling */
+.test-table-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.test-table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.test-table-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.test-table-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+} 

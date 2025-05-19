@@ -32,4 +32,37 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    // Обработка кликов по миниатюрам
+    const thumbnails = document.querySelectorAll('.thumbnail-item');
+    const mainImage = document.getElementById('mainImage');
+
+    thumbnails.forEach(thumbnail => {
+        thumbnail.addEventListener('click', function() {
+            // Убираем активный класс у всех миниатюр
+            thumbnails.forEach(t => t.classList.remove('active'));
+            // Добавляем активный класс к выбранной миниатюре
+            this.classList.add('active');
+            
+            // Обновляем главное изображение с анимацией
+            const newSrc = this.getAttribute('data-src');
+            if (mainImage && newSrc) {
+                // Добавляем класс для анимации исчезновения
+                mainImage.classList.add('fade-out');
+                
+                // После завершения анимации исчезновения меняем изображение
+                setTimeout(() => {
+                    mainImage.src = newSrc;
+                    // Добавляем класс для анимации появления
+                    mainImage.classList.remove('fade-out');
+                    mainImage.classList.add('fade-in');
+                    
+                    // Убираем класс анимации появления после её завершения
+                    setTimeout(() => {
+                        mainImage.classList.remove('fade-in');
+                    }, 300);
+                }, 300);
+            }
+        });
+    });
 });

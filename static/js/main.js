@@ -244,13 +244,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Обработка отправки форм
 document.addEventListener('DOMContentLoaded', function() {
-    const forms = document.querySelectorAll('form');
+    const forms = document.querySelectorAll('form:not(#testForm)');
     forms.forEach(form => {
         form.addEventListener('submit', function(e) {
             const submitButton = form.querySelector('button[type="submit"]');
-            if (submitButton) {
+            if (submitButton && !submitButton.hasAttribute('data-no-spinner')) {
+                const originalButtonText = submitButton.innerHTML;
                 submitButton.disabled = true;
                 submitButton.innerHTML = '<span class="spinner"></span> Завантаження...';
+                
+                // Восстанавливаем кнопку после отправки формы
+                setTimeout(() => {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                }, 1000);
             }
         });
     });

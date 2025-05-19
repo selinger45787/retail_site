@@ -12,11 +12,62 @@
 <div class="container mt-4">
     <h1>Створення тесту для "{{ material.title }}"</h1>
     
+    <div id="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+    
     <form method="POST" id="testForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
         <div id="questionsContainer">
-            <!-- Здесь будут вопросы -->
+            {% if request.method == 'POST' %}
+                {% for i in range(request.form.getlist('questions[]')|length) %}
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0">Питання {{ i + 1 }}</h5>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            <div class="mb-3">
+                                <label for="question_{{ i }}" class="form-label">Питання</label>
+                                <input type="text" class="form-control" id="question_{{ i }}" 
+                                       name="questions[]" value="{{ request.form.getlist('questions[]')[i] }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="correct_{{ i }}" class="form-label">Правильна відповідь</label>
+                                <input type="text" class="form-control" id="correct_{{ i }}" 
+                                       name="correct_answers[]" value="{{ request.form.getlist('correct_answers[]')[i] }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="wrong1_{{ i }}" class="form-label">Неправильна відповідь 1</label>
+                                <input type="text" class="form-control" id="wrong1_{{ i }}" 
+                                       name="wrong_answers_1[]" value="{{ request.form.getlist('wrong_answers_1[]')[i] }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="wrong2_{{ i }}" class="form-label">Неправильна відповідь 2</label>
+                                <input type="text" class="form-control" id="wrong2_{{ i }}" 
+                                       name="wrong_answers_2[]" value="{{ request.form.getlist('wrong_answers_2[]')[i] }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="wrong3_{{ i }}" class="form-label">Неправильна відповідь 3</label>
+                                <input type="text" class="form-control" id="wrong3_{{ i }}" 
+                                       name="wrong_answers_3[]" value="{{ request.form.getlist('wrong_answers_3[]')[i] }}" required>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
         </div>
         
         <div class="mb-4">

@@ -3,83 +3,90 @@
 {% block title %}Редагування матеріалу{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style/material_edit.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/material_add.css') }}">
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="mb-0">Редагування матеріалу</h2>
+    <h2>Редагування матеріалу</h2>
+    <form id="editMaterialForm" method="POST" action="{{ url_for('edit_material', material_id=material.id) }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-group mb-3">
+            <label for="title">Назва матеріалу</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ material.title }}" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="category_id">Категорія</label>
+            <select class="form-control" id="category_id" name="category_id" required>
+                <option value="">Виберіть категорію</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if category.id == material.category_id %}selected{% endif %}>
+                    {{ category.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="description">Опис</label>
+            <div class="toolbar-container"></div>
+            <div id="editor-container"></div>
+            <textarea class="form-control" id="description" name="description" style="display: none;" required>{{ material.description }}</textarea>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="image">Головне зображення</label>
+            {% if material.image_path %}
+            <div class="current-image mb-2">
+                <img src="{{ url_for('static', filename='img/materials/' + material.image_path) }}" 
+                     alt="Current image" 
+                     class="img-thumbnail" 
+                     style="max-height: 200px;">
+            </div>
+            {% endif %}
+            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+            <div id="imagePreview"></div>
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Додаткові зображення</label>
+            {% if material.images %}
+            <div class="current-images mb-2">
+                {% for image in material.images %}
+                <div class="additional-image-item">
+                    <img src="{{ url_for('static', filename='img/materials/' + image.image_path) }}" 
+                         alt="Additional image" 
+                         class="img-thumbnail">
+                    <button type="button" class="btn btn-danger btn-sm remove-image" data-image-id="{{ image.id }}">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data" class="edit-material-form">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Назва</label>
-                            <input type="text" class="form-control" id="title" name="title" value="{{ material.title }}" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="category_id" class="form-label">Категорія</label>
-                            <select class="form-select" id="category_id" name="category_id" required>
-                                {% for category in categories %}
-                                <option value="{{ category.id }}" {% if category.id == material.category_id %}selected{% endif %}>
-                                    {{ category.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Опис</label>
-                            <textarea class="form-control" id="description" name="description" rows="5" required>{{ material.description }}</textarea>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="image" class="form-label">Головне зображення</label>
-                            {% if material.image_path %}
-                            <div class="current-image mb-2">
-                                <img src="{{ url_for('static', filename='img/materials/' + material.image_path) }}" 
-                                     alt="Current image" 
-                                     class="img-thumbnail" 
-                                     style="max-height: 200px;">
-                            </div>
-                            {% endif %}
-                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
-                            <small class="form-text text-muted">Залиште порожнім, щоб залишити поточне зображення</small>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="additional_images" class="form-label">Додаткові зображення</label>
-                            {% if material.images %}
-                            <div class="current-images mb-2">
-                                {% for image in material.images %}
-                                <img src="{{ url_for('static', filename='img/materials/' + image.image_path) }}" 
-                                     alt="Additional image" 
-                                     class="img-thumbnail" 
-                                     style="max-height: 100px; margin-right: 10px;">
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                            <input type="file" class="form-control" id="additional_images" name="additional_images" accept="image/*" multiple>
-                            <small class="form-text text-muted">Можна вибрати кілька зображень</small>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ url_for('view_material', material_id=material.id) }}" class="btn btn-secondary">Скасувати</a>
-                            <button type="submit" class="btn btn-primary">Зберегти зміни</button>
-                        </div>
-                    </form>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div id="additionalImagesContainer">
+                <div class="additional-image-input mb-2">
+                    <div class="input-group">
+                        <input type="file" class="form-control" name="additional_images" accept="image/*">
+                    </div>
                 </div>
             </div>
+            <button type="button" class="btn btn-add-image mt-2" id="addImageBtn">
+                <i class="fas fa-plus"></i>
+            </button>
         </div>
-    </div>
+
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('view_material', material_id=material.id) }}" class="btn btn-secondary">Скасувати</a>
+            <button type="submit" class="btn btn-primary">Зберегти зміни</button>
+        </div>
+    </form>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.ckeditor.com/ckeditor5/40.1.0/decoupled-document/ckeditor.js"></script>
 <script src="{{ url_for('static', filename='js/material_edit.js') }}" defer></script>
 {% endblock %} 
