@@ -55,7 +55,12 @@ ALLOWED_ATTRIBUTES = {
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    try:
+        return User.query.get(int(user_id))
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error loading user: {str(e)}")
+        return None
 
 @app.context_processor
 def inject_user_and_brands():
@@ -68,6 +73,7 @@ def inject_user_and_brands():
             'categories': categories
         }
     except Exception as e:
+        db.session.rollback()
         logger.error(f"Error loading brands: {str(e)}")
         return {
             'current_user': current_user,
@@ -924,222 +930,233 @@ def user_profile(user_id):
 @app.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
-    # Проверяем, что пользователь администратор
-    if current_user.role != 'admin':
-        flash('У вас нет прав для доступа к этой странице', 'error')
+    try:
+        if current_user.role != 'admin':
+            flash('У вас нет прав для доступа к этой странице', 'error')
+            return redirect(url_for('index'))
+        
+        # Получаем всех пользователей
+        users = User.query.all()
+        
+        # Получаем все результаты тестов
+        test_results = TestResult.query.order_by(TestResult.created_at.desc()).all()
+        
+        # Общая статистика
+        total_attempts = len(test_results)
+        avg_score = sum(r.score for r in test_results) / total_attempts if total_attempts > 0 else 0
+        passed_tests = sum(1 for r in test_results if r.score >= 80)
+        success_rate = (passed_tests / total_attempts * 100) if total_attempts > 0 else 0
+        
+        # Статистика по времени (последние 30 дней)
+        from datetime import datetime, timedelta
+        
+        time_data = {}
+        today = datetime.utcnow().date()
+        for i in range(30):
+            date = today - timedelta(days=i)
+            date_str = date.strftime('%Y-%m-%d')
+            time_data[date_str] = {
+                'count': 0,
+                'sum_score': 0,
+                'avg_score': 0
+            }
+        
+        for result in test_results:
+            date_str = result.created_at.strftime('%Y-%m-%d')
+            if date_str in time_data:
+                time_data[date_str]['count'] += 1
+                time_data[date_str]['sum_score'] += result.score
+        
+        # Рассчитываем средний балл для каждого дня
+        for date_str in time_data:
+            if time_data[date_str]['count'] > 0:
+                time_data[date_str]['avg_score'] = time_data[date_str]['sum_score'] / time_data[date_str]['count']
+        
+        # Превращаем словарь в список для шаблона, сортируем по дате
+        chart_data = [{'date': date, 'value': data['avg_score']} for date, data in time_data.items()]
+        chart_data.sort(key=lambda x: x['date'])
+        
+        # Проблемные тесты (с низким средним баллом)
+        tests_stats = {}
+        for result in test_results:
+            test_id = result.test_id
+            if test_id not in tests_stats:
+                test = Test.query.get(test_id)
+                if test:
+                    tests_stats[test_id] = {
+                        'test': test,
+                        'scores': [],
+                        'avg_score': 0
+                    }
+            
+            if test_id in tests_stats:
+                tests_stats[test_id]['scores'].append(result.score)
+        
+        # Рассчитываем средний балл для каждого теста
+        for test_id in tests_stats:
+            scores = tests_stats[test_id]['scores']
+            tests_stats[test_id]['avg_score'] = sum(scores) / len(scores) if scores else 0
+        
+        # Сортируем тесты по среднему баллу (по возрастанию)
+        problematic_tests = sorted(
+            [{'test': data['test'], 'avg_score': data['avg_score']} for test_id, data in tests_stats.items()],
+            key=lambda x: x['avg_score']
+        )[:5]  # Топ-5 проблемных тестов
+        
+        # Проблемные пользователи (с низким средним баллом)
+        users_stats = {}
+        for result in test_results:
+            user_id = result.user_id
+            if user_id not in users_stats:
+                user = User.query.get(user_id)
+                if user:
+                    users_stats[user_id] = {
+                        'user': user,
+                        'scores': [],
+                        'avg_score': 0
+                    }
+            
+            if user_id in users_stats:
+                users_stats[user_id]['scores'].append(result.score)
+        
+        # Рассчитываем средний балл для каждого пользователя
+        for user_id in users_stats:
+            scores = users_stats[user_id]['scores']
+            users_stats[user_id]['avg_score'] = sum(scores) / len(scores) if scores else 0
+        
+        # Сортируем пользователей по среднему баллу (по возрастанию)
+        problematic_users = sorted(
+            [{'user': data['user'], 'avg_score': data['avg_score']} for user_id, data in users_stats.items()],
+            key=lambda x: x['avg_score']
+        )[:5]  # Топ-5 проблемных пользователей
+        
+        return render_template('admin_dashboard.html',
+                             users=users,
+                             total_attempts=total_attempts,
+                             avg_score=round(avg_score, 1),
+                             success_rate=round(success_rate, 1),
+                             chart_data=chart_data,
+                             problematic_tests=problematic_tests,
+                             problematic_users=problematic_users)
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error in admin_dashboard: {str(e)}")
+        flash('Произошла ошибка при загрузке панели администратора', 'error')
         return redirect(url_for('index'))
-    
-    # Получаем всех пользователей
-    users = User.query.all()
-    
-    # Получаем все результаты тестов
-    test_results = TestResult.query.order_by(TestResult.created_at.desc()).all()
-    
-    # Общая статистика
-    total_attempts = len(test_results)
-    avg_score = sum(r.score for r in test_results) / total_attempts if total_attempts > 0 else 0
-    passed_tests = sum(1 for r in test_results if r.score >= 80)
-    success_rate = (passed_tests / total_attempts * 100) if total_attempts > 0 else 0
-    
-    # Статистика по времени (последние 30 дней)
-    from datetime import datetime, timedelta
-    
-    time_data = {}
-    today = datetime.utcnow().date()
-    for i in range(30):
-        date = today - timedelta(days=i)
-        date_str = date.strftime('%Y-%m-%d')
-        time_data[date_str] = {
-            'count': 0,
-            'sum_score': 0,
-            'avg_score': 0
-        }
-    
-    for result in test_results:
-        date_str = result.created_at.strftime('%Y-%m-%d')
-        if date_str in time_data:
-            time_data[date_str]['count'] += 1
-            time_data[date_str]['sum_score'] += result.score
-    
-    # Рассчитываем средний балл для каждого дня
-    for date_str in time_data:
-        if time_data[date_str]['count'] > 0:
-            time_data[date_str]['avg_score'] = time_data[date_str]['sum_score'] / time_data[date_str]['count']
-    
-    # Превращаем словарь в список для шаблона, сортируем по дате
-    chart_data = [{'date': date, 'value': data['avg_score']} for date, data in time_data.items()]
-    chart_data.sort(key=lambda x: x['date'])
-    
-    # Проблемные тесты (с низким средним баллом)
-    tests_stats = {}
-    for result in test_results:
-        test_id = result.test_id
-        if test_id not in tests_stats:
-            test = Test.query.get(test_id)
-            if test:
-                tests_stats[test_id] = {
-                    'test': test,
-                    'scores': [],
-                    'avg_score': 0
-                }
-        
-        if test_id in tests_stats:
-            tests_stats[test_id]['scores'].append(result.score)
-    
-    # Рассчитываем средний балл для каждого теста
-    for test_id in tests_stats:
-        scores = tests_stats[test_id]['scores']
-        tests_stats[test_id]['avg_score'] = sum(scores) / len(scores) if scores else 0
-    
-    # Сортируем тесты по среднему баллу (по возрастанию)
-    problematic_tests = sorted(
-        [{'test': data['test'], 'avg_score': data['avg_score']} for test_id, data in tests_stats.items()],
-        key=lambda x: x['avg_score']
-    )[:5]  # Топ-5 проблемных тестов
-    
-    # Проблемные пользователи (с низким средним баллом)
-    users_stats = {}
-    for result in test_results:
-        user_id = result.user_id
-        if user_id not in users_stats:
-            user = User.query.get(user_id)
-            if user:
-                users_stats[user_id] = {
-                    'user': user,
-                    'scores': [],
-                    'avg_score': 0
-                }
-        
-        if user_id in users_stats:
-            users_stats[user_id]['scores'].append(result.score)
-    
-    # Рассчитываем средний балл для каждого пользователя
-    for user_id in users_stats:
-        scores = users_stats[user_id]['scores']
-        users_stats[user_id]['avg_score'] = sum(scores) / len(scores) if scores else 0
-    
-    # Сортируем пользователей по среднему баллу (по возрастанию)
-    problematic_users = sorted(
-        [{'user': data['user'], 'avg_score': data['avg_score']} for user_id, data in users_stats.items()],
-        key=lambda x: x['avg_score']
-    )[:5]  # Топ-5 проблемных пользователей
-    
-    return render_template('admin_dashboard.html',
-                         users=users,
-                         total_attempts=total_attempts,
-                         avg_score=round(avg_score, 1),
-                         success_rate=round(success_rate, 1),
-                         chart_data=chart_data,
-                         problematic_tests=problematic_tests,
-                         problematic_users=problematic_users)
 
 @app.route('/api/admin/user_tests/<int:user_id>')
 @login_required
 def api_user_tests(user_id):
-    # Проверяем, что пользователь администратор
-    if current_user.role != 'admin':
-        return jsonify({'error': 'Недостаточно прав'}), 403
-    
-    user = User.query.get_or_404(user_id)
-    
-    # Получаем результаты тестов пользователя, сгруппированные по бренду
-    brands_data = {}
-    
-    # Получаем все результаты тестов пользователя
-    user_results = TestResult.query.filter_by(user_id=user_id).all()
-    
-    for result in user_results:
-        test = Test.query.get(result.test_id)
-        if not test:
-            continue
+    try:
+        if current_user.role != 'admin':
+            return jsonify({'error': 'Недостаточно прав'}), 403
+        
+        user = User.query.get_or_404(user_id)
+        logger.info(f"Getting test results for user {user.username}")
+        
+        # Получаем результаты тестов пользователя, сгруппированные по бренду
+        brands_data = {}
+        
+        # Получаем все результаты тестов пользователя
+        user_results = TestResult.query.filter_by(user_id=user_id).all()
+        logger.info(f"Found {len(user_results)} test results for user")
+        
+        for result in user_results:
+            test = Test.query.get(result.test_id)
+            if not test:
+                logger.warning(f"Test {result.test_id} not found")
+                continue
+                
+            material = Material.query.get(test.material_id)
+            if not material:
+                logger.warning(f"Material for test {test.id} not found")
+                continue
+                
+            brand = Brand.query.get(material.brand_id)
+            if not brand:
+                logger.warning(f"Brand for material {material.id} not found")
+                continue
             
-        material = Material.query.get(test.material_id)
-        if not material:
-            continue
+            logger.info(f"Processing result for brand: {brand.name}, material: {material.title}")
             
-        brand = Brand.query.get(material.brand_id)
-        if not brand:
-            continue
-        
-        # Добавляем бренд, если его еще нет
-        if brand.id not in brands_data:
-            brands_data[brand.id] = {
-                'id': brand.id,
-                'name': brand.name,
-                'materials': {}
+            # Добавляем бренд, если его еще нет
+            if brand.id not in brands_data:
+                brands_data[brand.id] = {
+                    'id': brand.id,
+                    'name': brand.name,
+                    'materials': {}
+                }
+            
+            # Добавляем материал, если его еще нет
+            if material.id not in brands_data[brand.id]['materials']:
+                brands_data[brand.id]['materials'][material.id] = {
+                    'id': material.id,
+                    'title': material.title,
+                    'attempts': []
+                }
+            
+            # Добавляем информацию о прохождении теста
+            correct_answers = int(result.score * result.max_score / 100)
+            wrong_answers = result.max_score - correct_answers
+            
+            # Получаем детальную информацию по ответам на вопросы
+            question_details = []
+            test_question_results = TestQuestionResult.query.filter_by(test_result_id=result.id).all()
+            
+            for question_result in test_question_results:
+                question = TestQuestion.query.get(question_result.question_id)
+                if question:
+                    question_details.append({
+                        'question_text': question.text,
+                        'user_answer': question_result.answer_given,
+                        'correct_answer': question.correct_answer,
+                        'is_correct': question_result.is_correct
+                    })
+            
+            attempt_data = {
+                'id': result.id,
+                'date': result.created_at.strftime('%d.%m.%Y %H:%M'),
+                'score': result.score,
+                'correct_answers': correct_answers,
+                'wrong_answers': wrong_answers,
+                'question_details': question_details
             }
+            
+            brands_data[brand.id]['materials'][material.id]['attempts'].append(attempt_data)
+            logger.info(f"Added attempt with score {result.score}% to material {material.title}")
         
-        # Добавляем материал, если его еще нет
-        if material.id not in brands_data[brand.id]['materials']:
-            brands_data[brand.id]['materials'][material.id] = {
-                'id': material.id,
-                'title': material.title,
-                'tests': {}
-            }
-        
-        # Добавляем тест, если его еще нет
-        if test.id not in brands_data[brand.id]['materials'][material.id]['tests']:
-            brands_data[brand.id]['materials'][material.id]['tests'][test.id] = {
-                'id': test.id,
-                'attempts': []
-            }
-        
-        # Добавляем информацию о прохождении теста
-        correct_answers = int(result.score * result.max_score / 100)
-        wrong_answers = result.max_score - correct_answers
-        
-        # Получаем детальную информацию по ответам на вопросы
-        question_details = []
-        test_question_results = TestQuestionResult.query.filter_by(test_result_id=result.id).all()
-        
-        for question_result in test_question_results:
-            question = TestQuestion.query.get(question_result.question_id)
-            if question:
-                question_details.append({
-                    'question_text': question.text,
-                    'user_answer': question_result.answer_given,
-                    'correct_answer': question.correct_answer,
-                    'is_correct': question_result.is_correct
+        # Преобразуем словари в списки для удобства использования в шаблоне
+        brands_list = []
+        for brand_id, brand_data in brands_data.items():
+            materials_list = []
+            for material_id, material_data in brand_data['materials'].items():
+                materials_list.append({
+                    'id': material_id,
+                    'title': material_data['title'],
+                    'attempts': material_data['attempts']
                 })
-        
-        brands_data[brand.id]['materials'][material.id]['tests'][test.id]['attempts'].append({
-            'id': result.id,
-            'date': result.created_at.strftime('%d.%m.%Y %H:%M'),
-            'score': result.score,
-            'correct_answers': correct_answers,
-            'wrong_answers': wrong_answers,
-            'question_details': question_details
-        })
-    
-    # Преобразуем словари в списки для удобства использования в шаблоне
-    brands_list = []
-    for brand_id, brand_data in brands_data.items():
-        materials_list = []
-        for material_id, material_data in brand_data['materials'].items():
-            tests_list = []
-            for test_id, test_data in material_data['tests'].items():
-                tests_list.append({
-                    'id': test_id,
-                    'attempts': test_data['attempts']
-                })
-            materials_list.append({
-                'id': material_id,
-                'title': material_data['title'],
-                'tests': tests_list
+            brands_list.append({
+                'id': brand_id,
+                'name': brand_data['name'],
+                'materials': materials_list
             })
-        brands_list.append({
-            'id': brand_id,
-            'name': brand_data['name'],
-            'materials': materials_list
-        })
-    
-    return jsonify({
-        'user': {
-            'id': user.id,
-            'username': user.username
-        },
-        'brands': brands_list
-    })
+        
+        response_data = {
+            'user': {
+                'id': user.id,
+                'username': user.username
+            },
+            'brands': brands_list
+        }
+        
+        logger.info(f"Final response structure: {response_data}")
+        return jsonify(response_data)
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error in api_user_tests: {str(e)}")
+        logger.error(f"Error details: {traceback.format_exc()}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/static/<path:filename>')
 def serve_static(filename):

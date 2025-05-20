@@ -588,4 +588,289 @@
     text-align: center;
     color: #6c757d;
     padding: 15px;
+}
+
+/* Стили для брендов и материалов */
+.brand-section {
+    margin: 10px 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.brand-header {
+    margin: 0;
+    padding: 15px;
+    background: #f8f9fa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 1.1em;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.brand-header:hover {
+    background: #f0f0f0;
+}
+
+.brand-content {
+    padding: 15px;
+    display: none;
+}
+
+.material-section {
+    margin: 10px 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.material-header {
+    margin: 0;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 1em;
+    color: #444;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.material-header:hover {
+    background: #f0f0f0;
+}
+
+.material-content {
+    padding: 15px;
+    display: none;
+}
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.results-table th,
+.results-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.results-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+.results-table tr:hover {
+    background: #f8f9fa;
+}
+
+/* Иконки */
+.fas {
+    margin-right: 8px;
+    transition: transform 0.2s;
+}
+
+.fa-chevron-right {
+    transform: rotate(0deg);
+}
+
+.fa-chevron-down {
+    transform: rotate(90deg);
+}
+
+/* Состояния загрузки и ошибок */
+.loading-indicator {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.error {
+    color: #dc3545;
+    padding: 10px;
+    text-align: center;
+}
+
+.no-data {
+    color: #6c757d;
+    padding: 10px;
+    text-align: center;
+    font-style: italic;
+}
+
+/* Анимации */
+.brand-content,
+.material-content {
+    transition: all 0.3s ease;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .results-table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .brand-header,
+    .material-header {
+        padding: 10px;
+    }
+    
+    .brand-content,
+    .material-content {
+        padding: 10px;
+    }
+}
+
+/* Стили для попыток прохождения теста */
+.attempt-section {
+    margin: 10px 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.attempt-header {
+    padding: 12px 15px;
+    background: #f8f9fa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 1em;
+    color: #444;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.attempt-header:hover {
+    background: #f0f0f0;
+}
+
+.attempt-content {
+    padding: 15px;
+    display: none;
+}
+
+.attempt-summary {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.attempt-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.attempt-score {
+    margin-left: auto;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.score-high {
+    background-color: rgba(40, 167, 69, 0.15);
+    color: #1e7e34;
+}
+
+.score-medium {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #d39e00;
+}
+
+.score-low {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #bd2130;
+}
+
+.attempt-correct {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.attempt-wrong {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+/* Стили для таблицы вопросов */
+.questions-section {
+    margin-top: 15px;
+}
+
+.questions-section h5 {
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 1em;
+}
+
+.questions-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+}
+
+.questions-table th,
+.questions-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.questions-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+.correct-answer {
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.wrong-answer {
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+.text-success {
+    color: #28a745;
+}
+
+.text-danger {
+    color: #dc3545;
+}
+
+.no-details {
+    color: #6c757d;
+    font-style: italic;
+    text-align: center;
+    padding: 10px;
+}
+
+/* Анимации */
+.attempt-content {
+    transition: all 0.3s ease;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .attempt-stats {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .attempt-score {
+        margin-left: 0;
+    }
+    
+    .questions-table {
+        display: block;
+        overflow-x: auto;
+    }
 } 
