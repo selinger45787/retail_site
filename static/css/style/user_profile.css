@@ -176,4 +176,34 @@
     background: #f8f9fa;
     border-radius: 8px;
     margin-top: 1rem;
+}
+
+.test-row {
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.test-row:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transform: translateX(5px);
+    box-shadow: -2px 0 0 #007bff;
+}
+
+.test-row td {
+    color: #495057;
+    position: relative;
+}
+
+.test-row td:first-child::before {
+    content: '→';
+    position: absolute;
+    left: -20px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    color: #007bff;
+}
+
+.test-row:hover td:first-child::before {
+    opacity: 1;
 } 

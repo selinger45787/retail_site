@@ -18,6 +18,38 @@ function showFlashMessage(message, type = 'danger') {
     }, 5000);
 }
 
+function checkDuplicateQuestions() {
+    const questions = document.querySelectorAll('[name="questions[]"]');
+    const questionValues = Array.from(questions).map(q => q.value.trim().toLowerCase());
+    const duplicates = new Set();
+    
+    // Находим дубликаты
+    questionValues.forEach((value, index) => {
+        if (value && questionValues.indexOf(value) !== questionValues.lastIndexOf(value)) {
+            duplicates.add(value);
+        }
+    });
+    
+    // Сбрасываем предыдущие стили
+    questions.forEach(q => {
+        q.classList.remove('is-invalid');
+        q.classList.remove('duplicate-question');
+    });
+    
+    // Подсвечиваем дубликаты
+    if (duplicates.size > 0) {
+        questions.forEach(q => {
+            if (duplicates.has(q.value.trim().toLowerCase())) {
+                q.classList.add('is-invalid');
+                q.classList.add('duplicate-question');
+            }
+        });
+        return false;
+    }
+    
+    return true;
+}
+
 function checkDuplicateAnswers(questionDiv) {
     const answers = [
         questionDiv.querySelector('[name="correct_answers[]"]').value.trim(),
@@ -39,6 +71,12 @@ function validateForm() {
         return false;
     }
     
+    // Проверка дубликатов вопросов
+    if (!checkDuplicateQuestions()) {
+        showFlashMessage('Знайдено дублікати питань. Будь ласка, перевірте червоні поля.');
+        return false;
+    }
+    
     // Проверка уникальности ответов для каждого вопроса
     for (const question of questions) {
         if (!checkDuplicateAnswers(question)) {
@@ -51,43 +89,43 @@ function validateForm() {
 }
 
 function addQuestion() {
-    const container = document.getElementById('questionsContainer');
+    const container = document.getElementById('questions-container');
     const questionCount = container.querySelectorAll('.card').length;
     
     const questionDiv = document.createElement('div');
-    questionDiv.className = 'card mb-4';
+    questionDiv.className = 'card mb-3 question-card';
     questionDiv.innerHTML = `
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="card-title mb-0">Питання ${questionCount + 1}</h5>
+                <h5 class="card-title">Питання ${questionCount + 1}</h5>
                 <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
+            
             <div class="mb-3">
-                <label for="question_${questionCount}" class="form-label">Питання</label>
-                <input type="text" class="form-control" id="question_${questionCount}" 
-                       name="questions[]" required>
+                <label class="form-label">Питання</label>
+                <input type="text" class="form-control" name="questions[]" required>
             </div>
+            
             <div class="mb-3">
-                <label for="correct_${questionCount}" class="form-label">Правильна відповідь</label>
-                <input type="text" class="form-control" id="correct_${questionCount}" 
-                       name="correct_answers[]" required>
+                <label class="form-label">Правильна відповідь</label>
+                <input type="text" class="form-control" name="correct_answers[]" required>
             </div>
+            
             <div class="mb-3">
-                <label for="wrong1_${questionCount}" class="form-label">Неправильна відповідь 1</label>
-                <input type="text" class="form-control" id="wrong1_${questionCount}" 
-                       name="wrong_answers_1[]" required>
+                <label class="form-label">Неправильна відповідь 1</label>
+                <input type="text" class="form-control" name="wrong_answers_1[]" required>
             </div>
+            
             <div class="mb-3">
-                <label for="wrong2_${questionCount}" class="form-label">Неправильна відповідь 2</label>
-                <input type="text" class="form-control" id="wrong2_${questionCount}" 
-                       name="wrong_answers_2[]" required>
+                <label class="form-label">Неправильна відповідь 2</label>
+                <input type="text" class="form-control" name="wrong_answers_2[]" required>
             </div>
+            
             <div class="mb-3">
-                <label for="wrong3_${questionCount}" class="form-label">Неправильна відповідь 3</label>
-                <input type="text" class="form-control" id="wrong3_${questionCount}" 
-                       name="wrong_answers_3[]" required>
+                <label class="form-label">Неправильна відповідь 3</label>
+                <input type="text" class="form-control" name="wrong_answers_3[]" required>
             </div>
         </div>
     `;

@@ -4,121 +4,137 @@
     Редагування тесту - {{ material.title }}
 {% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/test_create.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <h1>Редагування тесту для "{{ material.title }}"</h1>
     
-    <form method="POST" id="testForm">
+    <div id="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+    
+    <form id="testForm" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        
-        <div id="questionsContainer">
-            {% for question in questions %}
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="card-title mb-0">Питання {{ loop.index }}</h5>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                    <div class="mb-3">
-                        <label for="question_{{ loop.index0 }}" class="form-label">Питання</label>
-                        <input type="text" class="form-control" id="question_{{ loop.index0 }}" 
-                               name="questions[]" value="{{ question.text }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="correct_{{ loop.index0 }}" class="form-label">Правильна відповідь</label>
-                        <input type="text" class="form-control" id="correct_{{ loop.index0 }}" 
-                               name="correct_answers[]" value="{{ question.correct_answer }}" required>
-                    </div>
-                    {% set wrong_answers = question.answers|selectattr('text', 'ne', question.correct_answer)|list %}
-                    <div class="mb-3">
-                        <label for="wrong1_{{ loop.index0 }}" class="form-label">Неправильна відповідь 1</label>
-                        <input type="text" class="form-control" id="wrong1_{{ loop.index0 }}" 
-                               name="wrong_answers_1[]" value="{{ wrong_answers[0].text if wrong_answers|length > 0 else '' }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="wrong2_{{ loop.index0 }}" class="form-label">Неправильна відповідь 2</label>
-                        <input type="text" class="form-control" id="wrong2_{{ loop.index0 }}" 
-                               name="wrong_answers_2[]" value="{{ wrong_answers[1].text if wrong_answers|length > 1 else '' }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="wrong3_{{ loop.index0 }}" class="form-label">Неправильна відповідь 3</label>
-                        <input type="text" class="form-control" id="wrong3_{{ loop.index0 }}" 
-                               name="wrong_answers_3[]" value="{{ wrong_answers[2].text if wrong_answers|length > 2 else '' }}" required>
+        <div id="questions-container">
+            {% if questions_data %}
+                {% for i in range(questions_data|length) %}
+                <div class="card mb-3 question-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title">Питання {{ i + 1 }}</h5>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Питання</label>
+                            <input type="text" class="form-control" name="questions[]" required
+                                   value="{{ questions_data[i] }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Правильна відповідь</label>
+                            <input type="text" class="form-control" name="correct_answers[]" required
+                                   value="{{ correct_answers[i] }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Неправильна відповідь 1</label>
+                            <input type="text" class="form-control" name="wrong_answers_1[]" required
+                                   value="{{ wrong_answers_1[i] }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Неправильна відповідь 2</label>
+                            <input type="text" class="form-control" name="wrong_answers_2[]" required
+                                   value="{{ wrong_answers_2[i] }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Неправильна відповідь 3</label>
+                            <input type="text" class="form-control" name="wrong_answers_3[]" required
+                                   value="{{ wrong_answers_3[i] }}">
+                        </div>
                     </div>
                 </div>
-            </div>
-            {% endfor %}
+                {% endfor %}
+            {% else %}
+                {% for question in questions %}
+                <div class="card mb-3 question-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title">Питання {{ loop.index }}</h5>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Питання</label>
+                            <input type="text" class="form-control" name="questions[]" required
+                                   value="{{ question.text }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Правильна відповідь</label>
+                            <input type="text" class="form-control" name="correct_answers[]" required
+                                   value="{{ question.correct_answer }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Неправильна відповідь 1</label>
+                            <input type="text" class="form-control" name="wrong_answers_1[]" required
+                                   value="{{ question.answers[0].text if question.answers|length > 0 else '' }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Неправильна відповідь 2</label>
+                            <input type="text" class="form-control" name="wrong_answers_2[]" required
+                                   value="{{ question.answers[1].text if question.answers|length > 1 else '' }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Неправильна відповідь 3</label>
+                            <input type="text" class="form-control" name="wrong_answers_3[]" required
+                                   value="{{ question.answers[2].text if question.answers|length > 2 else '' }}">
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
         </div>
         
-        <div class="mb-4">
-            <button type="button" class="btn btn-success" onclick="addQuestion()">
+        <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-primary" onclick="addQuestion()">
                 <i class="fas fa-plus"></i> Додати питання
             </button>
-        </div>
-        
-        <div class="d-flex justify-content-between">
-            <a href="{{ url_for('view_material', material_id=material.id) }}" class="btn btn-secondary">Скасувати</a>
-            <button type="submit" class="btn btn-primary">Зберегти зміни</button>
+            
+            <div>
+                <a href="{{ url_for('view_material', material_id=material.id) }}" class="btn btn-secondary">
+                    Скасувати
+                </a>
+                <button type="submit" class="btn btn-success">
+                    Зберегти тест
+                </button>
+            </div>
         </div>
     </form>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script>
-let questionCount = {{ questions|length }};
-
-function addQuestion() {
-    const container = document.getElementById('questionsContainer');
-    const questionDiv = document.createElement('div');
-    questionDiv.className = 'card mb-4';
-    questionDiv.innerHTML = `
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="card-title mb-0">Питання ${questionCount + 1}</h5>
-                <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(this)">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-            <div class="mb-3">
-                <label for="question_${questionCount}" class="form-label">Питання</label>
-                <input type="text" class="form-control" id="question_${questionCount}" name="questions[]" required>
-            </div>
-            <div class="mb-3">
-                <label for="correct_${questionCount}" class="form-label">Правильна відповідь</label>
-                <input type="text" class="form-control" id="correct_${questionCount}" name="correct_answers[]" required>
-            </div>
-            <div class="mb-3">
-                <label for="wrong1_${questionCount}" class="form-label">Неправильна відповідь 1</label>
-                <input type="text" class="form-control" id="wrong1_${questionCount}" name="wrong_answers_1[]" required>
-            </div>
-            <div class="mb-3">
-                <label for="wrong2_${questionCount}" class="form-label">Неправильна відповідь 2</label>
-                <input type="text" class="form-control" id="wrong2_${questionCount}" name="wrong_answers_2[]" required>
-            </div>
-            <div class="mb-3">
-                <label for="wrong3_${questionCount}" class="form-label">Неправильна відповідь 3</label>
-                <input type="text" class="form-control" id="wrong3_${questionCount}" name="wrong_answers_3[]" required>
-            </div>
-        </div>
-    `;
-    container.appendChild(questionDiv);
-    questionCount++;
-}
-
-function removeQuestion(button) {
-    const questionDiv = button.closest('.card');
-    questionDiv.remove();
-    updateQuestionNumbers();
-}
-
-function updateQuestionNumbers() {
-    const questions = document.querySelectorAll('.card');
-    questions.forEach((question, index) => {
-        question.querySelector('.card-title').textContent = `Питання ${index + 1}`;
-    });
-}
-</script>
+<script src="{{ url_for('static', filename='js/test_create.js') }}"></script>
 {% endblock %} 

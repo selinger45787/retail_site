@@ -170,7 +170,17 @@ function expandUserRow(userId) {
                                     ${material.title}
                                 </h4>
                                 <div class="material-content" style="display: none;">
-                    `;
+                                    <table class="test-history">
+                                        <thead>
+                                            <tr>
+                                                <th>Дата</th>
+                                                <th>Балл</th>
+                                                <th>Правильных</th>
+                                                <th>Неправильных</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                        `;
                         
                         material.attempts.forEach(attempt => {
                             // Определяем класс для оценки
@@ -182,54 +192,18 @@ function expandUserRow(userId) {
                             }
                             
                             html += `
-                                <div class="attempt-section">
-                                    <div class="attempt-header" onclick="toggleAccordion(this)">
-                                        <i class="fas fa-chevron-right"></i>
-                                        <span>Тест от ${attempt.date}</span>
-                                        <span class="attempt-score ${scoreClass}">${attempt.score}%</span>
-                                    </div>
-                                    <div class="attempt-content" style="display: none;">
-                                        <div class="attempt-summary">
-                                            <div class="attempt-stats">
-                                                <span class="attempt-correct">Правильных: ${attempt.correct_answers}</span>
-                                                <span class="attempt-wrong">Неправильных: ${attempt.wrong_answers}</span>
-                                            </div>
-                                        </div>
-                                        ${attempt.question_details && attempt.question_details.length > 0 ? `
-                                            <div class="questions-section">
-                                                <h5>Детали ответов:</h5>
-                                                <table class="questions-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Вопрос</th>
-                                                            <th>Ответ пользователя</th>
-                                                            <th>Правильный ответ</th>
-                                                            <th>Результат</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        ${attempt.question_details.map(question => `
-                                                            <tr class="${question.is_correct ? 'correct-answer' : 'wrong-answer'}">
-                                                                <td>${question.question_text}</td>
-                                                                <td>${question.user_answer}</td>
-                                                                <td>${question.correct_answer}</td>
-                                                                <td>
-                                                                    ${question.is_correct 
-                                                                        ? '<i class="fas fa-check text-success"></i>' 
-                                                                        : '<i class="fas fa-times text-danger"></i>'}
-                                                                </td>
-                                                            </tr>
-                                                        `).join('')}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        ` : '<p class="no-details">Детальная информация по вопросам недоступна</p>'}
-                                    </div>
-                                </div>
+                                <tr class="test-row" onclick="window.location.href='/view_material/${material.id}'" style="cursor: pointer;">
+                                    <td>${attempt.date}</td>
+                                    <td class="${scoreClass}">${attempt.score}%</td>
+                                    <td>${attempt.correct_answers}</td>
+                                    <td>${attempt.wrong_answers}</td>
+                                </tr>
                             `;
                         });
                         
                         html += `
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         `;

@@ -58,7 +58,7 @@
                     </thead>
                     <tbody>
                         {% for result in test_results %}
-                        <tr>
+                        <tr class="test-row" data-material-id="{{ result.test.material.id }}" style="cursor: pointer;">
                             <td>{{ result.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
                             <td>{{ result.test.material.title }}</td>
                             <td>
@@ -118,4 +118,19 @@
         </section>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const testRows = document.querySelectorAll('.test-row');
+    
+    testRows.forEach(row => {
+        row.addEventListener('click', function() {
+            const materialId = this.dataset.materialId;
+            window.location.href = `/view_material/${materialId}`;
+        });
+    });
+});
+</script>
 {% endblock %} 

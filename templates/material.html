@@ -9,6 +9,7 @@
 {% endblock %}
 
 {% block content %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="material-header">
     <div class="material-header-content">
         <h1>{{ material.brand.name }}</h1>

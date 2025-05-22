@@ -89,13 +89,13 @@ class TestQuestion(db.Model):
     __tablename__ = 'test_question'
     
     id = db.Column(db.Integer, primary_key=True)
-    test_id = db.Column(db.Integer, db.ForeignKey('tests.id'), nullable=False)
+    test_id = db.Column(db.Integer, db.ForeignKey('tests.id', ondelete='CASCADE'), nullable=False)
     text = db.Column(db.Text, nullable=False)
     correct_answer = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Связи
-    answers = db.relationship('TestAnswer', backref='question', lazy=True, cascade='all, delete-orphan')
+    # Обновляем связь с ответами
+    answers = db.relationship('TestAnswer', back_populates='question', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<TestQuestion {self.id}>'
@@ -104,9 +104,12 @@ class TestAnswer(db.Model):
     __tablename__ = 'test_answer'
     
     id = db.Column(db.Integer, primary_key=True)
-    question_id = db.Column(db.Integer, db.ForeignKey('test_question.id'), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('test_question.id', ondelete='CASCADE'), nullable=False)
     text = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Добавляем явную связь с вопросом
+    question = db.relationship('TestQuestion', back_populates='answers')
     
     def __repr__(self):
         return f'<TestAnswer {self.id}>'

@@ -64,4 +64,19 @@
         padding: 0.4rem 1rem;
         font-size: 0.9rem;
     }
+}
+
+.duplicate-question {
+    border-color: #dc3545 !important;
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.duplicate-question:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.duplicate-question::placeholder {
+    color: rgba(220, 53, 69, 0.5);
 } 
