@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const addUserForm = document.getElementById('addUserForm');
     const userSearch = document.getElementById('userSearch');
+    const sortBy = document.getElementById('sortBy');
     
     // Добавляем обработчик для фильтрации
     if (userSearch) {
@@ -54,6 +55,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error:', error);
                 showError('Произошла ошибка при создании пользователя');
             });
+        });
+    }
+
+    // Добавляем обработчик для сортировки
+    if (sortBy) {
+        sortBy.addEventListener('change', function() {
+            sortTable(this.value);
         });
     }
 
@@ -297,4 +305,52 @@ function loadUserStats(userId) {
         .catch(error => {
             console.error('Error loading user stats:', error);
         });
+}
+
+// Функция сортировки таблицы
+function sortTable(sortType) {
+    const tbody = document.querySelector('.users-table tbody');
+    const rows = Array.from(tbody.querySelectorAll('.user-row'));
+    
+    rows.sort((a, b) => {
+        let valueA, valueB;
+        
+        switch(sortType) {
+            case 'name':
+                valueA = a.querySelector('td:first-child').textContent.toLowerCase();
+                valueB = b.querySelector('td:first-child').textContent.toLowerCase();
+                return valueA.localeCompare(valueB);
+                
+            case 'tests':
+                valueA = parseInt(a.querySelector('td:nth-child(2)').textContent) || 0;
+                valueB = parseInt(b.querySelector('td:nth-child(2)').textContent) || 0;
+                return valueB - valueA; // Сортировка по убыванию
+                
+            case 'score':
+                valueA = parseInt(a.querySelector('td:nth-child(3)').textContent) || 0;
+                valueB = parseInt(b.querySelector('td:nth-child(3)').textContent) || 0;
+                return valueB - valueA; // Сортировка по убыванию
+                
+            default:
+                return 0;
+        }
+    });
+    
+    // Перемещаем строки с деталями вместе с основными строками
+    rows.forEach((row, index) => {
+        const userId = row.dataset.userId;
+        const detailsRow = document.getElementById(`user-details-${userId}`);
+        
+        // Удаляем старые строки
+        tbody.removeChild(row);
+        if (detailsRow) {
+            tbody.removeChild(detailsRow);
+        }
+        
+        // Вставляем строки в новом порядке
+        tbody.insertBefore(row, tbody.children[index * 2]);
+        if (detailsRow) {
+            tbody.insertBefore(detailsRow, tbody.children[index * 2 + 1]);
+        }
+    });
 } 
