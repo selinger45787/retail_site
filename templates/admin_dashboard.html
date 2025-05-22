@@ -135,7 +135,6 @@
                 <thead>
                     <tr>
                         <th>Пользователь</th>
-                        <th>Email</th>
                         <th>Количество тестов</th>
                         <th>Средний балл</th>
                         <th>Действия</th>
@@ -145,7 +144,6 @@
                     {% for user in users %}
                     <tr class="user-row" data-user-id="{{ user.id }}">
                         <td>{{ user.username }}</td>
-                        <td>{{ user.email }}</td>
                         <td class="text-center">-</td>
                         <td class="text-center">-</td>
                         <td class="actions">

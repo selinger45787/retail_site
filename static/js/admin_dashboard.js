@@ -1,5 +1,32 @@
 document.addEventListener('DOMContentLoaded', function() {
     const addUserForm = document.getElementById('addUserForm');
+    const userSearch = document.getElementById('userSearch');
+    
+    // Добавляем обработчик для фильтрации
+    if (userSearch) {
+        userSearch.addEventListener('input', function() {
+            const searchText = this.value.toLowerCase();
+            const userRows = document.querySelectorAll('.user-row');
+            
+            userRows.forEach(row => {
+                const userName = row.querySelector('td:first-child').textContent.toLowerCase();
+                const detailsRow = document.getElementById(`user-details-${row.dataset.userId}`);
+                
+                if (userName.includes(searchText)) {
+                    row.style.display = '';
+                    if (detailsRow) {
+                        // Only show details row if it was previously expanded
+                        detailsRow.style.display = detailsRow.classList.contains('expanded') ? '' : 'none';
+                    }
+                } else {
+                    row.style.display = 'none';
+                    if (detailsRow) {
+                        detailsRow.style.display = 'none';
+                    }
+                }
+            });
+        });
+    }
     
     if (addUserForm) {
         addUserForm.addEventListener('submit', function(e) {
@@ -29,6 +56,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // Загружаем статистику для всех пользователей
+    const userRows = document.querySelectorAll('.user-row');
+    userRows.forEach(row => {
+        const userId = row.dataset.userId;
+        loadUserStats(userId);
+    });
 });
 
 function showError(message) {
@@ -49,9 +83,11 @@ function expandUserRow(userId) {
     const loadingIndicator = detailsRow.querySelector('.loading-indicator');
     const userDetails = detailsRow.querySelector('.user-details');
     const expandButton = document.querySelector(`.user-row[data-user-id="${userId}"] .btn-expand i`);
+    const userRow = document.querySelector(`.user-row[data-user-id="${userId}"]`);
     
     if (detailsRow.classList.contains('expanded')) {
         detailsRow.classList.remove('expanded');
+        detailsRow.style.display = 'none';
         expandButton.classList.remove('fa-chevron-up');
         expandButton.classList.add('fa-chevron-down');
         return;
@@ -60,6 +96,7 @@ function expandUserRow(userId) {
     loadingIndicator.style.display = 'flex';
     userDetails.style.display = 'none';
     detailsRow.classList.add('expanded');
+    detailsRow.style.display = '';
     expandButton.classList.remove('fa-chevron-down');
     expandButton.classList.add('fa-chevron-up');
     
@@ -73,6 +110,34 @@ function expandUserRow(userId) {
             console.log('Received data:', data);
             loadingIndicator.style.display = 'none';
             userDetails.style.display = 'block';
+            
+            // Обновляем количество тестов и средний балл
+            let totalTests = 0;
+            let totalScore = 0;
+            let attemptsCount = 0;
+            
+            if (data.brands && data.brands.length > 0) {
+                data.brands.forEach(brand => {
+                    brand.materials.forEach(material => {
+                        if (material.attempts) {
+                            attemptsCount += material.attempts.length;
+                            material.attempts.forEach(attempt => {
+                                totalScore += attempt.score;
+                                totalTests++;
+                            });
+                        }
+                    });
+                });
+            }
+            
+            const avgScore = totalTests > 0 ? Math.round(totalScore / totalTests) : 0;
+            
+            // Обновляем ячейки в таблице
+            const testCountCell = userRow.querySelector('td:nth-child(2)');
+            const avgScoreCell = userRow.querySelector('td:nth-child(3)');
+            
+            testCountCell.textContent = attemptsCount;
+            avgScoreCell.textContent = avgScore + '%';
             
             let html = '';
             
@@ -193,4 +258,43 @@ function toggleAccordion(header) {
         chevron.classList.remove('fa-chevron-down');
         chevron.classList.add('fa-chevron-right');
     }
+}
+
+function loadUserStats(userId) {
+    fetch(`/api/admin/user_tests/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            const userRow = document.querySelector(`.user-row[data-user-id="${userId}"]`);
+            if (!userRow) return;
+
+            let totalTests = 0;
+            let totalScore = 0;
+            let attemptsCount = 0;
+            
+            if (data.brands && data.brands.length > 0) {
+                data.brands.forEach(brand => {
+                    brand.materials.forEach(material => {
+                        if (material.attempts) {
+                            attemptsCount += material.attempts.length;
+                            material.attempts.forEach(attempt => {
+                                totalScore += attempt.score;
+                                totalTests++;
+                            });
+                        }
+                    });
+                });
+            }
+            
+            const avgScore = totalTests > 0 ? Math.round(totalScore / totalTests) : 0;
+            
+            // Обновляем ячейки в таблице
+            const testCountCell = userRow.querySelector('td:nth-child(2)');
+            const avgScoreCell = userRow.querySelector('td:nth-child(3)');
+            
+            testCountCell.textContent = attemptsCount;
+            avgScoreCell.textContent = avgScore + '%';
+        })
+        .catch(error => {
+            console.error('Error loading user stats:', error);
+        });
 } 
