@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Управление назначениями тестов{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Управление назначениями тестов</h1>
+    
+    <!-- Форма назначения теста -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Назначить новый тест</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('test_assignments') }}">
+                {{ form.csrf_token }}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.user_id.label(class="form-label") }}
+                        {{ form.user_id(class="form-select") }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.material_id.label(class="form-label") }}
+                        {{ form.material_id(class="form-select") }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.start_date.label(class="form-label") }}
+                        {{ form.start_date(class="form-control", type="datetime-local") }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.end_date.label(class="form-label") }}
+                        {{ form.end_date(class="form-control", type="datetime-local") }}
+                    </div>
+                </div>
+                <div class="text-end">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Список назначений -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Список назначений</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Сотрудник</th>
+                            <th>Материал</th>
+                            <th>Дата начала</th>
+                            <th>Дата окончания</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in assignments %}
+                        <tr>
+                            <td>{{ assignment.user.username }}</td>
+                            <td>{{ assignment.material.title }}</td>
+                            <td>{{ assignment.start_date.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td>{{ assignment.end_date.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td>
+                                {% if assignment.is_completed %}
+                                    <span class="badge bg-success">Завершен</span>
+                                {% elif assignment.end_date < now %}
+                                    <span class="badge bg-danger">Просрочен</span>
+                                {% elif assignment.start_date <= now %}
+                                    <span class="badge bg-primary">Активен</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Ожидает</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" 
+                                        onclick="deleteAssignment({{ assignment.id }})">
+                                    Удалить
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteAssignment(assignmentId) {
+    if (confirm('Вы уверены, что хотите удалить это назначение?')) {
+        fetch(`/admin/test_assignments/${assignmentId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Произошла ошибка при удалении назначения');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка при удалении назначения');
+        });
+    }
+}
+</script>
+{% endblock %} 

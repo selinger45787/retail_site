@@ -116,6 +116,13 @@
                 <button class="btn btn-secondary">Редагувати профіль</button>
             </div>
         </section>
+
+        <div class="profile-actions">
+            <a href="{{ url_for('my_assignments') }}" class="btn btn-primary">
+                <i class="fas fa-tasks"></i>
+                Мои назначенные тесты
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -128,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
     testRows.forEach(row => {
         row.addEventListener('click', function() {
             const materialId = this.dataset.materialId;
-            window.location.href = `/view_material/${materialId}`;
+            window.location.href = `/material/${materialId}`;
         });
     });
 });

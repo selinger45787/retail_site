@@ -1,0 +1,51 @@
+{% if brands %}
+<div class="brands-section">
+    <h3>Бренди</h3>
+    <ul class="brands-list">
+        {% for brand in brands %}
+        <li>
+            <a href="{{ url_for('brand', brand_id=brand.id) }}" class="brand-link">
+                {{ brand.name }}
+                <span class="material-count">({{ brand.materials|length }})</span>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<style>
+.brands-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.brands-list li {
+    margin-bottom: 8px;
+}
+
+.brand-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #333;
+    text-decoration: none;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.brand-link:hover {
+    background-color: #f5f5f5;
+}
+
+.material-count {
+    color: #666;
+    font-size: 0.9em;
+    background-color: #e9ecef;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+}
+</style> 

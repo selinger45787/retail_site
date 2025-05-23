@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory, jsonify, current_app, session
 import os
 import markupsafe
-from models import db, User, Brand, Material, Category, MaterialImage, Test, TestQuestion, TestAnswer, TestResult, TestQuestionResult
+from models import db, User, Brand, Material, Category, MaterialImage, Test, TestQuestion, TestAnswer, TestResult, TestQuestionResult, TestAssignment
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
 import logging
@@ -14,7 +14,8 @@ from flask_wtf.csrf import CSRFProtect, validate_csrf
 import traceback
 import psycopg2
 import decimal
-from forms import AddUserForm, LoginForm
+from forms import AddUserForm, LoginForm, TestAssignmentForm
+from functools import wraps
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -30,10 +31,25 @@ app.config.from_object(config['development'])
 csrf = CSRFProtect()
 csrf.init_app(app)
 
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            flash('У вас нет прав для доступа к этой странице', 'error')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 # Контекстный процессор для передачи брендов во все шаблоны
 @app.context_processor
 def inject_brands():
-    return dict(brands=Brand.query.all())
+    try:
+        brands = Brand.query.all()
+        return dict(brands=brands)
+    except Exception as e:
+        db.session.rollback()  # Откатываем транзакцию в случае ошибки
+        logger.error(f"Error loading brands: {str(e)}")
+        return dict(brands=[])
 
 # Создаем необходимые папки
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -81,8 +97,8 @@ def inject_user_and_brands():
             'categories': categories
         }
     except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error loading brands: {str(e)}")
+        db.session.rollback()  # Откатываем транзакцию в случае ошибки
+        logger.error(f"Error loading brands and categories: {str(e)}")
         return {
             'current_user': current_user,
             'brands': [],
@@ -124,7 +140,32 @@ app.jinja_env.filters['nl2br'] = nl2br
 @app.route('/')
 def index():
     brands = Brand.query.all()
-    return render_template('index.html', brands=brands)
+    
+    # Получаем назначенные тесты для текущего пользователя
+    assigned_tests = []
+    if current_user.is_authenticated:
+        now = datetime.utcnow()
+        assignments = TestAssignment.query.filter(
+            TestAssignment.user_id == current_user.id,
+            TestAssignment.is_completed == False,
+            TestAssignment.end_date >= now
+        ).order_by(TestAssignment.end_date).all()
+        
+        for assignment in assignments:
+            material = Material.query.get(assignment.material_id)
+            if material:
+                brand = Brand.query.get(material.brand_id)
+                assigned_tests.append({
+                    'material': material,
+                    'brand': brand,
+                    'start_date': assignment.start_date,
+                    'end_date': assignment.end_date,
+                    'is_active': assignment.start_date <= now <= assignment.end_date
+                })
+    
+    return render_template('index.html', 
+                         brands=brands,
+                         assigned_tests=assigned_tests)
 
 @app.route('/brand/<int:brand_id>')
 def brand(brand_id):
@@ -788,6 +829,18 @@ def submit_test(test_id):
     
     # Обновляем итоговый результат
     test_result.score = round(score)
+    
+    # Если тест пройден успешно (>= 80%), отмечаем назначение как завершенное
+    if current_user.is_authenticated and score >= 80:
+        assignment = TestAssignment.query.filter(
+            TestAssignment.user_id == current_user.id,
+            TestAssignment.material_id == material.id,
+            TestAssignment.is_completed == False
+        ).first()
+        
+        if assignment:
+            assignment.is_completed = True
+    
     db.session.commit()
     
     # Определяем результат
@@ -1378,6 +1431,128 @@ def delete_material_image(image_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+@app.route('/admin/test_assignments', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def test_assignments():
+    form = TestAssignmentForm()
+    if form.validate_on_submit():
+        try:
+            # Проверяем, что дата окончания позже даты начала
+            if form.end_date.data <= form.start_date.data:
+                flash('Дата окончания должна быть позже даты начала', 'error')
+                return redirect(url_for('test_assignments'))
+            
+            # Проверяем, что у материала есть тест
+            material = Material.query.get(form.material_id.data)
+            if not Test.query.filter_by(material_id=material.id).first():
+                flash('Для этого материала еще не создан тест', 'error')
+                return redirect(url_for('test_assignments'))
+            
+            # Проверяем, нет ли уже активного назначения для этого пользователя и материала
+            existing_assignment = TestAssignment.query.filter(
+                TestAssignment.user_id == form.user_id.data,
+                TestAssignment.material_id == form.material_id.data,
+                TestAssignment.is_completed == False
+            ).first()
+            
+            if existing_assignment:
+                flash('Цьому користувачу вже призначено цей тест', 'error')
+                return redirect(url_for('test_assignments'))
+            
+            # Создаем новое назначение
+            assignment = TestAssignment(
+                user_id=form.user_id.data,
+                material_id=form.material_id.data,
+                start_date=form.start_date.data,
+                end_date=form.end_date.data,
+                created_by=current_user.id
+            )
+            
+            db.session.add(assignment)
+            db.session.commit()
+            
+            flash('Тест успешно назначен', 'success')
+            return redirect(url_for('test_assignments'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error creating test assignment: {str(e)}")
+            flash('Произошла ошибка при назначении теста', 'error')
+
+    assignments = TestAssignment.query.order_by(TestAssignment.created_at.desc()).all()
+    return render_template('test_assignments.html', 
+                         form=form, 
+                         assignments=assignments,
+                         now=datetime.utcnow())
+
+@app.route('/admin/test_assignments/<int:assignment_id>/delete', methods=['POST'])
+@login_required
+def delete_test_assignment(assignment_id):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        assignment = TestAssignment.query.get_or_404(assignment_id)
+        db.session.delete(assignment)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/my_assignments')
+@login_required
+def my_assignments():
+    # Получаем активные назначения для текущего пользователя
+    now = datetime.utcnow()
+    assignments = TestAssignment.query.filter(
+        TestAssignment.user_id == current_user.id,
+        TestAssignment.start_date <= now,
+        TestAssignment.end_date >= now,
+        TestAssignment.is_completed == False
+    ).order_by(TestAssignment.end_date).all()
+    
+    # Получаем завершенные назначения
+    completed_assignments = TestAssignment.query.filter(
+        TestAssignment.user_id == current_user.id,
+        TestAssignment.is_completed == True
+    ).order_by(TestAssignment.end_date.desc()).all()
+    
+    return render_template('my_assignments.html',
+                         assignments=assignments,
+                         completed_assignments=completed_assignments)
+
+@app.before_request
+def before_request():
+    try:
+        # Проверяем состояние сессии
+        db.session.execute('SELECT 1')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Database session error: {str(e)}")
+
+@app.after_request
+def after_request(response):
+    try:
+        if response.status_code >= 400:
+            db.session.rollback()
+        else:
+            db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error in after_request: {str(e)}")
+    return response
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    try:
+        if exception:
+            db.session.rollback()
+        db.session.remove()
+    except Exception as e:
+        logger.error(f"Error in shutdown_session: {str(e)}")
 
 if __name__ == '__main__':
     app.run(debug=True)

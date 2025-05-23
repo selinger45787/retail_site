@@ -145,3 +145,23 @@ class TestQuestionResult(db.Model):
     # Relationships
     test_result = db.relationship('TestResult', backref=db.backref('question_results', lazy=True))
     question = db.relationship('TestQuestion', backref=db.backref('question_results', lazy=True))
+
+class TestAssignment(db.Model):
+    __tablename__ = 'test_assignments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    material_id = db.Column(db.Integer, db.ForeignKey('materials.id'), nullable=False)
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime, nullable=False)
+    is_completed = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Связи
+    user = db.relationship('User', foreign_keys=[user_id], backref='test_assignments')
+    material = db.relationship('Material', backref='test_assignments')
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_assignments')
+
+    def __repr__(self):
+        return f'<TestAssignment {self.id}: {self.user.username} - {self.material.title}>'
