@@ -84,7 +84,10 @@
                             {% else %}
                                 <div class="submenu-icon default-icon">{{ brand.name[0] }}</div>
                             {% endif %}
-                            {{ brand.name }}
+                            <span class="brand-name">{{ brand.name }}</span>
+                            {% if brand.materials|length > 0 %}
+                            <span class="material-count">{{ brand.materials|length }}</span>
+                            {% endif %}
                         </a>
                         {% endfor %}
                     </div>
@@ -211,5 +214,35 @@
     <script src="{{ url_for('static', filename='js/base.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/adminSidebar.js') }}" defer></script>
     {% block scripts %}{% endblock %}
+
+    <style>
+    .submenu-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        color: #333;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+
+    .submenu-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .brand-name {
+        flex: 1;
+        margin-left: 8px;
+        color: #000;
+    }
+
+    .material-count {
+        color: #000;
+        font-size: 0.85em;
+        background-color: #e9ecef;
+        padding: 2px 8px;
+        border-radius: 12px;
+        margin-left: 8px;
+    }
+    </style>
 </body>
 </html> 
