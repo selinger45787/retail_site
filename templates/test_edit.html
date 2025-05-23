@@ -94,22 +94,24 @@
                                    value="{{ question.correct_answer }}">
                         </div>
                         
+                        {% set wrong_answers = question.answers|selectattr('text', 'ne', question.correct_answer)|list %}
+                        
                         <div class="mb-3">
                             <label class="form-label">Неправильна відповідь 1</label>
                             <input type="text" class="form-control" name="wrong_answers_1[]" required
-                                   value="{{ question.answers[0].text if question.answers|length > 0 else '' }}">
+                                   value="{{ wrong_answers[0].text if wrong_answers|length > 0 else '' }}">
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Неправильна відповідь 2</label>
                             <input type="text" class="form-control" name="wrong_answers_2[]" required
-                                   value="{{ question.answers[1].text if question.answers|length > 1 else '' }}">
+                                   value="{{ wrong_answers[1].text if wrong_answers|length > 1 else '' }}">
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Неправильна відповідь 3</label>
                             <input type="text" class="form-control" name="wrong_answers_3[]" required
-                                   value="{{ question.answers[2].text if question.answers|length > 2 else '' }}">
+                                   value="{{ wrong_answers[2].text if wrong_answers|length > 2 else '' }}">
                         </div>
                     </div>
                 </div>

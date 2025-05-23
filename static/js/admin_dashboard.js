@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const userRows = document.querySelectorAll('.user-row');
             
             userRows.forEach(row => {
-                const userName = row.querySelector('td:first-child').textContent.toLowerCase();
+                const userName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
                 const detailsRow = document.getElementById(`user-details-${row.dataset.userId}`);
                 
                 if (userName.includes(searchText)) {
@@ -87,158 +87,224 @@ function showError(message) {
 }
 
 function expandUserRow(userId) {
+    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
     const detailsRow = document.getElementById(`user-details-${userId}`);
-    const loadingIndicator = detailsRow.querySelector('.loading-indicator');
-    const userDetails = detailsRow.querySelector('.user-details');
-    const expandButton = document.querySelector(`.user-row[data-user-id="${userId}"] .btn-expand i`);
-    const userRow = document.querySelector(`.user-row[data-user-id="${userId}"]`);
+    const button = row.querySelector('.btn-expand');
     
-    if (detailsRow.classList.contains('expanded')) {
-        detailsRow.classList.remove('expanded');
-        detailsRow.style.display = 'none';
-        expandButton.classList.remove('fa-chevron-up');
-        expandButton.classList.add('fa-chevron-down');
-        return;
-    }
-    
-    loadingIndicator.style.display = 'flex';
-    userDetails.style.display = 'none';
-    detailsRow.classList.add('expanded');
-    detailsRow.style.display = '';
-    expandButton.classList.remove('fa-chevron-down');
-    expandButton.classList.add('fa-chevron-up');
-    
-    console.log('Fetching data for user:', userId);
-    fetch(`/api/admin/user_tests/${userId}`)
-        .then(response => {
-            console.log('Response status:', response.status);
-            return response.json();
-        })
-        .then(data => {
-            console.log('Received data:', data);
-            loadingIndicator.style.display = 'none';
-            userDetails.style.display = 'block';
-            
-            // Обновляем количество тестов и средний балл
-            let totalTests = 0;
-            let totalScore = 0;
-            let attemptsCount = 0;
-            
-            if (data.brands && data.brands.length > 0) {
-                data.brands.forEach(brand => {
-                    brand.materials.forEach(material => {
-                        if (material.attempts) {
-                            attemptsCount += material.attempts.length;
+    if (detailsRow.style.display === 'none' || !detailsRow.style.display) {
+        detailsRow.style.display = 'table-row';
+        button.innerHTML = '<i class="fas fa-chevron-down"></i>';
+        
+        // Загружаем данные только если они еще не загружены
+        if (detailsRow.querySelector('.loading')) {
+            fetch(`/api/admin/user_tests/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        detailsRow.querySelector('td').innerHTML = `<div class="error-message">${data.error}</div>`;
+                        return;
+                    }
+                    
+                    let html = '<div class="user-details">';
+                    
+                    // Общая статистика
+                    let totalAttempts = 0;
+                    let totalScore = 0;
+                    
+                    data.brands.forEach(brand => {
+                        brand.materials.forEach(material => {
+                            totalAttempts += material.attempts.length;
                             material.attempts.forEach(attempt => {
                                 totalScore += attempt.score;
-                                totalTests++;
                             });
-                        }
+                        });
                     });
-                });
-            }
-            
-            const avgScore = totalTests > 0 ? Math.round(totalScore / totalTests) : 0;
-            
-            // Обновляем ячейки в таблице
-            const testCountCell = userRow.querySelector('td:nth-child(2)');
-            const avgScoreCell = userRow.querySelector('td:nth-child(3)');
-            
-            testCountCell.textContent = attemptsCount;
-            avgScoreCell.textContent = avgScore + '%';
-            
-            let html = '';
-            
-            if (data.brands && data.brands.length > 0) {
-                console.log('Processing brands:', data.brands);
-                data.brands.forEach(brand => {
+                    
+                    const avgScore = totalAttempts > 0 ? (totalScore / totalAttempts).toFixed(1) : 0;
+                    
                     html += `
-                        <div class="brand-section">
-                            <h3 class="brand-header" onclick="toggleAccordion(this)">
-                                <i class="fas fa-chevron-right"></i>
-                                ${brand.name}
-                            </h3>
-                            <div class="brand-content" style="display: none;">
+                        <div class="user-stats">
+                            <h4>Общая статистика</h4>
+                            <p>Всего попыток: ${totalAttempts}</p>
+                            <p>Средний балл: ${avgScore}%</p>
+                        </div>
                     `;
                     
-                    brand.materials.forEach(material => {
-                        console.log('Processing material:', material);
+                    // Детальная информация по брендам и материалам
+                    data.brands.forEach(brand => {
+                        // Считаем статистику по бренду
+                        let brandAttempts = 0;
+                        let brandTotalScore = 0;
+                        
+                        brand.materials.forEach(material => {
+                            brandAttempts += material.attempts.length;
+                            material.attempts.forEach(attempt => {
+                                brandTotalScore += attempt.score;
+                            });
+                        });
+                        
+                        const brandAvgScore = brandAttempts > 0 ? (brandTotalScore / brandAttempts).toFixed(1) : 0;
+                        
                         html += `
-                            <div class="material-section">
-                                <h4 class="material-header" onclick="toggleAccordion(this)">
-                                    <i class="fas fa-chevron-right"></i>
-                                    ${material.title}
-                                </h4>
-                                <div class="material-content" style="display: none;">
-                                    <table class="test-history">
+                            <div class="brand-section">
+                                <div class="brand-header" onclick="toggleBrandContent(this)">
+                                    <h3>${brand.name}</h3>
+                                    <div class="brand-stats">
+                                        <span>Попыток: ${brandAttempts}</span>
+                                        <span>Средний балл: ${brandAvgScore}%</span>
+                                    </div>
+                                    <span class="toggle-icon"><i class="fas fa-chevron-right"></i></span>
+                                </div>
+                                <div class="brand-content" style="display: none;">
+                        `;
+                        
+                        brand.materials.forEach(material => {
+                            html += `
+                                <div class="material-section">
+                                    <div class="material-header" onclick="toggleMaterialContent(this)">
+                                        <h4>${material.title}</h4>
+                                        <span class="toggle-icon"><i class="fas fa-chevron-right"></i></span>
+                                    </div>
+                                    <div class="material-content" style="display: none;">
+                            `;
+                            
+                            if (material.attempts.length === 0) {
+                                html += '<p>Нет попыток прохождения теста</p>';
+                            } else {
+                                html += `
+                                    <table class="attempts-table">
                                         <thead>
                                             <tr>
                                                 <th>Дата</th>
-                                                <th>Балл</th>
-                                                <th>Правильных</th>
-                                                <th>Неправильных</th>
+                                                <th class="text-center">Балл</th>
+                                                <th class="text-center">Правильных</th>
+                                                <th class="text-center">Неправильных</th>
+                                                <th class="text-center">Действия</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                        `;
-                        
-                        material.attempts.forEach(attempt => {
-                            // Определяем класс для оценки
-                            let scoreClass = 'score-low';
-                            if (attempt.score >= 80) {
-                                scoreClass = 'score-high';
-                            } else if (attempt.score >= 60) {
-                                scoreClass = 'score-medium';
+                                `;
+                                
+                                material.attempts.forEach(attempt => {
+                                    html += `
+                                        <tr>
+                                            <td>${attempt.date}</td>
+                                            <td class="text-center">${attempt.score}%</td>
+                                            <td class="text-center">${attempt.correct_answers}</td>
+                                            <td class="text-center">${attempt.wrong_answers}</td>
+                                            <td class="text-center">
+                                                <button class="btn btn-info btn-sm" onclick="toggleAttemptDetails(this)">
+                                                    Показать ответы
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="attempt-details-row" style="display: none;">
+                                            <td colspan="5">
+                                                <div class="attempt-details">
+                                                    <table class="questions-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Вопрос</th>
+                                                                <th class="text-center">Ответ пользователя</th>
+                                                                <th class="text-center">Правильный ответ</th>
+                                                                <th class="text-center">Результат</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                    `;
+                                    
+                                    attempt.question_details.forEach(detail => {
+                                        const resultClass = detail.is_correct ? 'correct' : 'incorrect';
+                                        const resultText = detail.is_correct ? 'Верно' : 'Неверно';
+                                        
+                                        html += `
+                                            <tr class="${resultClass}">
+                                                <td>${detail.question_text}</td>
+                                                <td class="text-center">${detail.user_answer}</td>
+                                                <td class="text-center">${detail.correct_answer}</td>
+                                                <td class="text-center">${resultText}</td>
+                                            </tr>
+                                        `;
+                                    });
+                                    
+                                    html += `
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `;
+                                });
+                                
+                                html += `
+                                        </tbody>
+                                    </table>
+                                `;
                             }
                             
                             html += `
-                                <tr class="test-row" onclick="window.location.href='/view_material/${material.id}'" style="cursor: pointer;">
-                                    <td>${attempt.date}</td>
-                                    <td class="${scoreClass}">${attempt.score}%</td>
-                                    <td>${attempt.correct_answers}</td>
-                                    <td>${attempt.wrong_answers}</td>
-                                </tr>
+                                    </div>
+                                </div>
                             `;
                         });
                         
                         html += `
-                                        </tbody>
-                                    </table>
                                 </div>
                             </div>
                         `;
                     });
                     
-                    html += `
-                            </div>
-                        </div>
-                    `;
+                    html += '</div>';
+                    detailsRow.querySelector('td').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    detailsRow.querySelector('td').innerHTML = '<div class="error-message">Ошибка при загрузке данных</div>';
                 });
-            } else {
-                html = '<p class="no-data">Нет данных о результатах тестов</p>';
-            }
-            
-            userDetails.innerHTML = html;
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            loadingIndicator.style.display = 'none';
-            userDetails.innerHTML = '<p class="error">Ошибка при загрузке данных</p>';
-        });
+        }
+    } else {
+        detailsRow.style.display = 'none';
+        button.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    }
 }
 
-function toggleAccordion(header) {
+function toggleBrandContent(header) {
     const content = header.nextElementSibling;
-    const chevron = header.querySelector('i');
+    const icon = header.querySelector('.toggle-icon');
     
-    if (content.style.display === 'none') {
+    if (content.style.display === 'none' || !content.style.display) {
         content.style.display = 'block';
-        chevron.classList.remove('fa-chevron-right');
-        chevron.classList.add('fa-chevron-down');
+        icon.innerHTML = '<i class="fas fa-chevron-down"></i>';
     } else {
         content.style.display = 'none';
-        chevron.classList.remove('fa-chevron-down');
-        chevron.classList.add('fa-chevron-right');
+        icon.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    }
+}
+
+function toggleMaterialContent(header) {
+    const content = header.nextElementSibling;
+    const icon = header.querySelector('.toggle-icon');
+    
+    if (content.style.display === 'none' || !content.style.display) {
+        content.style.display = 'block';
+        icon.innerHTML = '<i class="fas fa-chevron-down"></i>';
+    } else {
+        content.style.display = 'none';
+        icon.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    }
+}
+
+function toggleAttemptDetails(button) {
+    const row = button.closest('tr');
+    const detailsRow = row.nextElementSibling;
+    const isVisible = detailsRow.style.display !== 'none';
+    
+    if (!isVisible) {
+        detailsRow.style.display = 'table-row';
+        button.innerHTML = 'Скрыть ответы';
+    } else {
+        detailsRow.style.display = 'none';
+        button.innerHTML = 'Показать ответы';
     }
 }
 
@@ -270,8 +336,8 @@ function loadUserStats(userId) {
             const avgScore = totalTests > 0 ? Math.round(totalScore / totalTests) : 0;
             
             // Обновляем ячейки в таблице
-            const testCountCell = userRow.querySelector('td:nth-child(2)');
-            const avgScoreCell = userRow.querySelector('td:nth-child(3)');
+            const testCountCell = userRow.querySelector('td:nth-child(3)');
+            const avgScoreCell = userRow.querySelector('td:nth-child(4)');
             
             testCountCell.textContent = attemptsCount;
             avgScoreCell.textContent = avgScore + '%';
@@ -281,7 +347,6 @@ function loadUserStats(userId) {
         });
 }
 
-// Функция сортировки таблицы
 function sortTable(sortType) {
     const tbody = document.querySelector('.users-table tbody');
     const rows = Array.from(tbody.querySelectorAll('.user-row'));
@@ -291,18 +356,18 @@ function sortTable(sortType) {
         
         switch(sortType) {
             case 'name':
-                valueA = a.querySelector('td:first-child').textContent.toLowerCase();
-                valueB = b.querySelector('td:first-child').textContent.toLowerCase();
+                valueA = a.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                valueB = b.querySelector('td:nth-child(2)').textContent.toLowerCase();
                 return valueA.localeCompare(valueB);
                 
             case 'tests':
-                valueA = parseInt(a.querySelector('td:nth-child(2)').textContent) || 0;
-                valueB = parseInt(b.querySelector('td:nth-child(2)').textContent) || 0;
+                valueA = parseInt(a.querySelector('td:nth-child(3)').textContent) || 0;
+                valueB = parseInt(b.querySelector('td:nth-child(3)').textContent) || 0;
                 return valueB - valueA; // Сортировка по убыванию
                 
             case 'score':
-                valueA = parseInt(a.querySelector('td:nth-child(3)').textContent) || 0;
-                valueB = parseInt(b.querySelector('td:nth-child(3)').textContent) || 0;
+                valueA = parseInt(a.querySelector('td:nth-child(4)').textContent) || 0;
+                valueB = parseInt(b.querySelector('td:nth-child(4)').textContent) || 0;
                 return valueB - valueA; // Сортировка по убыванию
                 
             default:

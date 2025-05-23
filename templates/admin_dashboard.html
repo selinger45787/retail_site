@@ -134,34 +134,27 @@
             <table class="users-table" id="usersTable">
                 <thead>
                     <tr>
+                        <th>Действия</th>
                         <th>Пользователь</th>
                         <th>Количество тестов</th>
                         <th>Средний балл</th>
-                        <th>Действия</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for user in users %}
                     <tr class="user-row" data-user-id="{{ user.id }}">
+                        <td class="actions">
+                            <button class="btn-expand" onclick="expandUserRow({{ user.id }})">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </td>
                         <td>{{ user.username }}</td>
                         <td class="text-center">-</td>
                         <td class="text-center">-</td>
-                        <td class="actions">
-                            <button class="btn-expand" onclick="expandUserRow({{ user.id }})">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                        </td>
                     </tr>
-                    <tr class="details-row" id="user-details-{{ user.id }}">
-                        <td colspan="5" class="details-container">
-                            <div class="loading-indicator">
-                                <div class="spinner"></div>
-                                <p>Загрузка данных...</p>
-                            </div>
-                            
-                            <div class="user-details" style="display: none;">
-                                <!-- Сюда будут загружены детали через AJAX -->
-                            </div>
+                    <tr class="user-details-row" id="user-details-{{ user.id }}" style="display: none;">
+                        <td colspan="5">
+                            <div class="loading">Загрузка данных...</div>
                         </td>
                     </tr>
                     {% endfor %}

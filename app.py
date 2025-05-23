@@ -879,37 +879,76 @@ def moderate_test(material_id):
 def edit_test(material_id):
     if current_user.role != 'admin':
         flash('У вас нет прав для редактирования тестов', 'error')
-        return redirect(url_for('material_detail', material_id=material_id))
+        return redirect(url_for('view_material', material_id=material_id))
     
     material = Material.query.get_or_404(material_id)
     test = Test.query.filter_by(material_id=material_id).first()
     
     if not test:
         flash('Тест не найден', 'error')
-        return redirect(url_for('material_detail', material_id=material_id))
+        return redirect(url_for('view_material', material_id=material_id))
     
     if request.method == 'POST':
         try:
             # Получаем данные из формы
             questions = request.form.getlist('questions[]')
-            answers = request.form.getlist('answers[]')
             correct_answers = request.form.getlist('correct_answers[]')
+            wrong_answers_1 = request.form.getlist('wrong_answers_1[]')
+            wrong_answers_2 = request.form.getlist('wrong_answers_2[]')
+            wrong_answers_3 = request.form.getlist('wrong_answers_3[]')
             
             logger.info("=== Данные формы ===")
             logger.info(f"Количество вопросов: {len(questions)}")
-            logger.info(f"Количество ответов: {len(answers)}")
             logger.info(f"Количество правильных ответов: {len(correct_answers)}")
-            logger.info(f"Вопросы: {questions}")
-            logger.info(f"Ответы: {answers}")
-            logger.info(f"Правильные ответы: {correct_answers}")
+            logger.info(f"Количество неправильных ответов 1: {len(wrong_answers_1)}")
+            logger.info(f"Количество неправильных ответов 2: {len(wrong_answers_2)}")
+            logger.info(f"Количество неправильных ответов 3: {len(wrong_answers_3)}")
             
-            # Проверяем, что количество ответов соответствует количеству вопросов
-            if len(answers) != len(questions) * 4:
-                logger.error(f"Несоответствие количества ответов: получено {len(answers)}, ожидалось {len(questions) * 4}")
+            # Проверяем, что все массивы имеют одинаковую длину
+            if not (len(questions) == len(correct_answers) == len(wrong_answers_1) == len(wrong_answers_2) == len(wrong_answers_3)):
+                logger.error("Несоответствие количества вопросов и ответов")
                 flash('Количество ответов не соответствует количеству вопросов', 'error')
-                return redirect(url_for('edit_test', material_id=material_id))
+                return render_template('test_edit.html', 
+                                    material=material, 
+                                    test=test, 
+                                    questions=TestQuestion.query.filter_by(test_id=test.id).all())
             
-            # Удаляем старые вопросы (ответы удалятся автоматически благодаря каскадному удалению)
+            # Проверка на дубликаты вопросов
+            question_set = set()
+            has_duplicates = False
+            for question in questions:
+                if question.lower() in question_set:
+                    has_duplicates = True
+                    logger.warning(f"Найден дубликат вопроса: {question}")
+                    break
+                question_set.add(question.lower())
+            
+            if has_duplicates:
+                flash('Знайдено дублікати питань. Будь ласка, перевірте червоні поля.', 'error')
+                return render_template('test_edit.html', 
+                                    material=material, 
+                                    test=test, 
+                                    questions=TestQuestion.query.filter_by(test_id=test.id).all())
+            
+            # Проверка уникальности ответов для каждого вопроса
+            for i in range(len(questions)):
+                answers = [correct_answers[i], wrong_answers_1[i], wrong_answers_2[i], wrong_answers_3[i]]
+                if len(set(answers)) != len(answers):
+                    logger.warning(f"Найдены дубликаты ответов в вопросе {i+1}")
+                    flash('Всі відповіді на одне питання повинні бути унікальними', 'error')
+                    return render_template('test_edit.html', 
+                                        material=material, 
+                                        test=test, 
+                                        questions=TestQuestion.query.filter_by(test_id=test.id).all())
+            
+            # Получаем все существующие вопросы теста
+            existing_questions = TestQuestion.query.filter_by(test_id=test.id).all()
+            
+            # Сначала удаляем все ответы для существующих вопросов
+            for question in existing_questions:
+                TestAnswer.query.filter_by(question_id=question.id).delete()
+            
+            # Затем удаляем сами вопросы
             TestQuestion.query.filter_by(test_id=test.id).delete()
             db.session.flush()
             
@@ -924,24 +963,29 @@ def edit_test(material_id):
                 db.session.flush()  # Получаем ID вопроса
                 
                 # Создаем ответы для вопроса
-                for j in range(4):
-                    answer = TestAnswer(
-                        question_id=question.id,
-                        text=answers[i * 4 + j]
-                    )
+                answers = [
+                    TestAnswer(question_id=question.id, text=correct_answers[i]),
+                    TestAnswer(question_id=question.id, text=wrong_answers_1[i]),
+                    TestAnswer(question_id=question.id, text=wrong_answers_2[i]),
+                    TestAnswer(question_id=question.id, text=wrong_answers_3[i])
+                ]
+                for answer in answers:
                     db.session.add(answer)
             
             db.session.commit()
             flash('Тест успешно обновлен', 'success')
-            return redirect(url_for('material_detail', material_id=material_id))
+            return redirect(url_for('view_material', material_id=material_id))
             
         except Exception as e:
             db.session.rollback()
             logger.error(f"Ошибка при обновлении теста: {str(e)}")
             logger.error(f"Тип ошибки: {type(e)}")
             logger.error(f"Детали ошибки: {traceback.format_exc()}")
-            flash(f'Произошла ошибка при обновлении теста: {str(e)}', 'error')
-            return redirect(url_for('edit_test', material_id=material_id))
+            flash('Произошла ошибка при обновлении теста', 'error')
+            return render_template('test_edit.html', 
+                                material=material, 
+                                test=test, 
+                                questions=TestQuestion.query.filter_by(test_id=test.id).all())
     
     # Для GET запроса получаем существующие вопросы и ответы
     questions = TestQuestion.query.filter_by(test_id=test.id).all()
