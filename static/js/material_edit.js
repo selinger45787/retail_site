@@ -78,27 +78,24 @@ document.addEventListener('DOMContentLoaded', function() {
     removeImageButtons.forEach(button => {
         button.addEventListener('click', async function() {
             const imageId = this.getAttribute('data-image-id');
-            const confirmed = confirm('Ви впевнені, що хочете видалити це зображення?');
             
-            if (confirmed) {
-                try {
-                    const response = await fetch(`/material/image/${imageId}/delete`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        this.closest('.additional-image-item').remove();
-                    } else {
-                        alert('Помилка при видаленні зображення');
+            try {
+                const response = await fetch(`/material/image/${imageId}/delete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
                     }
-                } catch (error) {
-                    console.error('Error:', error);
+                });
+                
+                if (response.ok) {
+                    this.closest('.additional-image-item').remove();
+                } else {
                     alert('Помилка при видаленні зображення');
                 }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Помилка при видаленні зображення');
             }
         });
     });

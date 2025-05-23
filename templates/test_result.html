@@ -1,40 +1,43 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/test_result.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="result-container">
     <h1>Результати тесту: {{ material.title }}</h1>
     
     <div class="result-card">
         <div class="result-header">
-            <h2>{{ result }}</h2>
+            <h2>Ваш результат</h2>
         </div>
         
         <div class="result-details">
-            <div class="score-circle">
-                <span class="score">{{ "%.1f"|format(score) }}%</span>
+            <div class="score-circle {% if score >= 80 %}excellent{% elif score >= 60 %}good{% else %}poor{% endif %}">
+                <div class="score">{{ "%.1f"|format(score) }}%</div>
             </div>
             
             <div class="stats">
                 <p>Правильних відповідей: <strong>{{ correct_answers }}</strong> з <strong>{{ total_questions }}</strong></p>
+                <p>Час проходження: <strong>{{ time_taken }}</strong></p>
             </div>
         </div>
-        
+
         <div class="result-message">
             {% if score >= 80 %}
-                <p>Вітаємо! Ви відмінно знаєте матеріал.</p>
+                <p>Відмінно! Ви показали чудове розуміння матеріалу.</p>
             {% elif score >= 60 %}
-                <p>Добре! Але є ще що повторити.</p>
+                <p>Добре! Ви маєте гарне розуміння матеріалу, але є простір для покращення.</p>
             {% else %}
-                <p>Рекомендуємо повторити матеріал для кращого розуміння.</p>
+                <p>Рекомендуємо повторити матеріал та спробувати ще раз.</p>
             {% endif %}
         </div>
-        
+
         <div class="result-actions">
             <a href="{{ url_for('view_material', material_id=material.id) }}" class="btn">Повернутися до матеріалу</a>
             <a href="{{ url_for('take_test', material_id=material.id) }}" class="btn">Спробувати ще раз</a>
         </div>
     </div>
 </div>
-
-<!-- Removed inline CSS -->
 {% endblock %} 

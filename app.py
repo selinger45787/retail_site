@@ -30,6 +30,11 @@ app.config.from_object(config['development'])
 csrf = CSRFProtect()
 csrf.init_app(app)
 
+# Контекстный процессор для передачи брендов во все шаблоны
+@app.context_processor
+def inject_brands():
+    return dict(brands=Brand.query.all())
+
 # Создаем необходимые папки
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(os.path.join(app.static_folder, 'img', 'materials'), exist_ok=True)
@@ -118,7 +123,8 @@ app.jinja_env.filters['nl2br'] = nl2br
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    brands = Brand.query.all()
+    return render_template('index.html', brands=brands)
 
 @app.route('/brand/<int:brand_id>')
 def brand(brand_id):
@@ -269,14 +275,10 @@ def add_material(brand_id):
 @app.route('/material/<int:material_id>')
 def view_material(material_id):
     material = Material.query.get_or_404(material_id)
-    brand = Brand.query.get_or_404(material.brand_id)
-    category = Category.query.get_or_404(material.category_id)
     images = MaterialImage.query.filter_by(material_id=material_id).all()
     
     return render_template('material.html', 
                          material=material, 
-                         brand=brand, 
-                         category=category, 
                          images=images)
 
 @app.route('/material/<int:material_id>/edit', methods=['GET', 'POST'])
@@ -1349,6 +1351,33 @@ def add_user():
             print(f"Error creating user: {str(e)}")
     
     return render_template('add_user.html', form=form)
+
+@app.route('/material/image/<int:image_id>/delete', methods=['POST'])
+@login_required
+def delete_material_image(image_id):
+    image = MaterialImage.query.get_or_404(image_id)
+    material = Material.query.get_or_404(image.material_id)
+    
+    # Проверяем права доступа
+    if current_user.role != 'admin':
+        flash('У вас нет прав для удаления изображений', 'danger')
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        # Удаляем файл изображения
+        if image.image_path:
+            image_path = os.path.join(current_app.static_folder, 'img/materials', image.image_path)
+            if os.path.exists(image_path):
+                os.remove(image_path)
+        
+        # Удаляем запись из базы данных
+        db.session.delete(image)
+        db.session.commit()
+        
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
