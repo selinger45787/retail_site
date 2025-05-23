@@ -11,14 +11,23 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
-    role = db.Column(db.String(20), default='user')
+    role = db.Column(db.String(20), nullable=False, default='user')  # 'admin' or 'user'
+    phone_number = db.Column(db.String(20))
+    department = db.Column(db.String(50))  # 'online', 'offline', 'office', 'management'
+    position = db.Column(db.String(50))  # 'seller', 'cashier', 'manager', 'merchandiser', 'other'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    test_results = db.relationship('TestResult', backref='test_user', lazy=True)
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
         
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def __repr__(self):
+        return f'<User {self.username}>'
 
 class Brand(db.Model):
     __tablename__ = 'brands'
@@ -122,7 +131,6 @@ class TestResult(db.Model):
     score = db.Column(db.Integer, nullable=False)
     max_score = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    user = db.relationship('User', backref=db.backref('test_results', lazy=True))
     test = db.relationship('Test', backref=db.backref('test_results', lazy=True))
 
 class TestQuestionResult(db.Model):

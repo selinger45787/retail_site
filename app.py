@@ -14,6 +14,7 @@ from flask_wtf.csrf import CSRFProtect, validate_csrf
 import traceback
 import psycopg2
 import decimal
+from forms import AddUserForm, LoginForm
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -415,24 +416,17 @@ def delete_material(material_id):
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
-        
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = User.query.filter_by(username=username).first()
-        
-        if user and user.check_password(password):
+    
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user and user.check_password(form.password.data):
             login_user(user)
-            if request.headers.get('Accept') == 'application/json':
-                return jsonify({'success': True})
             flash('Ви успішно увійшли в систему', 'success')
             return redirect(url_for('index'))
-            
-        if request.headers.get('Accept') == 'application/json':
-            return jsonify({'error': 'Невірний логін або пароль'})
         flash('Невірний логін або пароль', 'error')
-            
-    return render_template('login.html')
+    
+    return render_template('login.html', form=form)
 
 @app.route('/logout')
 @login_required
@@ -551,14 +545,23 @@ def add_brand():
 
 @app.route('/login_modal', methods=['POST'])
 def login_modal():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    user = User.query.filter_by(username=username).first()
-    
-    if user and user.check_password(password):
-        login_user(user)
-        return jsonify({'success': True})
-    return jsonify({'success': False, 'message': 'Невірний логін або пароль'})
+    try:
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if not username or not password:
+            return jsonify({'success': False, 'message': 'Будь ласка, заповніть всі поля'})
+        
+        user = User.query.filter_by(username=username).first()
+        
+        if user and user.check_password(password):
+            login_user(user)
+            return jsonify({'success': True})
+        
+        return jsonify({'success': False, 'message': 'Невірний логін або пароль'})
+    except Exception as e:
+        logger.error(f"Error in login_modal: {str(e)}")
+        return jsonify({'success': False, 'message': 'Помилка сервера. Спробуйте пізніше'})
 
 @app.route('/create_test/<int:material_id>', methods=['GET', 'POST'])
 @login_required
@@ -1305,6 +1308,47 @@ def serve_static(filename):
 def handle_error(error):
     logger.error(f"Произошла ошибка: {str(error)}")
     return render_template('error.html', error=error), 500
+
+@app.route('/admin/add_user', methods=['GET', 'POST'])
+@login_required
+def add_user():
+    if current_user.role != 'admin':
+        flash('У вас нет прав для доступа к этой странице', 'error')
+        return redirect(url_for('index'))
+    
+    form = AddUserForm()
+    if form.validate_on_submit():
+        try:
+            # Combine first and last name for username
+            username = f"{form.first_name.data} {form.last_name.data}"
+            
+            # Check if user already exists
+            if User.query.filter_by(username=username).first():
+                flash('Користувач з таким ім\'ям вже існує', 'error')
+                return render_template('add_user.html', form=form)
+            
+            # Create new user
+            user = User(
+                username=username,
+                role=form.role.data,
+                phone_number=form.phone_number.data,
+                department=form.department.data,
+                position=form.position.data
+            )
+            user.set_password(form.password.data)
+            
+            db.session.add(user)
+            db.session.commit()
+            
+            flash('Користувача успішно додано', 'success')
+            return redirect(url_for('admin_dashboard'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash('Помилка при створенні користувача', 'error')
+            print(f"Error creating user: {str(e)}")
+    
+    return render_template('add_user.html', form=form)
 
 if __name__ == '__main__':
     app.run(debug=True)

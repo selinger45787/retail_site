@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Додати користувача{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-center">Додати нового користувача</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_user') }}" autocomplete="off">
+                        {{ form.csrf_token }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.first_name.label(class="form-label") }}
+                                    {{ form.first_name(class="form-control", autocomplete="off") }}
+                                    {% if form.first_name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.first_name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.last_name.label(class="form-label") }}
+                                    {{ form.last_name(class="form-control", autocomplete="off") }}
+                                    {% if form.last_name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.last_name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.password.label(class="form-label") }}
+                                    {{ form.password(class="form-control", autocomplete="new-password") }}
+                                    {% if form.password.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.password.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.confirm_password.label(class="form-label") }}
+                                    {{ form.confirm_password(class="form-control", autocomplete="new-password") }}
+                                    {% if form.confirm_password.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.confirm_password.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            {{ form.phone_number.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">+380</span>
+                                {{ form.phone_number(class="form-control phone-input", 
+                                                   pattern="[0-9]{9}",
+                                                   title="Введіть 9 цифр номера телефону") }}
+                            </div>
+                            {% if form.phone_number.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.phone_number.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group mb-3">
+                            {{ form.role.label(class="form-label") }}
+                            {{ form.role(class="form-select") }}
+                            {% if form.role.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.role.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group mb-3">
+                            {{ form.department.label(class="form-label") }}
+                            {{ form.department(class="form-select") }}
+                            {% if form.department.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.department.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group mb-3">
+                            {{ form.position.label(class="form-label") }}
+                            {{ form.position(class="form-select") }}
+                            {% if form.position.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.position.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="text-center">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/phone-mask.js') }}"></script>
+{% endblock %} 
