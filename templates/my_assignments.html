@@ -1,93 +1,166 @@
 {% extends "base.html" %}
 
-{% block title %}Мои назначенные тесты{% endblock %}
+{% block title %}Мої призначення{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="mb-4">Мои назначенные тесты</h1>
-    
-    <!-- Активные назначения -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Активные тесты</h5>
+<!-- Debug info -->
+<div class="container mt-4">
+    <div class="alert alert-info">
+        <h4>Debug Information:</h4>
+        <p>Number of active assignments: {{ assignments|length }}</p>
+        <p>Number of completed assignments: {{ completed_assignments|length }}</p>
+        {% for assignment in assignments %}
+        <div class="mb-3">
+            <h5>Assignment #{{ loop.index }}:</h5>
+            <pre>
+Material ID: {{ assignment.material.id }}
+Material Title: {{ assignment.material.title }}
+Brand: {{ assignment.material.brand.name }}
+Start Date: {{ assignment.start_date }}
+End Date: {{ assignment.end_date }}
+            </pre>
         </div>
-        <div class="card-body">
-            {% if assignments %}
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Материал</th>
-                            <th>Дата начала</th>
-                            <th>Дата окончания</th>
-                            <th>Статус</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for assignment in assignments %}
-                        <tr>
-                            <td>{{ assignment.material.title }}</td>
-                            <td>{{ assignment.start_date.strftime('%d.%m.%Y %H:%M') }}</td>
-                            <td>{{ assignment.end_date.strftime('%d.%m.%Y %H:%M') }}</td>
-                            <td>
-                                {% if assignment.end_date < now %}
-                                    <span class="badge bg-danger">Просрочен</span>
-                                {% else %}
-                                    <span class="badge bg-primary">Активен</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{{ url_for('take_test', material_id=assignment.material.id) }}" 
-                                   class="btn btn-sm btn-primary">
-                                    Пройти тест
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        border: none;
+        border-radius: 15px;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .card-img-top {
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        height: 200px;
+        object-fit: cover;
+    }
+    
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #2c3e50;
+    }
+    
+    .card-text small {
+        font-size: 0.9rem;
+    }
+    
+    .btn {
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 500;
+    }
+    
+    .btn-primary {
+        background-color: #1976d2;
+        border-color: #1976d2;
+    }
+    
+    .btn-primary:hover {
+        background-color: #1565c0;
+        border-color: #1565c0;
+    }
+    
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+    
+    .text-muted {
+        color: #6c757d !important;
+    }
+</style>
+
+<div class="container mt-4">
+    <h2 class="mb-4">Мої призначення</h2>
+
+    <!-- Активные назначения -->
+    <div class="mb-5">
+        <h3 class="mb-3">Активні призначення</h3>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for assignment in assignments %}
+            <div class="col">
+                <div class="card h-100 border-primary">
+                    {% if assignment.material.image_path %}
+                    <img src="{{ url_for('static', filename='img/materials/' + assignment.material.image_path) }}" 
+                         class="card-img-top" 
+                         alt="{{ assignment.material.title }}">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='img/materials/default.png') }}" 
+                         class="card-img-top" 
+                         alt="Default image">
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">{{ assignment.material.title }}</h5>
+                        <p class="card-text">
+                            <small class="text-muted">Бренд: {{ assignment.material.brand.name }}</small>
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">
+                                    Період: {{ assignment.start_date.strftime('%d.%m.%Y') }} - {{ assignment.end_date.strftime('%d.%m.%Y') }}
+                                </small>
+                            </div>
+                            
+                            <a href="{{ url_for('view_material', material_id=assignment.material.id) }}" 
+                               class="btn btn-primary">
+                                Перейти до матеріалу
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            {% else %}
-            <p class="text-muted">У вас нет активных назначенных тестов</p>
-            {% endif %}
+            {% endfor %}
         </div>
     </div>
-    
+
     <!-- Завершенные назначения -->
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Завершенные тесты</h5>
-        </div>
-        <div class="card-body">
-            {% if completed_assignments %}
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Материал</th>
-                            <th>Дата начала</th>
-                            <th>Дата окончания</th>
-                            <th>Статус</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for assignment in completed_assignments %}
-                        <tr>
-                            <td>{{ assignment.material.title }}</td>
-                            <td>{{ assignment.start_date.strftime('%d.%m.%Y %H:%M') }}</td>
-                            <td>{{ assignment.end_date.strftime('%d.%m.%Y %H:%M') }}</td>
-                            <td>
-                                <span class="badge bg-success">Завершен</span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <div>
+        <h3 class="mb-3">Завершені призначення</h3>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for assignment in completed_assignments %}
+            <div class="col">
+                <div class="card h-100 border-success">
+                    {% if assignment.material.image_path %}
+                    <img src="{{ url_for('static', filename='img/materials/' + assignment.material.image_path) }}" 
+                         class="card-img-top" 
+                         alt="{{ assignment.material.title }}">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='img/materials/default.png') }}" 
+                         class="card-img-top" 
+                         alt="Default image">
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">{{ assignment.material.title }}</h5>
+                        <p class="card-text">
+                            <small class="text-muted">Бренд: {{ assignment.material.brand.name }}</small>
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">
+                                    Завершено: {{ assignment.end_date.strftime('%d.%m.%Y') }}
+                                </small>
+                            </div>
+                            
+                            <a href="{{ url_for('view_material', material_id=assignment.material.id) }}" 
+                               class="btn btn-primary">
+                                Перейти до матеріалу
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            {% else %}
-            <p class="text-muted">У вас нет завершенных тестов</p>
-            {% endif %}
+            {% endfor %}
         </div>
     </div>
 </div>

@@ -4,8 +4,7 @@ from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
 from models import User, Material, Test
 
 class AddUserForm(FlaskForm):
-    first_name = StringField('Ім\'я', validators=[DataRequired(), Length(min=2, max=50)])
-    last_name = StringField('Прізвище', validators=[DataRequired(), Length(min=2, max=50)])
+    username = StringField('Ім\'я користувача', validators=[DataRequired(), Length(min=2, max=50)])
     password = PasswordField('Пароль', validators=[DataRequired(), Length(min=6)])
     confirm_password = PasswordField('Підтвердження паролю', 
                                    validators=[DataRequired(), EqualTo('password')])
@@ -37,9 +36,8 @@ class AddUserForm(FlaskForm):
                          validators=[DataRequired()])
     submit = SubmitField('Додати користувача')
 
-    def validate_username(self, first_name, last_name):
-        username = f"{first_name.data} {last_name.data}"
-        user = User.query.filter_by(username=username).first()
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
         if user:
             raise ValidationError('Користувач з таким ім\'ям вже існує.')
 
@@ -80,6 +78,15 @@ class TestAssignmentForm(FlaskForm):
         test = Test.query.filter_by(material_id=material.id).first()
         if not test:
             raise ValidationError('Для этого материала еще не создан тест')
+
+    def validate_end_date(self, field):
+        if field.data <= self.start_date.data:
+            raise ValidationError('Дата окончания должна быть позже даты начала')
+
+class EditTestAssignmentForm(FlaskForm):
+    start_date = DateTimeField('Дата начала', format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
+    end_date = DateTimeField('Дата окончания', format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
+    submit = SubmitField('Сохранить изменения')
 
     def validate_end_date(self, field):
         if field.data <= self.start_date.data:

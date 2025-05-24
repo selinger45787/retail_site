@@ -6,7 +6,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from werkzeug.utils import secure_filename
 import logging
 from config import config
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_migrate import Migrate
 import bleach
 from html import unescape
@@ -14,7 +14,7 @@ from flask_wtf.csrf import CSRFProtect, validate_csrf
 import traceback
 import psycopg2
 import decimal
-from forms import AddUserForm, LoginForm, TestAssignmentForm
+from forms import AddUserForm, LoginForm, TestAssignmentForm, EditTestAssignmentForm
 from functools import wraps
 
 # Настройка логирования
@@ -144,7 +144,7 @@ def index():
     # Получаем назначенные тесты для текущего пользователя
     assigned_tests = []
     if current_user.is_authenticated:
-        now = datetime.utcnow()
+        now = datetime.utcnow()  # Используем UTC время
         assignments = TestAssignment.query.filter(
             TestAssignment.user_id == current_user.id,
             TestAssignment.is_completed == False,
@@ -165,7 +165,8 @@ def index():
     
     return render_template('index.html', 
                          brands=brands,
-                         assigned_tests=assigned_tests)
+                         assigned_tests=assigned_tests,
+                         now=datetime.utcnow())  # Передаем now в шаблон
 
 @app.route('/brand/<int:brand_id>')
 def brand(brand_id):
@@ -379,81 +380,139 @@ def edit_material(material_id):
 @app.route('/material/<int:material_id>/delete', methods=['POST'])
 @login_required
 def delete_material(material_id):
+    logger.info(f"=== Начало удаления материала {material_id} ===")
     try:
         if current_user.role != 'admin':
-            flash('У вас немає прав для видалення матеріалів', 'error')
-            return jsonify({'error': 'Access denied', 'redirect': url_for('view_material', material_id=material_id)}), 403
+            logger.warning(f"Попытка удаления материала {material_id} пользователем без прав админа")
+            return jsonify({'error': 'У вас немає прав для видалення матеріалів', 'redirect': url_for('view_material', material_id=material_id)}), 403
 
         # Получаем CSRF-токен из JSON-данных
         data = request.get_json()
+        logger.info(f"Полученные данные: {data}")
+        
         if not data or 'csrf_token' not in data:
+            logger.error("CSRF token missing")
             return jsonify({'error': 'CSRF token missing'}), 400
 
-        validate_csrf(data['csrf_token'])
+        try:
+            validate_csrf(data['csrf_token'])
+        except Exception as e:
+            logger.error(f"CSRF validation error: {str(e)}")
+            return jsonify({'error': 'Invalid CSRF token'}), 400
 
-        material = Material.query.get_or_404(material_id)
+        # Проверяем существование материала
+        material = Material.query.get(material_id)
+        if not material:
+            logger.error(f"Материал {material_id} не найден")
+            return jsonify({'error': 'Матеріал не знайдено'}), 404
+
         brand_id = material.brand_id
+        logger.info(f"Материал найден: {material.title}")
 
-        # Сначала удаляем все связанные результаты тестов
+        # Проверяем наличие теста
         test = Test.query.filter_by(material_id=material_id).first()
-        if test:
-            # Удаляем результаты вопросов теста
-            TestQuestionResult.query.filter(
-                TestQuestionResult.test_result_id.in_(
-                    TestResult.query.filter_by(test_id=test.id).with_entities(TestResult.id)
-                )
-            ).delete(synchronize_session=False)
-            
-            # Удаляем результаты тестов
-            TestResult.query.filter_by(test_id=test.id).delete()
-            
-            # Удаляем ответы на вопросы
-            TestAnswer.query.filter(
-                TestAnswer.question_id.in_(
-                    TestQuestion.query.filter_by(test_id=test.id).with_entities(TestQuestion.id)
-                )
-            ).delete(synchronize_session=False)
-            
-            # Удаляем вопросы теста
-            TestQuestion.query.filter_by(test_id=test.id).delete()
-            
-            # Удаляем сам тест
-            db.session.delete(test)
+        has_test = test is not None
+        logger.info(f"Наличие теста: {has_test}")
 
-        # Удаление изображений
-        if material.image_path:
+        # Проверяем наличие активных назначений
+        active_assignments = TestAssignment.query.filter_by(material_id=material_id, is_completed=False).count()
+        has_active_assignments = active_assignments > 0
+        logger.info(f"Активных назначений: {active_assignments}")
+
+        # Если это первый запрос на удаление, возвращаем информацию о зависимостях
+        if not data.get('confirmed'):
+            logger.info("Возвращаем информацию о зависимостях")
+            return jsonify({
+                'has_test': has_test,
+                'has_active_assignments': has_active_assignments,
+                'active_assignments_count': active_assignments,
+                'needs_confirmation': True
+            })
+
+        # Если пользователь подтвердил удаление
+        if data.get('confirmed'):
+            logger.info("Начинаем процесс удаления")
             try:
-                os.remove(os.path.join(app.static_folder, 'img', 'materials', material.image_path))
+                # Сначала удаляем все связанные результаты тестов
+                if test:
+                    logger.info("Удаляем связанные результаты теста")
+                    # Удаляем результаты вопросов теста
+                    TestQuestionResult.query.filter(
+                        TestQuestionResult.test_result_id.in_(
+                            TestResult.query.filter_by(test_id=test.id).with_entities(TestResult.id)
+                        )
+                    ).delete(synchronize_session=False)
+                    
+                    # Удаляем результаты тестов
+                    TestResult.query.filter_by(test_id=test.id).delete()
+                    
+                    # Удаляем ответы на вопросы
+                    TestAnswer.query.filter(
+                        TestAnswer.question_id.in_(
+                            TestQuestion.query.filter_by(test_id=test.id).with_entities(TestQuestion.id)
+                        )
+                    ).delete(synchronize_session=False)
+                    
+                    # Удаляем вопросы теста
+                    TestQuestion.query.filter_by(test_id=test.id).delete()
+                    
+                    # Удаляем сам тест
+                    db.session.delete(test)
+                    logger.info("Тест успешно удален")
+
+                # Удаляем все назначения теста
+                TestAssignment.query.filter_by(material_id=material_id).delete()
+                logger.info("Назначения теста удалены")
+
+                # Удаление изображений
+                if material.image_path:
+                    try:
+                        image_path = os.path.join(app.static_folder, 'img', 'materials', material.image_path)
+                        logger.info(f"Удаляем главное изображение: {image_path}")
+                        if os.path.exists(image_path):
+                            os.remove(image_path)
+                    except Exception as e:
+                        logger.warning(f"Ошибка при удалении главного изображения: {e}")
+
+                for image in material.images:
+                    try:
+                        image_path = os.path.join(app.static_folder, 'img', 'materials', image.image_path)
+                        logger.info(f"Удаляем дополнительное изображение: {image_path}")
+                        if os.path.exists(image_path):
+                            os.remove(image_path)
+                    except Exception as e:
+                        logger.warning(f"Ошибка при удалении дополнительного изображения: {e}")
+
+                # Удаляем сам материал
+                logger.info("Удаляем материал из базы данных")
+                db.session.delete(material)
+                db.session.commit()
+                logger.info("Материал успешно удален")
+
+                return jsonify({
+                    'success': True,
+                    'redirect': url_for('brand', brand_id=brand_id),
+                    'message': 'Матеріал було успішно видалено'
+                })
+
             except Exception as e:
-                app.logger.warning(f"Failed to delete main image: {e}")
-
-        for image in material.images:
-            try:
-                os.remove(os.path.join(app.static_folder, 'img', 'materials', image.image_path))
-            except Exception as e:
-                app.logger.warning(f"Failed to delete additional image: {e}")
-
-        # Удаляем сам материал
-        db.session.delete(material)
-        db.session.commit()
-
-        flash('Матеріал було успішно видалено', 'success')
-        return jsonify({
-            'success': True,
-            'redirect': url_for('brand', brand_id=brand_id),
-            'message': 'Матеріал було успішно видалено'
-        })
+                db.session.rollback()
+                logger.error(f"Ошибка при удалении материала: {str(e)}")
+                logger.error(traceback.format_exc())
+                return jsonify({
+                    'error': 'Помилка при видаленні матеріалу',
+                    'details': str(e)
+                }), 500
 
     except Exception as e:
-        import traceback
-        app.logger.error(f"[DELETE MATERIAL] Internal server error: {e}")
-        app.logger.error(traceback.format_exc())
-        db.session.rollback()
-        flash('Помилка при видаленні матеріалу', 'error')
+        logger.error(f"Непредвиденная ошибка в delete_material: {str(e)}")
+        logger.error(traceback.format_exc())
         return jsonify({
             'error': 'Помилка при видаленні матеріалу',
-            'redirect': url_for('view_material', material_id=material_id)
+            'details': str(e)
         }), 500
+    finally:
+        logger.info(f"=== Завершение удаления материала {material_id} ===")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -1141,8 +1200,6 @@ def admin_dashboard():
         success_rate = (passed_tests / total_attempts * 100) if total_attempts > 0 else 0
         
         # Статистика по времени (последние 30 дней)
-        from datetime import datetime, timedelta
-        
         time_data = {}
         today = datetime.utcnow().date()
         for i in range(30):
@@ -1362,6 +1419,16 @@ def serve_static(filename):
 @app.errorhandler(Exception)
 def handle_error(error):
     logger.error(f"Произошла ошибка: {str(error)}")
+    logger.error(traceback.format_exc())
+    
+    # Если запрос ожидает JSON, возвращаем JSON-ответ
+    if request.is_json or request.headers.get('Accept') == 'application/json':
+        return jsonify({
+            'error': 'Внутрішня помилка сервера',
+            'details': str(error)
+        }), 500
+    
+    # Иначе возвращаем HTML-страницу с ошибкой
     return render_template('error.html', error=error), 500
 
 @app.route('/admin/add_user', methods=['GET', 'POST'])
@@ -1374,17 +1441,14 @@ def add_user():
     form = AddUserForm()
     if form.validate_on_submit():
         try:
-            # Combine first and last name for username
-            username = f"{form.first_name.data} {form.last_name.data}"
-            
             # Check if user already exists
-            if User.query.filter_by(username=username).first():
+            if User.query.filter_by(username=form.username.data).first():
                 flash('Користувач з таким ім\'ям вже існує', 'error')
-                return render_template('add_user.html', form=form)
+                return render_template('admin/users.html', form=form)
             
             # Create new user
             user = User(
-                username=username,
+                username=form.username.data,
                 role=form.role.data,
                 phone_number=form.phone_number.data,
                 department=form.department.data,
@@ -1396,14 +1460,14 @@ def add_user():
             db.session.commit()
             
             flash('Користувача успішно додано', 'success')
-            return redirect(url_for('admin_dashboard'))
+            return redirect(url_for('users'))
             
         except Exception as e:
             db.session.rollback()
             flash('Помилка при створенні користувача', 'error')
-            print(f"Error creating user: {str(e)}")
+            logger.error(f"Error creating user: {str(e)}")
     
-    return render_template('add_user.html', form=form)
+    return redirect(url_for('users'))
 
 @app.route('/material/image/<int:image_id>/delete', methods=['POST'])
 @login_required
@@ -1502,27 +1566,63 @@ def delete_test_assignment(assignment_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/admin/test_assignments/<int:assignment_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_test_assignment(assignment_id):
+    assignment = TestAssignment.query.get_or_404(assignment_id)
+    form = EditTestAssignmentForm()
+    
+    if form.validate_on_submit():
+        try:
+            # Проверяем, что дата окончания позже даты начала
+            if form.end_date.data <= form.start_date.data:
+                flash('Дата окончания должна быть позже даты начала', 'error')
+                return redirect(url_for('edit_test_assignment', assignment_id=assignment_id))
+            
+            # Обновляем даты
+            assignment.start_date = form.start_date.data
+            assignment.end_date = form.end_date.data
+            
+            db.session.commit()
+            flash('Дати успішно оновлено', 'success')
+            return redirect(url_for('test_assignments'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error updating test assignment: {str(e)}")
+            flash('Произошла ошибка при обновлении дат', 'error')
+    
+    # Для GET запроса заполняем форму текущими значениями
+    if request.method == 'GET':
+        form.start_date.data = assignment.start_date
+        form.end_date.data = assignment.end_date
+    
+    return render_template('edit_test_assignment.html', 
+                         form=form, 
+                         assignment=assignment)
+
 @app.route('/my_assignments')
 @login_required
 def my_assignments():
-    # Получаем активные назначения для текущего пользователя
-    now = datetime.utcnow()
-    assignments = TestAssignment.query.filter(
-        TestAssignment.user_id == current_user.id,
-        TestAssignment.start_date <= now,
-        TestAssignment.end_date >= now,
-        TestAssignment.is_completed == False
-    ).order_by(TestAssignment.end_date).all()
+    # Получаем все назначения для текущего пользователя
+    assignments = TestAssignment.query.filter_by(user_id=current_user.id).all()
     
-    # Получаем завершенные назначения
-    completed_assignments = TestAssignment.query.filter(
-        TestAssignment.user_id == current_user.id,
-        TestAssignment.is_completed == True
-    ).order_by(TestAssignment.end_date.desc()).all()
+    # Разделяем на активные и завершенные
+    active_assignments = []
+    completed_assignments = []
+    now = datetime.utcnow()  # Используем UTC время
     
-    return render_template('my_assignments.html',
-                         assignments=assignments,
-                         completed_assignments=completed_assignments)
+    for assignment in assignments:
+        if assignment.end_date > now:
+            active_assignments.append(assignment)
+        else:
+            completed_assignments.append(assignment)
+    
+    return render_template('my_assignments.html', 
+                         assignments=active_assignments,
+                         completed_assignments=completed_assignments,
+                         now=now)
 
 @app.before_request
 def before_request():
@@ -1553,6 +1653,121 @@ def shutdown_session(exception=None):
         db.session.remove()
     except Exception as e:
         logger.error(f"Error in shutdown_session: {str(e)}")
+
+@app.errorhandler(404)
+def not_found_error(error):
+    if request.is_json:
+        return jsonify({'error': 'Ресурс не знайдено'}), 404
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    if request.is_json:
+        return jsonify({'error': 'Внутрішня помилка сервера'}), 500
+    return render_template('500.html'), 500
+
+@app.route('/admin/users')
+@login_required
+@admin_required
+def users():
+    users = User.query.all()
+    form = AddUserForm()
+    return render_template('admin/users.html', users=users, form=form)
+
+@app.route('/admin/users/<int:user_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(user_id):
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        # Проверяем, не пытаемся ли удалить последнего администратора
+        if user.role == 'admin':
+            admin_count = User.query.filter_by(role='admin').count()
+            if admin_count <= 1:
+                return jsonify({'error': 'Неможливо видалити останнього адміністратора'}), 400
+        
+        # Проверяем, не пытаемся ли удалить самого себя
+        if user.id == current_user.id:
+            return jsonify({'error': 'Неможливо видалити власний обліковий запис'}), 400
+        
+        # Удаляем все связанные записи
+        try:
+            # Удаляем результаты тестов пользователя
+            TestResult.query.filter_by(user_id=user.id).delete()
+            
+            # Удаляем назначения тестов пользователя
+            TestAssignment.query.filter_by(user_id=user.id).delete()
+            
+            # Удаляем самого пользователя
+            db.session.delete(user)
+            db.session.commit()
+            
+            return jsonify({'success': True})
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error deleting user data: {str(e)}")
+            return jsonify({'error': 'Помилка при видаленні даних користувача'}), 500
+            
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error deleting user: {str(e)}")
+        return jsonify({'error': 'Помилка при видаленні користувача'}), 500
+
+@app.route('/admin/users/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+    form = AddUserForm(obj=user)
+    
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            user.username = form.username.data
+            if form.password.data:  # Обновляем пароль только если он был изменен
+                user.set_password(form.password.data)
+            user.role = form.role.data
+            user.phone_number = form.phone_number.data
+            user.department = form.department.data
+            user.position = form.position.data
+            
+            try:
+                db.session.commit()
+                flash('Користувача успішно оновлено', 'success')
+                return redirect(url_for('users'))
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Error updating user: {str(e)}")
+                flash('Помилка при оновленні користувача', 'error')
+    
+    return render_template('admin/edit_user.html', form=form, user=user)
+
+@app.route('/admin/users/<int:user_id>/dependencies', methods=['GET'])
+@login_required
+@admin_required
+def check_user_dependencies(user_id):
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        # Перевіряємо результати тестів
+        test_results_count = TestResult.query.filter_by(user_id=user.id).count()
+        
+        # Перевіряємо призначені тести
+        test_assignments_count = TestAssignment.query.filter_by(user_id=user.id).count()
+        
+        has_dependencies = test_results_count > 0 or test_assignments_count > 0
+        
+        return jsonify({
+            'has_dependencies': has_dependencies,
+            'test_results_count': test_results_count,
+            'test_assignments_count': test_assignments_count
+        })
+        
+    except Exception as e:
+        logger.error(f"Error checking user dependencies: {str(e)}")
+        return jsonify({'error': 'Помилка при перевірці залежностей'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

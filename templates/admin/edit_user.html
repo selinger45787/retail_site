@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование пользователя{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Редактирование пользователя</h1>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                {{ form.csrf_token }}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control") }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.phone_number.label(class="form-label") }}
+                        {{ form.phone_number(class="form-control") }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control") }}
+                        <small class="form-text text-muted">Оставьте пустым, если не хотите менять пароль</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.confirm_password.label(class="form-label") }}
+                        {{ form.confirm_password(class="form-control") }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        {{ form.role.label(class="form-label") }}
+                        {{ form.role(class="form-select") }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.department.label(class="form-label") }}
+                        {{ form.department(class="form-select") }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.position.label(class="form-label") }}
+                        {{ form.position(class="form-select") }}
+                    </div>
+                </div>
+                <div class="text-end">
+                    <a href="{{ url_for('users') }}" class="btn btn-secondary">Отмена</a>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

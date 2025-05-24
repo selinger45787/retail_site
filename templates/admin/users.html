@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Управління користувачами{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Управління користувачами</h1>
+    
+    <!-- Пошук та фільтрація -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="searchForm" class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Пошук користувачів...">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="roleFilter">
+                        <option value="">Всі ролі</option>
+                        <option value="admin">Адміністратор</option>
+                        <option value="user">Користувач</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="departmentFilter">
+                        <option value="">Всі відділи</option>
+                        <option value="online">Онлайн</option>
+                        <option value="offline">Офлайн</option>
+                        <option value="office">Офіс</option>
+                        <option value="management">Менеджмент</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-secondary" id="resetFilters">Скинути фільтри</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Форма створення користувача -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Створити нового користувача</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('add_user') }}">
+                {{ form.csrf_token }}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control") }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.phone_number.label(class="form-label") }}
+                        {{ form.phone_number(class="form-control") }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control") }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.confirm_password.label(class="form-label") }}
+                        {{ form.confirm_password(class="form-control") }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        {{ form.role.label(class="form-label") }}
+                        {{ form.role(class="form-select") }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.department.label(class="form-label") }}
+                        {{ form.department(class="form-select") }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.position.label(class="form-label") }}
+                        {{ form.position(class="form-select") }}
+                    </div>
+                </div>
+                <div class="text-end">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Список користувачів -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Список користувачів</h5>
+            <span class="badge bg-primary" id="userCount">Всього: {{ users|length }}</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Ім'я користувача</th>
+                            <th>Роль</th>
+                            <th>Телефон</th>
+                            <th>Відділ</th>
+                            <th>Посада</th>
+                            <th>Дата реєстрації</th>
+                            <th class="text-center">Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>
+                                {% if user.role == 'admin' %}
+                                    <span class="badge bg-danger">Адміністратор</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Користувач</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.phone_number or '-' }}</td>
+                            <td>{{ user.department or '-' }}</td>
+                            <td>{{ user.position or '-' }}</td>
+                            <td>{{ user.created_at.strftime('%d.%m.%Y') }}</td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('edit_user', user_id=user.id) }}" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="Редагувати">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="checkUserDependencies({{ user.id }})"
+                                            title="Видалити">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно підтвердження видалення -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteUserModalLabel">Підтвердження видалення</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="deleteUserInfo">
+                    <p>Ви впевнені, що хочете видалити цього користувача?</p>
+                    <div id="userDependencies" class="mt-3" style="display: none;">
+                        <h6>Пов'язані дані:</h6>
+                        <ul class="list-unstyled">
+                            <li id="testResultsInfo"></li>
+                            <li id="testAssignmentsInfo"></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteUser">Видалити</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentUserId = null;
+
+// Функція для фільтрації таблиці
+function filterTable() {
+    const searchText = document.getElementById('searchInput').value.toLowerCase();
+    const roleFilter = document.getElementById('roleFilter').value;
+    const departmentFilter = document.getElementById('departmentFilter').value;
+    
+    const rows = document.querySelectorAll('tbody tr');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const username = row.cells[0].textContent.toLowerCase();
+        const role = row.cells[1].textContent.toLowerCase();
+        const department = row.cells[3].textContent.toLowerCase();
+        
+        const matchesSearch = username.includes(searchText);
+        const matchesRole = !roleFilter || role.includes(roleFilter);
+        const matchesDepartment = !departmentFilter || department.includes(departmentFilter);
+        
+        if (matchesSearch && matchesRole && matchesDepartment) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    document.getElementById('userCount').textContent = `Всього: ${visibleCount}`;
+}
+
+// Додаємо обробники подій для фільтрів
+document.getElementById('searchInput').addEventListener('input', filterTable);
+document.getElementById('roleFilter').addEventListener('change', filterTable);
+document.getElementById('departmentFilter').addEventListener('change', filterTable);
+
+// Скидання фільтрів
+document.getElementById('resetFilters').addEventListener('click', function() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('roleFilter').value = '';
+    document.getElementById('departmentFilter').value = '';
+    filterTable();
+});
+
+function checkUserDependencies(userId) {
+    currentUserId = userId;
+    
+    // Отримуємо інформацію про залежності користувача
+    fetch(`/admin/users/${userId}/dependencies`)
+        .then(response => response.json())
+        .then(data => {
+            const dependenciesDiv = document.getElementById('userDependencies');
+            const testResultsInfo = document.getElementById('testResultsInfo');
+            const testAssignmentsInfo = document.getElementById('testAssignmentsInfo');
+            
+            if (data.has_dependencies) {
+                dependenciesDiv.style.display = 'block';
+                testResultsInfo.textContent = `Результати тестів: ${data.test_results_count}`;
+                testAssignmentsInfo.textContent = `Призначені тести: ${data.test_assignments_count}`;
+            } else {
+                dependenciesDiv.style.display = 'none';
+            }
+            
+            new bootstrap.Modal(document.getElementById('deleteUserModal')).show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Помилка при отриманні інформації про користувача');
+        });
+}
+
+document.getElementById('confirmDeleteUser').addEventListener('click', function() {
+    if (!currentUserId) return;
+    
+    fetch(`/admin/users/${currentUserId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Помилка при видаленні користувача');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Помилка при видаленні користувача');
+    });
+});
+</script>
+{% endblock %} 
