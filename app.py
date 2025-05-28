@@ -1444,7 +1444,7 @@ def add_user():
             # Check if user already exists
             if User.query.filter_by(username=form.username.data).first():
                 flash('Користувач з таким ім\'ям вже існує', 'error')
-                return render_template('admin/users.html', form=form)
+                return render_template('admin/users.html', form=form, users=User.query.all())
             
             # Create new user
             user = User(
@@ -1467,7 +1467,7 @@ def add_user():
             flash('Помилка при створенні користувача', 'error')
             logger.error(f"Error creating user: {str(e)}")
     
-    return redirect(url_for('users'))
+    return render_template('admin/users.html', form=form, users=User.query.all())
 
 @app.route('/material/image/<int:image_id>/delete', methods=['POST'])
 @login_required
@@ -1679,42 +1679,78 @@ def users():
 @login_required
 @admin_required
 def delete_user(user_id):
+    logger.info(f"=== Начало удаления пользователя {user_id} ===")
     try:
+        # Проверяем CSRF-токен
+        data = request.get_json()
+        if not data or 'csrf_token' not in data:
+            logger.error("CSRF token missing")
+            return jsonify({'error': 'CSRF token missing'}), 400
+
+        try:
+            validate_csrf(data['csrf_token'])
+        except Exception as e:
+            logger.error(f"CSRF validation error: {str(e)}")
+            return jsonify({'error': 'Invalid CSRF token'}), 400
+
         user = User.query.get_or_404(user_id)
+        logger.info(f"Найден пользователь: {user.username}")
         
         # Проверяем, не пытаемся ли удалить последнего администратора
         if user.role == 'admin':
             admin_count = User.query.filter_by(role='admin').count()
             if admin_count <= 1:
+                logger.warning(f"Попытка удалить последнего администратора: {user.username}")
                 return jsonify({'error': 'Неможливо видалити останнього адміністратора'}), 400
         
         # Проверяем, не пытаемся ли удалить самого себя
         if user.id == current_user.id:
+            logger.warning(f"Попытка удалить свой аккаунт: {user.username}")
             return jsonify({'error': 'Неможливо видалити власний обліковий запис'}), 400
         
-        # Удаляем все связанные записи
         try:
-            # Удаляем результаты тестов пользователя
+            # 1. Удаляем все результаты тестов пользователя и связанные результаты вопросов
+            test_results = TestResult.query.filter_by(user_id=user.id).all()
+            logger.info(f"Найдено результатов тестов: {len(test_results)}")
+            for test_result in test_results:
+                TestQuestionResult.query.filter_by(test_result_id=test_result.id).delete()
+                logger.info(f"Удалены результаты вопросов для теста {test_result.id}")
             TestResult.query.filter_by(user_id=user.id).delete()
-            
-            # Удаляем назначения тестов пользователя
+            logger.info("Удалены все результаты тестов пользователя")
+
+            # 2. Удаляем все назначения тестов пользователя (где он назначен)
             TestAssignment.query.filter_by(user_id=user.id).delete()
-            
-            # Удаляем самого пользователя
+            logger.info("Удалены все назначения тестов пользователя")
+
+            # 2.1. Удаляем все назначения, которые этот пользователь создавал
+            TestAssignment.query.filter_by(created_by=user.id).delete()
+            logger.info("Удалены все назначения, созданные пользователем")
+
+            # 3. Удаляем самого пользователя
             db.session.delete(user)
             db.session.commit()
+            logger.info(f"Пользователь {user.username} успешно удален")
             
-            return jsonify({'success': True})
+            flash('Користувача успішно видалено', 'success')
+            return jsonify({
+                'success': True,
+                'redirect': url_for('users'),
+                'message': 'Користувача успішно видалено'
+            })
             
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Error deleting user data: {str(e)}")
+            logger.error(f"Ошибка при удалении данных пользователя: {str(e)}")
+            logger.error(f"Детали ошибки: {traceback.format_exc()}")
             return jsonify({'error': 'Помилка при видаленні даних користувача'}), 500
             
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error deleting user: {str(e)}")
+        logger.error(f"Непредвиденная ошибка при удалении пользователя: {str(e)}")
+        logger.error(f"Детали ошибки: {traceback.format_exc()}")
         return jsonify({'error': 'Помилка при видаленні користувача'}), 500
+    finally:
+        logger.info(f"=== Завершение удаления пользователя {user_id} ===")
 
 @app.route('/admin/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -1751,15 +1787,16 @@ def check_user_dependencies(user_id):
     try:
         user = User.query.get_or_404(user_id)
         
-        # Перевіряємо результати тестів
+        # Проверяем результаты тестов
         test_results_count = TestResult.query.filter_by(user_id=user.id).count()
         
-        # Перевіряємо призначені тести
+        # Проверяем назначенные тесты
         test_assignments_count = TestAssignment.query.filter_by(user_id=user.id).count()
         
         has_dependencies = test_results_count > 0 or test_assignments_count > 0
         
         return jsonify({
+            'success': True,
             'has_dependencies': has_dependencies,
             'test_results_count': test_results_count,
             'test_assignments_count': test_assignments_count
@@ -1767,7 +1804,10 @@ def check_user_dependencies(user_id):
         
     except Exception as e:
         logger.error(f"Error checking user dependencies: {str(e)}")
-        return jsonify({'error': 'Помилка при перевірці залежностей'}), 500
+        return jsonify({
+            'success': False,
+            'error': 'Помилка при перевірці залежностей'
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

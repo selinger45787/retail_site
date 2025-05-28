@@ -3,9 +3,108 @@
 {% block title %}Управління користувачами{% endblock %}
 
 {% block content %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="container">
     <h1 class="mb-4">Управління користувачами</h1>
     
+    <!-- Форма створення користувача -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Створити нового користувача</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('add_user') }}" id="addUserForm">
+                {{ form.csrf_token }}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control") }}
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.phone_number.label(class="form-label") }}
+                        {{ form.phone_number(class="form-control") }}
+                        {% if form.phone_number.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.phone_number.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control", autocomplete="new-password") }}
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.confirm_password.label(class="form-label") }}
+                        {{ form.confirm_password(class="form-control", autocomplete="new-password") }}
+                        {% if form.confirm_password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.confirm_password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        {{ form.role.label(class="form-label") }}
+                        {{ form.role(class="form-select") }}
+                        {% if form.role.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.role.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.department.label(class="form-label") }}
+                        {{ form.department(class="form-select") }}
+                        {% if form.department.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.department.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.position.label(class="form-label") }}
+                        {{ form.position(class="form-select") }}
+                        {% if form.position.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.position.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Додати користувача</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Пошук та фільтрація -->
     <div class="card mb-4">
         <div class="card-body">
@@ -31,55 +130,6 @@
                 </div>
                 <div class="col-md-2">
                     <button type="button" class="btn btn-secondary" id="resetFilters">Скинути фільтри</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Форма створення користувача -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Створити нового користувача</h5>
-        </div>
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('add_user') }}">
-                {{ form.csrf_token }}
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        {{ form.username.label(class="form-label") }}
-                        {{ form.username(class="form-control") }}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        {{ form.phone_number.label(class="form-label") }}
-                        {{ form.phone_number(class="form-control") }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        {{ form.password.label(class="form-label") }}
-                        {{ form.password(class="form-control") }}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        {{ form.confirm_password.label(class="form-label") }}
-                        {{ form.confirm_password(class="form-control") }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        {{ form.role.label(class="form-label") }}
-                        {{ form.role(class="form-select") }}
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        {{ form.department.label(class="form-label") }}
-                        {{ form.department(class="form-select") }}
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        {{ form.position.label(class="form-label") }}
-                        {{ form.position(class="form-select") }}
-                    </div>
-                </div>
-                <div class="text-end">
-                    {{ form.submit(class="btn btn-primary") }}
                 </div>
             </form>
         </div>
@@ -128,8 +178,9 @@
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button type="button" 
-                                            class="btn btn-sm btn-outline-danger"
-                                            onclick="checkUserDependencies({{ user.id }})"
+                                            class="btn btn-sm btn-outline-danger delete-user-btn"
+                                            data-user-id="{{ user.id }}"
+                                            data-username="{{ user.username }}"
                                             title="Видалити">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
@@ -145,129 +196,232 @@
 </div>
 
 <!-- Модальне вікно підтвердження видалення -->
-<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="position: relative; z-index: 1061;">
             <div class="modal-header">
                 <h5 class="modal-title" id="deleteUserModalLabel">Підтвердження видалення</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div id="deleteUserInfo">
-                    <p>Ви впевнені, що хочете видалити цього користувача?</p>
-                    <div id="userDependencies" class="mt-3" style="display: none;">
-                        <h6>Пов'язані дані:</h6>
-                        <ul class="list-unstyled">
-                            <li id="testResultsInfo"></li>
-                            <li id="testAssignmentsInfo"></li>
-                        </ul>
-                    </div>
-                </div>
+                <div id="deleteWarnings"></div>
+                <p>Ви впевнені, що хочете видалити користувача <strong id="deleteUserName"></strong>?</p>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="position: relative; z-index: 1062;">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteUser">Видалити</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Видалити</button>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1050;
+}
+
+.custom-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.custom-modal-content {
+    position: relative;
+    margin: 10% auto;
+    width: 90%;
+    max-width: 500px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1051;
+}
+
+.custom-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.custom-modal-header h5 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.custom-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-modal-close:hover {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.custom-modal-body {
+    padding: 1rem;
+}
+
+.custom-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+}
+</style>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-let currentUserId = null;
-
-// Функція для фільтрації таблиці
-function filterTable() {
-    const searchText = document.getElementById('searchInput').value.toLowerCase();
-    const roleFilter = document.getElementById('roleFilter').value;
-    const departmentFilter = document.getElementById('departmentFilter').value;
-    
-    const rows = document.querySelectorAll('tbody tr');
-    let visibleCount = 0;
-    
-    rows.forEach(row => {
-        const username = row.cells[0].textContent.toLowerCase();
-        const role = row.cells[1].textContent.toLowerCase();
-        const department = row.cells[3].textContent.toLowerCase();
-        
-        const matchesSearch = username.includes(searchText);
-        const matchesRole = !roleFilter || role.includes(roleFilter);
-        const matchesDepartment = !departmentFilter || department.includes(departmentFilter);
-        
-        if (matchesSearch && matchesRole && matchesDepartment) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация модального окна
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteUserModal'), {
+        backdrop: true,
+        keyboard: true
     });
     
-    document.getElementById('userCount').textContent = `Всього: ${visibleCount}`;
-}
-
-// Додаємо обробники подій для фільтрів
-document.getElementById('searchInput').addEventListener('input', filterTable);
-document.getElementById('roleFilter').addEventListener('change', filterTable);
-document.getElementById('departmentFilter').addEventListener('change', filterTable);
-
-// Скидання фільтрів
-document.getElementById('resetFilters').addEventListener('click', function() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('roleFilter').value = '';
-    document.getElementById('departmentFilter').value = '';
-    filterTable();
-});
-
-function checkUserDependencies(userId) {
-    currentUserId = userId;
+    // Функция для фильтрации таблицы
+    function filterTable() {
+        const searchText = document.getElementById('searchInput').value.toLowerCase();
+        const roleFilter = document.getElementById('roleFilter').value.toLowerCase();
+        const departmentFilter = document.getElementById('departmentFilter').value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const username = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+            const role = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            const department = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+            
+            const matchesSearch = username.includes(searchText);
+            const matchesRole = !roleFilter || role.includes(roleFilter);
+            const matchesDepartment = !departmentFilter || department.includes(departmentFilter);
+            
+            row.style.display = matchesSearch && matchesRole && matchesDepartment ? '' : 'none';
+        });
+        
+        // Обновляем счетчик пользователей
+        const visibleRows = document.querySelectorAll('tbody tr:not([style*="display: none"])').length;
+        document.getElementById('userCount').textContent = `Всього: ${visibleRows}`;
+    }
     
-    // Отримуємо інформацію про залежності користувача
-    fetch(`/admin/users/${userId}/dependencies`)
+    // Обработчики событий для фильтров
+    document.getElementById('searchInput').addEventListener('input', filterTable);
+    document.getElementById('roleFilter').addEventListener('change', filterTable);
+    document.getElementById('departmentFilter').addEventListener('change', filterTable);
+    
+    // Сброс фильтров
+    document.getElementById('resetFilters').addEventListener('click', function() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('roleFilter').value = '';
+        document.getElementById('departmentFilter').value = '';
+        filterTable();
+    });
+    
+    // Обработчик удаления пользователя
+    document.querySelectorAll('.delete-user-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const username = this.getAttribute('data-username');
+            
+            // Проверяем зависимости пользователя
+            fetch(`/admin/users/${userId}/dependencies`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.error || 'Помилка при перевірці залежностей');
+                }
+                
+                // Очищаем предыдущие предупреждения
+                const warningsDiv = document.getElementById('deleteWarnings');
+                warningsDiv.innerHTML = '';
+                
+                // Добавляем предупреждения, если есть зависимости
+                if (data.test_results_count > 0) {
+                    warningsDiv.innerHTML += `<div class="alert alert-warning">У користувача є ${data.test_results_count} результатів тестів, які також будуть видалені.</div>`;
+                }
+                
+                if (data.test_assignments_count > 0) {
+                    warningsDiv.innerHTML += `<div class="alert alert-danger">У користувача є ${data.test_assignments_count} призначених тестів, які також будуть видалені.</div>`;
+                }
+                
+                document.getElementById('deleteUserName').textContent = username;
+                document.getElementById('confirmDeleteBtn').setAttribute('data-user-id', userId);
+                deleteModal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message || 'Помилка при перевірці залежностей користувача');
+            });
+        });
+    });
+    
+    // Подтверждение удаления
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        const userId = this.getAttribute('data-user-id');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        fetch(`/admin/users/${userId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                csrf_token: csrfToken
+            })
+        })
         .then(response => response.json())
         .then(data => {
-            const dependenciesDiv = document.getElementById('userDependencies');
-            const testResultsInfo = document.getElementById('testResultsInfo');
-            const testAssignmentsInfo = document.getElementById('testAssignmentsInfo');
-            
-            if (data.has_dependencies) {
-                dependenciesDiv.style.display = 'block';
-                testResultsInfo.textContent = `Результати тестів: ${data.test_results_count}`;
-                testAssignmentsInfo.textContent = `Призначені тести: ${data.test_assignments_count}`;
+            if (data.success) {
+                // Показываем сообщение об успехе
+                const flashContainer = document.createElement('div');
+                flashContainer.className = 'alert alert-success alert-dismissible fade show';
+                flashContainer.innerHTML = `
+                    ${data.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                document.querySelector('.container').insertBefore(flashContainer, document.querySelector('.container').firstChild);
+                
+                // Перезагружаем страницу через небольшую задержку
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 1000);
             } else {
-                dependenciesDiv.style.display = 'none';
+                alert(data.error || 'Помилка при видаленні користувача');
             }
-            
-            new bootstrap.Modal(document.getElementById('deleteUserModal')).show();
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Помилка при отриманні інформації про користувача');
+            alert('Помилка при видаленні користувача');
+        })
+        .finally(() => {
+            deleteModal.hide();
         });
-}
-
-document.getElementById('confirmDeleteUser').addEventListener('click', function() {
-    if (!currentUserId) return;
-    
-    fetch(`/admin/users/${currentUserId}/delete`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token() }}'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert(data.error || 'Помилка при видаленні користувача');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Помилка при видаленні користувача');
     });
 });
 </script>
