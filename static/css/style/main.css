@@ -31,24 +31,43 @@ header {
 .site-title {
     position: absolute;
     left: 0;
+    top: 0;
     width: 280px;
-    padding-left: 0;
+    height: 72px;
+    padding-left: 20px;
     z-index: 1001;
     display: flex;
+    align-items: center;
     justify-content: flex-start;
 }
 
 .site-title a {
     text-decoration: none;
+    display: block;
+}
+
+.header-logo-container {
+    position: absolute;
+    left: 2rem;
     display: flex;
     align-items: center;
-    width: 100%;
-    padding-left: 2rem;
+}
+
+.header-logo-container a {
+    text-decoration: none;
+    display: block;
 }
 
 .header-logo {
-    height: 40px;
+    height: 50px;
     width: auto;
+    display: block;
+}
+
+.site-name {
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
 }
 
 .auth-buttons {
@@ -90,42 +109,82 @@ header {
 }
 
 .admin-link {
-    background: linear-gradient(145deg, #3a3e45, #272a30);
-    color: #ffffff;
-    border: 1px solid #4a4e56;
-    border-bottom: none;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    text-decoration: none;
     position: relative;
-    padding: 0.65rem 1.2rem;
-    border-radius: 10px 10px 0 0;
-    margin-bottom: 0;
-    z-index: 2002;
-    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 14px;
     font-weight: 600;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.admin-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.admin-link:hover::before {
+    left: 100%;
 }
 
 .admin-link:hover {
-    background: linear-gradient(145deg, #45494f, #31343a);
+    background: linear-gradient(135deg, #495057, #343a40);
     color: #ffffff;
-    text-decoration: none;
     transform: translateY(-2px);
-    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .admin-link:before {
-    content: "\f0ad";
-    font-family: "Font Awesome 6 Free";
+    content: '\f0c9';
+    font-family: 'Font Awesome 6 Free';
     font-weight: 900;
+    margin-right: 8px;
 }
 
 .user-info {
-    color: white;
-    font-weight: 500;
+    color: #ffffff;
+    font-size: 0.9rem;
     margin-right: 1rem;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.user-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.user-info:hover::before {
+    left: 100%;
+}
+
+.user-info:hover {
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+    text-decoration: none;
 }
 
 /* Layout Styles */
@@ -286,27 +345,24 @@ header {
 /* Responsive Styles */
 @media (max-width: 768px) {
     .header-content {
+        padding: 0 1rem;
         flex-direction: column;
-        align-items: flex-start;
+        gap: 0.5rem;
     }
-    
+
     .site-title {
-        position: relative;
-        width: 100%;
-        padding-left: 1rem;
+        font-size: 1.4rem;
     }
-    
+
     .auth-buttons {
-        position: relative;
-        right: auto;
-        margin-top: 0.5rem;
+        flex-direction: column;
+        gap: 0.5rem;
         width: 100%;
-        justify-content: flex-end;
-        padding-right: 1rem;
     }
-    
+
     .main-content {
         margin-left: 0;
+        padding: 0.5rem;
     }
 }
 
@@ -419,211 +475,31 @@ header {
     color: #666;
 }
 
-/* Admin Dropdown Menu Styles */
-.admin-menu-wrapper {
-    position: relative;
-    display: inline-block;
-    z-index: 2000;
-}
-
-/* При наведении на кнопку или само меню показываем меню */
-.admin-menu-wrapper:hover .admin-dropdown-menu,
-.admin-dropdown-menu:hover {
-    visibility: visible;
-    opacity: 1;
-    transform: translateY(-1px);
-    pointer-events: auto;
-}
-
-.admin-dropdown-menu {
-    visibility: hidden;
-    opacity: 0;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: linear-gradient(145deg, #31343a, #252830);
-    width: 100%;
-    min-width: max-content;
-    border-radius: 0 0 10px 10px;
-    padding: 0;
-    z-index: 2001;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
-    transform: translateY(0);
-    transition: visibility 0.2s, opacity 0.2s, transform 0.2s;
-    pointer-events: none;
-    margin-top: -1px;
-    border: 1px solid #4a4e56;
-    border-top: none;
-    overflow: hidden;
-}
-
-.admin-dropdown-item {
+/* Styles from base.html */
+.submenu-item {
     display: flex;
     align-items: center;
-    padding: 0.85rem 1.2rem;
-    color: #e6e8ea;
+    padding: 8px 12px;
+    color: #333;
     text-decoration: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-size: 14px;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: linear-gradient(145deg, #31343a, #252830);
-    justify-content: flex-start;
-    width: 100%;
-    position: relative;
-    overflow: hidden;
+    transition: background-color 0.2s;
 }
 
-.admin-dropdown-item:hover {
-    background: linear-gradient(145deg, #45494f, #31343a);
-    color: #ffffff;
-    text-decoration: none;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+.submenu-item:hover {
+    background-color: #f5f5f5;
 }
 
-.admin-dropdown-item i {
-    margin-right: 12px;
-    width: 20px;
-    text-align: center;
-    color: #b0b4bc;
-    display: inline-block;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-    opacity: 0.9;
+.brand-name {
+    flex: 1;
+    margin-left: 8px;
+    color: #000;
 }
 
-.admin-dropdown-item:hover i {
-    color: #e6e8ea;
-    transform: scale(1.1) rotate(5deg);
-    opacity: 1;
-}
-
-/* Добавляем эффект свечения при наведении */
-.admin-dropdown-item::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.admin-dropdown-item:hover::after {
-    opacity: 1;
-}
-
-/* Исправляем выравнивание в подменю */
-.admin-dropdown-submenu > .admin-dropdown-item {
-    justify-content: space-between;
-    padding-right: 10px;
-    text-align: left;
-    display: flex;
-}
-
-.admin-dropdown-submenu > .admin-dropdown-item > span {
-    display: flex;
-    align-items: center;
-}
-
-.admin-dropdown-submenu > .admin-dropdown-item::after {
-    content: '\f054';
-    font-family: 'Font Awesome 6 Free';
-    font-weight: 900;
-    font-size: 0.7em;
-    margin-left: auto;
-    color: #bdc3c7;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-}
-
-.admin-dropdown-submenu:hover > .admin-dropdown-item::after {
-    color: #ecf0f1;
-    transform: rotate(90deg);
-}
-
-.admin-dropdown-submenu-content {
-    display: none;
-    background: linear-gradient(145deg, #252830, #1d1f24);
-    padding: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    width: 100%;
-}
-
-.admin-dropdown-submenu-item {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem 1.2rem 0.75rem 1.2rem;
-    color: #b0b4bc;
-    text-decoration: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-size: 13px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-    justify-content: flex-start;
-    width: 100%;
-    position: relative;
-    overflow: hidden;
-}
-
-.admin-dropdown-submenu-item:last-child {
-    border-bottom: none;
-}
-
-.admin-dropdown-submenu-item:hover {
-    background: linear-gradient(145deg, #31343a, #252830);
-    color: #ffffff;
-    text-decoration: none;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.admin-dropdown-submenu-item i {
-    margin-right: 12px;
-    width: 20px;
-    text-align: center;
-    color: #8a8e96;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-    opacity: 0.9;
-}
-
-.admin-dropdown-submenu-item:hover i {
-    color: #e6e8ea;
-    transform: scale(1.1) rotate(5deg);
-    opacity: 1;
-}
-
-/* Добавляем эффект свечения для подпунктов */
-.admin-dropdown-submenu-item::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.admin-dropdown-submenu-item:hover::after {
-    opacity: 1;
-}
-
-/* При активном выпадающем меню кнопка должна выглядеть как активная */
-.admin-menu-wrapper:hover .admin-link {
-    background: linear-gradient(145deg, #45494f, #31343a);
-    color: #ffffff;
-}
-
-/* Submenu Styles */
-.admin-dropdown-submenu {
-    position: relative;
-}
-
-.admin-dropdown-submenu:hover .admin-dropdown-submenu-content {
-    display: block;
+.material-count {
+    color: #000;
+    font-size: 0.85em;
+    background-color: #e9ecef;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
 } 

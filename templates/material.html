@@ -10,100 +10,118 @@
 
 {% block content %}
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<div class="material-header">
-    <div class="material-header-content">
-        <h1>{{ material.brand.name }}</h1>
-        <div class="material-actions">
-            {% if current_user.is_authenticated and current_user.role == 'admin' %}
-            <a href="{{ url_for('edit_material', material_id=material.id) }}" class="material-btn btn-primary">
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Редагувати матеріал
-            </a>
-            <button onclick="deleteMaterial({{ material.id }})" class="material-btn btn-danger">
-                <i class="fas fa-trash"></i> Видалити матеріал
-            </button>
-            {% endif %}
+<div class="material-page">
+    <div class="container-fluid">
+        <!-- Заголовок материала -->
+        <div class="material-header fade-in">
+            <h1 class="material-brand-title">
+                <i class="fas fa-tag me-3"></i>{{ material.brand.name }}
+            </h1>
             
-            <!-- Тестовые действия -->
-            {% if material.tests|length > 0 %}
-                <a href="{{ url_for('take_test', material_id=material.id) }}" class="material-btn btn-primary">Пройти тест</a>
+            <div class="material-actions">
                 {% if current_user.is_authenticated and current_user.role == 'admin' %}
-                    <a href="{{ url_for('edit_test', material_id=material.id) }}" class="material-btn btn-warning">Редагувати тест</a>
+                <a href="{{ url_for('edit_material', material_id=material.id) }}" class="material-btn btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Редагувати матеріал
+                </a>
+                <button onclick="deleteMaterial({{ material.id }})" class="material-btn btn-danger">
+                    <i class="fas fa-trash"></i> 
+                    Видалити матеріал
+                </button>
                 {% endif %}
-            {% elif current_user.is_authenticated and current_user.role == 'admin' %}
-                <a href="{{ url_for('create_test', material_id=material.id) }}" class="material-btn btn-success">Створити тест</a>
-            {% endif %}
+                
+                <!-- Тестовые действия -->
+                {% if material.tests|length > 0 %}
+                    <a href="{{ url_for('take_test', material_id=material.id) }}" class="material-btn btn-primary">
+                        <i class="fas fa-play-circle"></i>
+                        Пройти тест
+                    </a>
+                    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                        <a href="{{ url_for('edit_test', material_id=material.id) }}" class="material-btn btn-warning">
+                            <i class="fas fa-cog"></i>
+                            Редагувати тест
+                        </a>
+                    {% endif %}
+                {% elif current_user.is_authenticated and current_user.role == 'admin' %}
+                    <a href="{{ url_for('create_test', material_id=material.id) }}" class="material-btn btn-success">
+                        <i class="fas fa-plus-circle"></i>
+                        Створити тест
+                    </a>
+                {% endif %}
+            </div>
         </div>
-    </div>
-</div>
 
-<div class="container mt-4">
-    <!-- Кнопка возврата -->
-    <div class="back-button-container mb-4">
-        <a href="{{ url_for('brand', brand_id=material.brand.id) }}" class="material-btn btn-back">
-            <svg class="back-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Повернутись до матеріалів
-        </a>
-    </div>
-
-    {% if material.image_path or material.images %}
-    <!-- Галерея изображений -->
-    <div class="material-gallery mb-4">
-        <!-- Главное изображение -->
-        <div class="main-image-container mb-3">
-            <img src="{{ url_for('static', filename='img/materials/' + (material.image_path or 'default.png')) }}" 
-                 alt="{{ material.title }}" 
-                 class="img-fluid main-image" 
-                 id="mainImage">
+        <!-- Кнопка возврата -->
+        <div class="back-button-container fade-in">
+            <a href="{{ url_for('brand', brand_id=material.brand.id) }}" class="material-btn btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Повернутись до матеріалів
+            </a>
         </div>
-        
-        <!-- Галерея миниатюр -->
-        <div class="thumbnail-gallery">
-            <!-- Главное изображение в галерее -->
-            <div class="thumbnail-item active" data-src="{{ url_for('static', filename='img/materials/' + (material.image_path or 'default.png')) }}">
+
+        {% if material.image_path or material.images %}
+        <!-- Галерея изображений -->
+        <div class="gallery-section fade-in">
+            <h3 style="color: #495057; margin-bottom: 20px; font-weight: 600;">
+                <i class="fas fa-images me-2"></i>Галерея зображень
+            </h3>
+            
+            <!-- Главное изображение -->
+            <div class="main-image-container">
                 <img src="{{ url_for('static', filename='img/materials/' + (material.image_path or 'default.png')) }}" 
                      alt="{{ material.title }}" 
-                     class="img-thumbnail">
+                     class="main-image" 
+                     id="mainImage">
             </div>
             
-            <!-- Дополнительные изображения -->
-            {% if material.images %}
-                {% for image in material.images %}
-                <div class="thumbnail-item" data-src="{{ url_for('static', filename='img/materials/' + image.image_path) }}">
-                    <img src="{{ url_for('static', filename='img/materials/' + image.image_path) }}" 
-                         alt="{{ material.title }}" 
-                         class="img-thumbnail">
+            <!-- Галерея миниатюр -->
+            <div class="thumbnail-gallery">
+                <!-- Главное изображение в галерее -->
+                <div class="thumbnail-item active" data-src="{{ url_for('static', filename='img/materials/' + (material.image_path or 'default.png')) }}">
+                    <img src="{{ url_for('static', filename='img/materials/' + (material.image_path or 'default.png')) }}" 
+                         alt="{{ material.title }}">
                 </div>
-                {% endfor %}
-            {% endif %}
+                
+                <!-- Дополнительные изображения -->
+                {% if material.images %}
+                    {% for image in material.images %}
+                    <div class="thumbnail-item" data-src="{{ url_for('static', filename='img/materials/' + image.image_path) }}">
+                        <img src="{{ url_for('static', filename='img/materials/' + image.image_path) }}" 
+                             alt="{{ material.title }}">
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
         </div>
-    </div>
-    {% endif %}
+        {% endif %}
 
-    <!-- Информация о материале -->
-    <div class="material-content">
-        <h1 class="material-title">{{ material.title }}</h1>
-        <div class="material-meta">
-            <span class="material-category">Категорія: {{ material.category.name }}</span>
-        </div>
-        <div class="material-description">
-            {{ material.description|safe }}
+        <!-- Информация о материале -->
+        <div class="content-section fade-in">
+            <h1 class="material-title">{{ material.title }}</h1>
+            
+            <div class="material-meta">
+                <span class="material-category">
+                    <i class="fas fa-folder me-2"></i>Категорія: {{ material.category.name }}
+                </span>
+            </div>
+            
+            <div class="material-description">
+                {{ material.description|safe }}
+            </div>
         </div>
         
         {% if material.additional_images %}
-        <div class="additional-images">
-            <h3>Додаткові зображення</h3>
-            <div class="image-grid">
-                {% for image in material.additional_images %}
-                <div class="image-item">
-                    <img src="{{ url_for('static', filename='img/materials/' + image.image_path) }}" alt="Додаткове зображення">
+        <!-- Дополнительные изображения -->
+        <div class="additional-images-section fade-in">
+            <div class="additional-images">
+                <h3><i class="fas fa-plus-circle"></i>Додаткові зображення</h3>
+                <div class="image-grid">
+                    {% for image in material.additional_images %}
+                    <div class="image-item">
+                        <img src="{{ url_for('static', filename='img/materials/' + image.image_path) }}" alt="Додаткове зображення">
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </div>
         {% endif %}
@@ -111,20 +129,26 @@
 </div>
 
 <!-- Модальное окно подтверждения удаления -->
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true" style="z-index: 1060;">
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="position: relative; z-index: 1061;">
+        <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="deleteConfirmModalLabel">Підтвердження видалення</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="deleteConfirmModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Підтвердження видалення
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div id="deleteWarnings"></div>
                 <p>Ви впевнені, що хочете видалити цей матеріал?</p>
             </div>
-            <div class="modal-footer" style="position: relative; z-index: 1062;">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">Видалити</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Скасувати
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">
+                    <i class="fas fa-trash me-1"></i>Видалити
+                </button>
             </div>
         </div>
     </div>
@@ -136,111 +160,4 @@
 <!-- Подключаем Bootstrap JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/material.js') }}"></script>
-<script>
-let currentMaterialId = null;
-let deleteModal = null;
-
-// Инициализируем модальное окно при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-    const modalElement = document.getElementById('deleteConfirmModal');
-    
-    // Удаляем старый backdrop, если он есть
-    const oldBackdrop = document.querySelector('.modal-backdrop');
-    if (oldBackdrop) {
-        oldBackdrop.remove();
-    }
-    
-    deleteModal = new bootstrap.Modal(modalElement, {
-        backdrop: true,
-        keyboard: true
-    });
-
-    // Добавляем обработчики для кнопок
-    const cancelButton = modalElement.querySelector('[data-bs-dismiss="modal"]');
-    const confirmButton = document.getElementById('confirmDelete');
-
-    cancelButton.addEventListener('click', function() {
-        deleteModal.hide();
-    });
-
-    confirmButton.addEventListener('click', function() {
-        if (!currentMaterialId) return;
-        
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        
-        // Второй запрос для фактического удаления
-        fetch(`/material/${currentMaterialId}/delete`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({
-                csrf_token: csrfToken,
-                confirmed: true
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = data.redirect;
-            } else {
-                alert(data.error || 'Помилка при видаленні матеріалу');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Помилка при видаленні матеріалу');
-        });
-        
-        deleteModal.hide();
-    });
-});
-
-function deleteMaterial(materialId) {
-    currentMaterialId = materialId;
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    
-    // Первый запрос для проверки зависимостей
-    fetch(`/material/${materialId}/delete`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({
-            csrf_token: csrfToken
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.needs_confirmation) {
-            // Показываем предупреждения
-            const warningsDiv = document.getElementById('deleteWarnings');
-            warningsDiv.innerHTML = '';
-            
-            if (data.has_test) {
-                warningsDiv.innerHTML += '<div class="alert alert-warning">Цей матеріал має створений тест, який також буде видалено.</div>';
-            }
-            
-            if (data.has_active_assignments) {
-                warningsDiv.innerHTML += `<div class="alert alert-danger">У цього матеріалу є ${data.active_assignments_count} активних призначень тестів, які також будуть видалені.</div>`;
-            }
-            
-            // Показываем модальное окно
-            deleteModal.show();
-        } else if (data.error) {
-            alert(data.error);
-        } else if (data.success) {
-            window.location.href = data.redirect;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Помилка при видаленні матеріалу');
-    });
-}
-</script>
 {% endblock %} 

@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory, jsonify, current_app, session
 import os
 import markupsafe
-from models import db, User, Brand, Material, Category, MaterialImage, Test, TestQuestion, TestAnswer, TestResult, TestQuestionResult, TestAssignment
+from models import db, User, Brand, Material, Category, MaterialImage, Test, TestQuestion, TestAnswer, TestResult, TestQuestionResult, TestAssignment, Order
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
 import logging
@@ -179,10 +179,14 @@ def brand(brand_id):
         .order_by(Material.id.desc())\
         .paginate(page=page, per_page=per_page, error_out=False)
     
+    # Получаем все категории для фильтрации
+    categories = Category.query.all()
+    
     return render_template('brand.html', 
                          brand=brand, 
                          materials=materials_pagination.items,
-                         pagination=materials_pagination)
+                         pagination=materials_pagination,
+                         categories=categories)
 
 @app.route('/brand/<int:brand_id>/info')
 def brand_info(brand_id):
@@ -1808,6 +1812,224 @@ def check_user_dependencies(user_id):
             'success': False,
             'error': 'Помилка при перевірці залежностей'
         }), 500
+
+@app.route('/company_structure')
+@login_required
+def company_structure():
+    """Страница структуры компании"""
+    try:
+        # Получаем всех пользователей
+        all_users = User.query.all()
+        
+        # Разделяем пользователей по категориям
+        founders = [user for user in all_users if user.department == 'founders']
+        general_director = next((user for user in all_users if user.department == 'general_director'), None)
+        
+        # Структура отделов с их должностями
+        department_structure = {
+            'accounting': {
+                'name': 'Відділ Бухгалтерії',
+                'positions': {
+                    'department_head': 'Керівник відділу',
+                    'accountant': 'Бухгалтер'
+                }
+            },
+            'marketing': {
+                'name': 'Відділ Маркетингу',
+                'positions': {
+                    'department_head': 'Керівник відділу',
+                    'photographer': 'Фотограф',
+                    'marketer': 'Маркетолог'
+                }
+            },
+            'online_sales': {
+                'name': 'Відділ Онлайн продажу',
+                'positions': {
+                    'department_head': 'Керівник відділу',
+                    'customer_manager': 'Менеджер по роботі з клієнтами'
+                }
+            },
+            'offline_sales': {
+                'name': 'Відділ Офлайн продажу',
+                'positions': {
+                    'department_head': 'Керівник відділу',
+                    'seller': 'Продавець',
+                    'cashier': 'Касир',
+                    'merchandiser': 'Мерчендайзер'
+                }
+            },
+            'foreign_trade': {
+                'name': 'Відділ ЗЕД',
+                'positions': {
+                    'department_head': 'Керівник відділу',
+                    'foreign_trade_manager': 'Менеджер ЗЕД'
+                }
+            },
+            'warehouse': {
+                'name': 'Складський відділ',
+                'positions': {
+                    'department_head': 'Керівник відділу',
+                    'warehouse_worker': 'Комірник'
+                }
+            },
+            'analytics': {
+                'name': 'Відділ аналітики',
+                'positions': {
+                    'department_head': 'Керівник відділу',
+                    'analyst': 'Аналітик'
+                }
+            }
+        }
+        
+        # Группируем сотрудников по отделам
+        departments = {}
+        for dept_code, dept_info in department_structure.items():
+            dept_employees = [user for user in all_users if user.department == dept_code]
+            departments[dept_code] = {
+                'name': dept_info['name'],
+                'positions': dept_info['positions'],
+                'employees': dept_employees
+            }
+        
+        # Подсчитываем статистику
+        total_employees = len(all_users)
+        departments_count = len([dept for dept in departments.values() if dept['employees']])
+        management_count = len([user for user in all_users if user.position == 'department_head'])
+        
+        # Подсчитываем вакантные позиции
+        vacant_positions = 0
+        for dept_info in departments.values():
+            for position_code in dept_info['positions'].keys():
+                position_employees = [emp for emp in dept_info['employees'] if emp.position == position_code]
+                if not position_employees:
+                    vacant_positions += 1
+        
+        return render_template('company_structure.html',
+                             founders=founders,
+                             founders_count=len(founders),
+                             general_director=general_director,
+                             departments=departments,
+                             total_employees=total_employees,
+                             departments_count=departments_count,
+                             management_count=management_count,
+                             vacant_positions=vacant_positions)
+                             
+    except Exception as e:
+        logger.error(f"Error in company_structure: {str(e)}")
+        flash('Помилка при завантаженні структури компанії', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/orders')
+@login_required
+def orders():
+    # Получаем все распоряжения
+    orders = Order.query.order_by(Order.created_at.desc()).all()
+    
+    # Получаем список отделов для фильтрации
+    departments = User.DEPARTMENTS
+    
+    return render_template('orders.html', 
+                         orders=orders,
+                         departments=departments)
+
+@app.route('/orders/add', methods=['GET', 'POST'])
+@login_required
+def add_order():
+    if request.method == 'POST':
+        title = request.form.get('title')
+        description = request.form.get('description')
+        number = request.form.get('number')
+        department = request.form.get('department')
+        image = request.files.get('image')
+        
+        if not all([title, description, number, department]):
+            flash('Будь ласка, заповніть усі поля', 'error')
+            return redirect(url_for('add_order'))
+        
+        try:
+            # Сохраняем изображение, если оно есть
+            image_path = None
+            if image and image.filename:
+                filename = secure_filename(image.filename)
+                image_path = os.path.join(app.static_folder, 'img', 'orders', filename)
+                # Создаем директорию, если её нет
+                os.makedirs(os.path.dirname(image_path), exist_ok=True)
+                image.save(image_path)
+                image_path = filename
+            
+            order = Order(
+                title=title,
+                description=description,
+                number=number,
+                department=department,
+                author_id=current_user.id,
+                image_path=image_path
+            )
+            db.session.add(order)
+            db.session.commit()
+            flash('Розпорядження успішно додано', 'success')
+            return redirect(url_for('orders'))
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error adding order: {str(e)}")
+            flash('Помилка при додаванні розпорядження', 'error')
+            return redirect(url_for('add_order'))
+    
+    return render_template('order_add.html', departments=User.DEPARTMENTS)
+
+@app.route('/orders/<int:order_id>')
+@login_required
+def view_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    return render_template('order_view.html', order=order)
+
+@app.route('/orders/<int:order_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    
+    # Проверяем права доступа
+    if current_user.role != 'admin' and order.author_id != current_user.id:
+        flash('У вас немає прав для редагування цього розпорядження', 'error')
+        return redirect(url_for('orders'))
+    
+    if request.method == 'POST':
+        try:
+            # Обновляем данные
+            order.title = request.form.get('title')
+            order.description = request.form.get('description')
+            order.number = request.form.get('number')
+            order.department = request.form.get('department')
+            order.status = request.form.get('status')
+            
+            db.session.commit()
+            flash('Розпорядження успішно оновлено', 'success')
+            return redirect(url_for('orders'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error updating order: {str(e)}")
+            flash('Помилка при оновленні розпорядження', 'error')
+    
+    return render_template('order_edit.html', order=order, departments=User.DEPARTMENTS)
+
+@app.route('/orders/<int:order_id>/delete', methods=['POST'])
+@login_required
+def delete_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    
+    # Проверяем права доступа
+    if current_user.role != 'admin' and order.author_id != current_user.id:
+        return jsonify({'error': 'У вас немає прав для видалення цього розпорядження'}), 403
+    
+    try:
+        db.session.delete(order)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error deleting order: {str(e)}")
+        return jsonify({'error': 'Помилка при видаленні розпорядження'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

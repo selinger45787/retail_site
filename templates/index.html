@@ -2,6 +2,10 @@
 
 {% block title %}Головна{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/index.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="container">
     {% if current_user.is_authenticated %}
@@ -61,102 +65,6 @@
 </div>
 {% endblock %}
 
-{% block extra_css %}
-<style>
-    .welcome-section {
-        text-align: center;
-        padding: 4rem 2rem;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin: 2rem 0;
-    }
-
-    .welcome-section h1 {
-        color: #2c3e50;
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .welcome-section .lead {
-        color: #6c757d;
-        font-size: 1.25rem;
-        line-height: 1.6;
-    }
-
-    .card {
-        transition: transform 0.2s ease-in-out;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .card.border-primary {
-        border-width: 2px !important;
-    }
-
-    .btn-primary {
-        background-color: #007bff;
-        border-color: #007bff;
-        transition: all 0.2s ease-in-out;
-    }
-
-    .btn-primary:hover {
-        background-color: #0056b3;
-        border-color: #0056b3;
-        transform: translateY(-1px);
-    }
-</style>
-{% endblock %}
-
 {% block scripts %}
-<script>
-  function showLoginModal() {
-    const modal = document.getElementById('loginModal');
-    modal.classList.add('show');
-    modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('visible'), 10);
-  }
-  
-  function closeLoginModal() {
-    const modal = document.getElementById('loginModal');
-    modal.classList.remove('visible');
-    setTimeout(() => modal.style.display = 'none', 300);
-  }
-  
-  function submitLoginForm() {
-    const formData = new FormData(document.getElementById('login-form'));
-    const errorElement = document.getElementById('login-error');
-    errorElement.innerText = '';
-    
-    fetch("/login_modal", {
-      method: "POST",
-      body: formData,
-      headers: {
-        'Accept': 'application/json'
-      }
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      if (data.success) {
-        closeLoginModal();
-        window.location.reload();
-      } else {
-        errorElement.innerText = data.message || 'Помилка входу';
-      }
-    })
-    .catch(error => {
-      console.error('Ошибка при отправке формы:', error);
-      errorElement.innerText = 'Помилка з\'єднання з сервером. Спробуйте пізніше.';
-    });
-  }
-</script>
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
 {% endblock %}

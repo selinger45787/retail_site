@@ -20,6 +20,51 @@ class User(UserMixin, db.Model):
     # Relationships
     test_results = db.relationship('TestResult', backref='test_user', lazy=True)
     
+    # Словарь соответствия кодов отделов и их названий
+    DEPARTMENTS = {
+        'founders': 'Засновники компанії',
+        'general_director': 'Генеральний директор',
+        'accounting': 'Відділ Бухгалтерії',
+        'marketing': 'Відділ Маркетингу',
+        'online_sales': 'Відділ Онлайн продажу',
+        'offline_sales': 'Відділ Офлайн продажу',
+        'foreign_trade': 'Відділ ЗЕД',
+        'warehouse': 'Складський відділ',
+        'analytics': 'Відділ аналітики',
+        'other': 'Інше',
+        'abrams_production': 'Виробництво Abrams'
+    }
+    
+    # Словарь соответствия кодов должностей и их названий
+    POSITIONS = {
+        'founder': 'Засновник',
+        'general_director': 'Генеральний директор',
+        'department_head': 'Керівник відділу',
+        'accountant': 'Бухгалтер',
+        'photographer': 'Фотограф',
+        'marketer': 'Маркетолог',
+        'customer_manager': 'Менеджер по роботі з клієнтами',
+        'seller': 'Продавець',
+        'cashier': 'Касир',
+        'merchandiser': 'Мерчендайзер',
+        'foreign_trade_manager': 'Менеджер ЗЕД',
+        'warehouse_worker': 'Комірник',
+        'analyst': 'Аналітик',
+        'office_manager': 'Офіс менеджер',
+        'cleaner': 'Прибиральниця',
+        'other_position': 'Інше'
+    }
+    
+    @property
+    def department_name(self):
+        """Возвращает читаемое название отдела"""
+        return self.DEPARTMENTS.get(self.department, self.department)
+    
+    @property
+    def position_name(self):
+        """Возвращает читаемое название должности"""
+        return self.POSITIONS.get(self.position, self.position)
+    
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
         
@@ -65,6 +110,20 @@ class Material(db.Model):
     
     # Добавляем связь с изображениями
     images = db.relationship('MaterialImage', backref='material', lazy=True, cascade='all, delete-orphan')
+    
+    def get_user_test_result(self, user_id):
+        """Получает последний результат теста пользователя для этого материала"""
+        if not self.tests:
+            return None
+        
+        # Получаем последний результат теста для этого материала
+        from sqlalchemy import desc
+        result = TestResult.query.filter_by(
+            user_id=user_id,
+            test_id=self.tests[0].id
+        ).order_by(desc(TestResult.created_at)).first()
+        
+        return result
     
     def __repr__(self):
         return f'<Material {self.title}>'
@@ -165,3 +224,47 @@ class TestAssignment(db.Model):
 
     def __repr__(self):
         return f'<TestAssignment {self.id}: {self.user.username} - {self.material.title}>'
+
+class Order(db.Model):
+    __tablename__ = 'orders'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    number = db.Column(db.String(50), nullable=False)
+    department = db.Column(db.String(50), nullable=False)
+    status = db.Column(db.String(20), default='active')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    image_path = db.Column(db.String(255))
+    
+    author = db.relationship('User', backref=db.backref('orders', lazy=True))
+    
+    @property
+    def status_name(self):
+        status_names = {
+            'active': 'Активне',
+            'completed': 'Виконане',
+            'cancelled': 'Скасоване'
+        }
+        return status_names.get(self.status, self.status)
+
+    @property
+    def status_color(self):
+        status_colors = {
+            'active': 'primary',
+            'completed': 'success',
+            'cancelled': 'danger'
+        }
+        return status_colors.get(self.status, 'secondary')
+
+    @property
+    def department_name(self):
+        return User.DEPARTMENTS.get(self.department, self.department)
+
+    @property
+    def author_name(self):
+        return self.author.username if self.author else 'Невідомий'
+    
+    def __repr__(self):
+        return f'<Order {self.number}: {self.title}>'

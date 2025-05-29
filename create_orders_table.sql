@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS orders (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    description TEXT NOT NULL,
+    number VARCHAR(20) UNIQUE NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'active',
+    department VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    author_id INTEGER NOT NULL REFERENCES users(id)
+); 

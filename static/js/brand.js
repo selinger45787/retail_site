@@ -16,13 +16,9 @@ function showDeleteModal(materialId) {
 // Закрыть модальное окно
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
-    modal.classList.remove('show');
-    setTimeout(() => {
+    if (modal) {
         modal.style.display = 'none';
-        if (modalId === 'deleteMaterialModal') {
-            materialToDelete = null;
-        }
-    }, 300);
+    }
 }
 
 // Удаление материала
@@ -102,4 +98,322 @@ document.addEventListener('DOMContentLoaded', () => {
             this.closest('.alert').remove();
         });
     });
+
+    // Intersection Observer для анимации появления карточек
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animationPlayState = 'running';
+            }
+        });
+    }, observerOptions);
+
+    // Наблюдаем за всеми карточками материалов
+    const materialCards = document.querySelectorAll('.material-card');
+    materialCards.forEach(card => {
+        card.style.animationPlayState = 'paused';
+        observer.observe(card);
+    });
+    
+    // Обработка ошибок загрузки изображений
+    const materialImages = document.querySelectorAll('.material-img');
+    materialImages.forEach(img => {
+        img.addEventListener('error', function() {
+            this.src = '/static/img/matertial_logo.png';
+        });
+    });
 });
+
+// Закрытие модального окна при клике вне его
+window.onclick = function(event) {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+}
+
+// Enhanced Brand Page JavaScript
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Элементы управления
+    const searchInput = document.getElementById('materialSearch');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const sortSelect = document.getElementById('sortBy');
+    const resetBtn = document.getElementById('resetFilters');
+    const viewBtns = document.querySelectorAll('.view-btn');
+    const materialsContainer = document.getElementById('materialsContainer');
+    const materialsCount = document.getElementById('materialsCount');
+    const noResults = document.getElementById('noResults');
+    
+    // Получаем все карточки материалов
+    let allMaterials = Array.from(document.querySelectorAll('.material-card'));
+    let filteredMaterials = [...allMaterials];
+    
+    // Инициализация
+    init();
+    
+    function init() {
+        // Обработчики событий
+        if (searchInput) {
+            searchInput.addEventListener('input', debounce(handleSearch, 300));
+        }
+        
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', handleFilter);
+        }
+        
+        if (sortSelect) {
+            sortSelect.addEventListener('change', handleSort);
+        }
+        
+        if (resetBtn) {
+            resetBtn.addEventListener('click', resetFilters);
+        }
+        
+        // Переключение видов
+        viewBtns.forEach(btn => {
+            btn.addEventListener('click', () => switchView(btn.dataset.view));
+        });
+        
+        // Обработчики для кнопок действий
+        setupActionButtons();
+        
+        // Анимация появления карточек
+        animateCards();
+    }
+    
+    // Поиск материалов
+    function handleSearch() {
+        const query = searchInput.value.toLowerCase().trim();
+        
+        filteredMaterials = allMaterials.filter(card => {
+            const title = card.dataset.title || '';
+            return title.includes(query);
+        });
+        
+        applyFiltersAndSort();
+    }
+    
+    // Фильтрация по категории
+    function handleFilter() {
+        const selectedCategory = categoryFilter.value;
+        
+        if (!selectedCategory) {
+            filteredMaterials = [...allMaterials];
+        } else {
+            filteredMaterials = allMaterials.filter(card => {
+                return card.dataset.category === selectedCategory;
+            });
+        }
+        
+        // Применяем поиск к отфильтрованным результатам
+        if (searchInput && searchInput.value.trim()) {
+            const query = searchInput.value.toLowerCase().trim();
+            filteredMaterials = filteredMaterials.filter(card => {
+                const title = card.dataset.title || '';
+                return title.includes(query);
+            });
+        }
+        
+        applyFiltersAndSort();
+    }
+    
+    // Сортировка материалов
+    function handleSort() {
+        const sortBy = sortSelect.value;
+        
+        filteredMaterials.sort((a, b) => {
+            switch (sortBy) {
+                case 'date_desc':
+                    return new Date(b.dataset.date) - new Date(a.dataset.date);
+                case 'date_asc':
+                    return new Date(a.dataset.date) - new Date(b.dataset.date);
+                case 'title_asc':
+                    return a.dataset.title.localeCompare(b.dataset.title);
+                case 'title_desc':
+                    return b.dataset.title.localeCompare(a.dataset.title);
+                default:
+                    return 0;
+            }
+        });
+        
+        updateDisplay();
+    }
+    
+    // Применение фильтров и сортировки
+    function applyFiltersAndSort() {
+        handleSort();
+    }
+    
+    // Обновление отображения
+    function updateDisplay() {
+        // Скрываем все карточки
+        allMaterials.forEach(card => {
+            card.style.display = 'none';
+        });
+        
+        // Показываем отфильтрованные карточки
+        if (filteredMaterials.length > 0) {
+            filteredMaterials.forEach((card, index) => {
+                card.style.display = 'block';
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+            
+            // Перестраиваем порядок в DOM
+            filteredMaterials.forEach(card => {
+                materialsContainer.appendChild(card);
+            });
+            
+            noResults.style.display = 'none';
+        } else {
+            noResults.style.display = 'block';
+        }
+        
+        // Обновляем счетчик
+        if (materialsCount) {
+            materialsCount.textContent = filteredMaterials.length;
+        }
+        
+        // Перезапускаем анимации
+        animateCards();
+    }
+    
+    // Сброс фильтров
+    function resetFilters() {
+        if (searchInput) searchInput.value = '';
+        if (categoryFilter) categoryFilter.value = '';
+        if (sortSelect) sortSelect.value = 'date_desc';
+        
+        filteredMaterials = [...allMaterials];
+        updateDisplay();
+    }
+    
+    // Переключение вида отображения
+    function switchView(view) {
+        viewBtns.forEach(btn => btn.classList.remove('active'));
+        event.target.closest('.view-btn').classList.add('active');
+        
+        if (view === 'list') {
+            materialsContainer.classList.add('list-view');
+        } else {
+            materialsContainer.classList.remove('list-view');
+        }
+    }
+    
+    // Настройка кнопок действий
+    function setupActionButtons() {
+        // Кнопки редактирования
+        document.querySelectorAll('.action-btn.edit').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const materialId = btn.dataset.materialId;
+                window.location.href = `/material/${materialId}/edit`;
+            });
+        });
+        
+        // Кнопки удаления
+        document.querySelectorAll('.action-btn.delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const materialId = btn.dataset.materialId;
+                showDeleteModal(materialId);
+            });
+        });
+    }
+    
+    // Анимация карточек
+    function animateCards() {
+        const visibleCards = filteredMaterials.filter(card => 
+            card.style.display !== 'none'
+        );
+        
+        visibleCards.forEach((card, index) => {
+            card.style.animation = 'none';
+            card.offsetHeight; // Trigger reflow
+            card.style.animation = `fadeInUp 0.6s ease forwards`;
+            card.style.animationDelay = `${index * 0.1}s`;
+        });
+    }
+    
+    // Уведомления
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show notification`;
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+        `;
+        
+        // Добавляем в начало контейнера
+        const container = document.querySelector('.materials-section');
+        container.insertBefore(notification, container.firstChild);
+        
+        // Автоматически скрыть через 5 секунд
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+    
+    // Глобальная функция сброса фильтров
+    window.resetFilters = resetFilters;
+    
+    // Debounce функция
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+});
+
+// CSS анимации
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: scale(1);
+        }
+        to {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+    }
+    
+    .notification {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        animation: slideInRight 0.3s ease;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);

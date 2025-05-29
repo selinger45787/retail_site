@@ -122,10 +122,14 @@
                 <div class="col-md-2">
                     <select class="form-select" id="departmentFilter">
                         <option value="">Всі відділи</option>
-                        <option value="online">Онлайн</option>
-                        <option value="offline">Офлайн</option>
-                        <option value="office">Офіс</option>
-                        <option value="management">Менеджмент</option>
+                        <option value="founders">Засновники компанії</option>
+                        <option value="general_director">Генеральний директор</option>
+                        <option value="accounting">Відділ Бухгалтерії</option>
+                        <option value="marketing">Відділ Маркетингу</option>
+                        <option value="online_sales">Відділ Онлайн продажу</option>
+                        <option value="offline_sales">Відділ Офлайн продажу</option>
+                        <option value="foreign_trade">Відділ ЗЕД</option>
+                        <option value="warehouse">Складський відділ</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -167,8 +171,8 @@
                                 {% endif %}
                             </td>
                             <td>{{ user.phone_number or '-' }}</td>
-                            <td>{{ user.department or '-' }}</td>
-                            <td>{{ user.position or '-' }}</td>
+                            <td data-department="{{ user.department }}">{{ user.department_name or '-' }}</td>
+                            <td data-position="{{ user.position }}">{{ user.position_name or '-' }}</td>
                             <td>{{ user.created_at.strftime('%d.%m.%Y') }}</td>
                             <td class="text-center">
                                 <div class="btn-group" role="group">
@@ -292,6 +296,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/user_form.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Инициализация модального окна
@@ -304,13 +309,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function filterTable() {
         const searchText = document.getElementById('searchInput').value.toLowerCase();
         const roleFilter = document.getElementById('roleFilter').value.toLowerCase();
-        const departmentFilter = document.getElementById('departmentFilter').value.toLowerCase();
+        const departmentFilter = document.getElementById('departmentFilter').value;
         const rows = document.querySelectorAll('tbody tr');
         
         rows.forEach(row => {
             const username = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
             const role = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-            const department = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+            const departmentCell = row.querySelector('td:nth-child(4)');
+            const department = departmentCell.getAttribute('data-department') || departmentCell.textContent.toLowerCase();
             
             const matchesSearch = username.includes(searchText);
             const matchesRole = !roleFilter || role.includes(roleFilter);

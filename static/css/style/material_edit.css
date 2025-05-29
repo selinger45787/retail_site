@@ -1,3 +1,59 @@
 /* Styles for edit_material.html */
 
-/* Add your custom styles here */ 
+/* Add your custom styles here */
+
+.additional-image-item {
+    position: relative;
+    display: inline-block;
+    margin: 10px;
+}
+
+.additional-image-item img {
+    max-height: 150px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.remove-image {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    line-height: 25px;
+    text-align: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+.remove-image:hover {
+    background: #c82333;
+}
+
+.current-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn-add-image {
+    padding: 8px 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    margin-top: 10px;
+    border-radius: 4px;
+}
+
+.btn-add-image:hover {
+    background-color: #218838;
+    color: white;
+} 

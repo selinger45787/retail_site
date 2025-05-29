@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Службові розпорядження{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/orders.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="mb-0">
+                    <i class="fas fa-file-alt me-3"></i>Службові розпорядження
+                </h1>
+                {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('add_order') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Додати розпорядження
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Фильтры -->
+            <div class="filters-section mb-4">
+                <div class="row">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Пошук розпоряджень...">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="statusFilter">
+                            <option value="">Всі статуси</option>
+                            <option value="active">Активні</option>
+                            <option value="completed">Виконані</option>
+                            <option value="cancelled">Скасовані</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="departmentFilter">
+                            <option value="">Всі відділи</option>
+                            {% for dept_code, dept_name in departments.items() %}
+                            <option value="{{ dept_code }}">{{ dept_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-secondary w-100" id="resetFilters">
+                            <i class="fas fa-undo me-2"></i>Скинути фільтри
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Карточки распоряжений -->
+            <div class="orders-grid">
+                {% for order in orders %}
+                <div class="order-card" data-status="{{ order.status }}" data-department="{{ order.department }}">
+                    <div class="order-header">
+                        <h3 class="order-title">{{ order.title }}</h3>
+                        <span class="order-number">№{{ order.number }}</span>
+                    </div>
+                    <div class="order-body">
+                        <p class="order-description">{{ order.description|truncate(150) }}</p>
+                        <div class="order-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>{{ order.created_at.strftime('%d.%m.%Y') }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-building"></i>
+                                <span>{{ order.department_name }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-user"></i>
+                                <span>{{ order.author_name }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="order-footer">
+                        <span class="status-badge status-{{ order.status }}">
+                            {{ order.status_name }}
+                        </span>
+                        <div class="order-actions">
+                            <a href="{{ url_for('view_order', order_id=order.id) }}" class="btn btn-sm btn-info">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if current_user.role == 'admin' %}
+                            <a href="{{ url_for('edit_order', order_id=order.id) }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button class="btn btn-sm btn-danger" onclick="deleteOrder({{ order.id }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div id="deleteOrderModal" class="modal">
+    <div class="modal-box">
+        <h3>Підтвердження видалення</h3>
+        <p>Ви впевнені, що хочете видалити це розпорядження? Цю дію неможливо скасувати.</p>
+        <form id="deleteOrderForm" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('deleteOrderModal')">Скасувати</button>
+                <button type="submit" class="btn btn-danger">Видалити</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/orders.js') }}"></script>
+{% endblock %} 

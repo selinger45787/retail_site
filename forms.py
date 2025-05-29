@@ -19,21 +19,38 @@ class AddUserForm(FlaskForm):
                       validators=[DataRequired()])
     department = SelectField('Відділ',
                            choices=[
-                               ('online', 'Онлайн відділ'),
-                               ('offline', 'Офлайн відділ'),
-                               ('office', 'Офіс'),
-                               ('management', 'Відділ управління')
+                               ('founders', 'Засновники компанії'),
+                               ('general_director', 'Генеральний директор'),
+                               ('accounting', 'Відділ Бухгалтерії'),
+                               ('marketing', 'Відділ Маркетингу'),
+                               ('online_sales', 'Відділ Онлайн продажу'),
+                               ('offline_sales', 'Відділ Офлайн продажу'),
+                               ('foreign_trade', 'Відділ ЗЕД'),
+                               ('warehouse', 'Складський відділ'),
+                               ('analytics', 'Відділ аналітики'),
+                               ('other', 'Інше'),
+                               ('abrams_production', 'Виробництво Abrams')
                            ],
                            validators=[DataRequired()])
     position = SelectField('Посада',
                          choices=[
+                             ('founder', 'Засновник'),
+                             ('general_director', 'Генеральний директор'),
+                             ('department_head', 'Керівник відділу'),
+                             ('accountant', 'Бухгалтер'),
+                             ('photographer', 'Фотограф'),
+                             ('marketer', 'Маркетолог'),
+                             ('customer_manager', 'Менеджер по роботі з клієнтами'),
                              ('seller', 'Продавець'),
                              ('cashier', 'Касир'),
-                             ('manager', 'Менеджер офлайн відділу'),
                              ('merchandiser', 'Мерчендайзер'),
-                             ('other', 'Інше')
-                         ],
-                         validators=[DataRequired()])
+                             ('foreign_trade_manager', 'Менеджер ЗЕД'),
+                             ('warehouse_worker', 'Комірник'),
+                             ('analyst', 'Аналітик'),
+                             ('office_manager', 'Офіс менеджер'),
+                             ('cleaner', 'Прибиральниця'),
+                             ('other_position', 'Інше')
+                         ])
     submit = SubmitField('Додати користувача')
 
     def validate_username(self, username):
@@ -62,7 +79,9 @@ class TestAssignmentForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(TestAssignmentForm, self).__init__(*args, **kwargs)
         self.user_id.choices = [(u.id, u.username) for u in User.query.order_by(User.username).all()]
-        self.material_id.choices = [(m.id, m.title) for m in Material.query.order_by(Material.title).all()]
+        # Загружаем только материалы, у которых есть тесты
+        materials_with_tests = Material.query.join(Test).order_by(Material.title).all()
+        self.material_id.choices = [(m.id, m.title) for m in materials_with_tests]
 
     def validate_user_id(self, field):
         user = User.query.get(field.data)

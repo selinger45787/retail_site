@@ -73,174 +73,183 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-function showError(message) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'alert alert-danger';
-    errorDiv.textContent = message;
+// Admin Dashboard JavaScript
+
+// Глобальные переменные
+let expandedUsers = new Set();
+
+// Функции для работы с уведомлениями
+function showSuccess(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
     
-    const form = document.getElementById('addUserForm');
-    form.insertBefore(errorDiv, form.firstChild);
+    const container = document.querySelector('.container');
+    container.insertBefore(alert, container.firstChild);
     
+    // Автоматически скрыть через 5 секунд
     setTimeout(() => {
-        errorDiv.remove();
+        if (alert.parentNode) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+function showError(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger alert-dismissible fade show';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(alert, container.firstChild);
+    
+    // Автоматически скрыть через 5 секунд
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.remove();
+        }
     }, 5000);
 }
 
 function expandUserRow(userId) {
-    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+    const button = document.querySelector(`.user-row[data-user-id="${userId}"] .btn-expand`);
     const detailsRow = document.getElementById(`user-details-${userId}`);
-    const button = row.querySelector('.btn-expand');
     
-    if (detailsRow.style.display === 'none' || !detailsRow.style.display) {
+    if (expandedUsers.has(userId)) {
+        // Скрываем детали
+        detailsRow.style.display = 'none';
+        detailsRow.classList.remove('expanded');
+        button.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        expandedUsers.delete(userId);
+    } else {
+        // Показываем детали
         detailsRow.style.display = 'table-row';
+        detailsRow.classList.add('expanded');
         button.innerHTML = '<i class="fas fa-chevron-down"></i>';
+        expandedUsers.add(userId);
         
-        // Загружаем данные только если они еще не загружены
+        // Загружаем данные, если еще не загружены
         if (detailsRow.querySelector('.loading')) {
             fetch(`/api/admin/user_tests/${userId}`)
                 .then(response => response.json())
                 .then(data => {
-                    if (data.error) {
-                        detailsRow.querySelector('td').innerHTML = `<div class="error-message">${data.error}</div>`;
-                        return;
-                    }
+                    let html = '<div class="user-details-content">';
                     
-                    let html = '<div class="user-details">';
-                    
-                    // Общая статистика
-                    let totalAttempts = 0;
-                    let totalScore = 0;
-                    
-                    data.brands.forEach(brand => {
-                        brand.materials.forEach(material => {
-                            totalAttempts += material.attempts.length;
-                            material.attempts.forEach(attempt => {
-                                totalScore += attempt.score;
-                            });
-                        });
-                    });
-                    
-                    const avgScore = totalAttempts > 0 ? (totalScore / totalAttempts).toFixed(1) : 0;
-                    
-                    html += `
-                        <div class="user-stats">
-                            <h4>Общая статистика</h4>
-                            <p>Всего попыток: ${totalAttempts}</p>
-                            <p>Средний балл: ${avgScore}%</p>
-                        </div>
-                    `;
-                    
-                    // Детальная информация по брендам и материалам
-                    data.brands.forEach(brand => {
-                        // Считаем статистику по бренду
-                        let brandAttempts = 0;
-                        let brandTotalScore = 0;
-                        
-                        brand.materials.forEach(material => {
-                            brandAttempts += material.attempts.length;
-                            material.attempts.forEach(attempt => {
-                                brandTotalScore += attempt.score;
-                            });
-                        });
-                        
-                        const brandAvgScore = brandAttempts > 0 ? (brandTotalScore / brandAttempts).toFixed(1) : 0;
-                        
-                        html += `
-                            <div class="brand-section">
-                                <div class="brand-header" onclick="toggleBrandContent(this)">
-                                    <h3>${brand.name}</h3>
-                                    <div class="brand-stats">
-                                        <span>Попыток: ${brandAttempts}</span>
-                                        <span>Средний балл: ${brandAvgScore}%</span>
-                                    </div>
-                                    <span class="toggle-icon"><i class="fas fa-chevron-right"></i></span>
-                                </div>
-                                <div class="brand-content" style="display: none;">
-                        `;
-                        
-                        brand.materials.forEach(material => {
+                    if (!data.brands || data.brands.length === 0) {
+                        html += '<div class="no-data">У пользователя нет результатов тестов</div>';
+                    } else {
+                        data.brands.forEach(brand => {
                             html += `
-                                <div class="material-section">
-                                    <div class="material-header" onclick="toggleMaterialContent(this)">
-                                        <h4>${material.title}</h4>
+                                <div class="brand-section">
+                                    <div class="brand-header" onclick="toggleBrandContent(this)">
+                                        <h4>${brand.name}</h4>
                                         <span class="toggle-icon"><i class="fas fa-chevron-right"></i></span>
                                     </div>
-                                    <div class="material-content" style="display: none;">
+                                    <div class="brand-content" style="display: none;">
                             `;
                             
-                            if (material.attempts.length === 0) {
-                                html += '<p>Нет попыток прохождения теста</p>';
-                            } else {
+                            brand.materials.forEach(material => {
                                 html += `
-                                    <table class="attempts-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Дата</th>
-                                                <th class="text-center">Балл</th>
-                                                <th class="text-center">Правильных</th>
-                                                <th class="text-center">Неправильных</th>
-                                                <th class="text-center">Действия</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
+                                    <div class="material-section">
+                                        <div class="material-header" onclick="toggleMaterialContent(this)">
+                                            <h5>${material.title}</h5>
+                                            <span class="toggle-icon"><i class="fas fa-chevron-right"></i></span>
+                                        </div>
+                                        <div class="material-content" style="display: none;">
                                 `;
                                 
-                                material.attempts.forEach(attempt => {
+                                if (!material.attempts || material.attempts.length === 0) {
+                                    html += '<div class="no-attempts">Нет попыток прохождения теста</div>';
+                                } else {
                                     html += `
-                                        <tr>
-                                            <td>${attempt.date}</td>
-                                            <td class="text-center">${attempt.score}%</td>
-                                            <td class="text-center">${attempt.correct_answers}</td>
-                                            <td class="text-center">${attempt.wrong_answers}</td>
-                                            <td class="text-center">
-                                                <button class="btn btn-info btn-sm" onclick="toggleAttemptDetails(this)">
-                                                    Показать ответы
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr class="attempt-details-row" style="display: none;">
-                                            <td colspan="5">
-                                                <div class="attempt-details">
-                                                    <table class="questions-table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Вопрос</th>
-                                                                <th class="text-center">Ответ пользователя</th>
-                                                                <th class="text-center">Правильный ответ</th>
-                                                                <th class="text-center">Результат</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
+                                        <table class="attempts-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Дата</th>
+                                                    <th class="text-center">Результат</th>
+                                                    <th class="text-center">Время</th>
+                                                    <th class="text-center">Статус</th>
+                                                    <th class="text-center">Действия</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
                                     `;
                                     
-                                    attempt.question_details.forEach(detail => {
-                                        const resultClass = detail.is_correct ? 'correct' : 'incorrect';
-                                        const resultText = detail.is_correct ? 'Верно' : 'Неверно';
+                                    material.attempts.forEach(attempt => {
+                                        const statusClass = attempt.score >= 80 ? 'success' : attempt.score >= 60 ? 'warning' : 'danger';
+                                        const statusText = attempt.score >= 80 ? 'Отлично' : attempt.score >= 60 ? 'Хорошо' : 'Неудовлетворительно';
                                         
                                         html += `
-                                            <tr class="${resultClass}">
-                                                <td>${detail.question_text}</td>
-                                                <td class="text-center">${detail.user_answer}</td>
-                                                <td class="text-center">${detail.correct_answer}</td>
-                                                <td class="text-center">${resultText}</td>
+                                            <tr class="attempt-row">
+                                                <td>${new Date(attempt.completed_at).toLocaleDateString('uk-UA')}</td>
+                                                <td class="text-center">
+                                                    <span class="score-badge ${statusClass}">${attempt.score}%</span>
+                                                </td>
+                                                <td class="text-center">${attempt.time_taken || 'N/A'}</td>
+                                                <td class="text-center">
+                                                    <span class="status-badge ${statusClass}">${statusText}</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-info btn-sm" onclick="toggleAttemptDetails(this)">
+                                                        Показать ответы
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr class="attempt-details-row" style="display: none;">
+                                                <td colspan="5">
+                                                    <div class="attempt-details">
+                                                        <table class="questions-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Вопрос</th>
+                                                                    <th class="text-center">Ответ пользователя</th>
+                                                                    <th class="text-center">Правильный ответ</th>
+                                                                    <th class="text-center">Результат</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                        `;
+                                        
+                                        attempt.question_details.forEach(detail => {
+                                            const resultClass = detail.is_correct ? 'correct' : 'incorrect';
+                                            const resultText = detail.is_correct ? 'Верно' : 'Неверно';
+                                            
+                                            html += `
+                                                <tr class="${resultClass}">
+                                                    <td>${detail.question_text}</td>
+                                                    <td class="text-center">${detail.user_answer}</td>
+                                                    <td class="text-center">${detail.correct_answer}</td>
+                                                    <td class="text-center">${resultText}</td>
+                                                </tr>
+                                            `;
+                                        });
+                                        
+                                        html += `
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         `;
                                     });
                                     
                                     html += `
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                            </tbody>
+                                        </table>
                                     `;
-                                });
+                                }
                                 
                                 html += `
-                                        </tbody>
-                                    </table>
+                                        </div>
+                                    </div>
                                 `;
-                            }
+                            });
                             
                             html += `
                                     </div>
@@ -252,7 +261,7 @@ function expandUserRow(userId) {
                                 </div>
                             </div>
                         `;
-                    });
+                    }
                     
                     html += '</div>';
                     detailsRow.querySelector('td').innerHTML = html;
@@ -262,9 +271,6 @@ function expandUserRow(userId) {
                     detailsRow.querySelector('td').innerHTML = '<div class="error-message">Ошибка при загрузке данных</div>';
                 });
         }
-    } else {
-        detailsRow.style.display = 'none';
-        button.innerHTML = '<i class="fas fa-chevron-right"></i>';
     }
 }
 
@@ -392,4 +398,120 @@ function sortTable(sortType) {
             tbody.insertBefore(detailsRow, tbody.children[index * 2 + 1]);
         }
     });
+}
+
+// Инициализация графика и анимаций
+function initializeDashboard(chartData) {
+    // Анимация появления элементов при прокрутке
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Наблюдаем за элементами с классом fade-in
+    document.querySelectorAll('.fade-in').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'all 0.6s ease';
+        observer.observe(el);
+    });
+
+    // Инициализация графика
+    const ctx = document.getElementById('testsChart');
+    if (ctx && chartData) {
+        new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: chartData.map(item => {
+                    const date = new Date(item.date);
+                    return date.toLocaleDateString('uk-UA', {day: '2-digit', month: '2-digit'});
+                }),
+                datasets: [{
+                    label: 'Середній бал',
+                    data: chartData.map(item => item.value),
+                    backgroundColor: 'rgba(108, 117, 125, 0.2)',
+                    borderColor: 'rgba(108, 117, 125, 1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: 'rgba(108, 117, 125, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 14
+                            },
+                            color: '#495057'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(73, 80, 87, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#6c757d',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return `Середній бал: ${context.raw.toFixed(1)}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Середній бал (%)',
+                            font: {
+                                size: 14
+                            },
+                            color: '#495057'
+                        },
+                        grid: {
+                            color: 'rgba(108, 117, 125, 0.1)'
+                        },
+                        ticks: {
+                            color: '#6c757d'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Дата',
+                            font: {
+                                size: 14
+                            },
+                            color: '#495057'
+                        },
+                        grid: {
+                            color: 'rgba(108, 117, 125, 0.1)'
+                        },
+                        ticks: {
+                            color: '#6c757d'
+                        }
+                    }
+                }
+            }
+        });
+    }
 } 

@@ -128,16 +128,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const testRows = document.querySelectorAll('.test-row');
-    
-    testRows.forEach(row => {
-        row.addEventListener('click', function() {
-            const materialId = this.dataset.materialId;
-            window.location.href = `/material/${materialId}`;
-        });
-    });
-});
-</script>
+<script src="{{ url_for('static', filename='js/user_profile.js') }}"></script>
 {% endblock %} 

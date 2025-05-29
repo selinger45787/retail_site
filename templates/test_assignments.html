@@ -104,29 +104,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-function deleteAssignment(assignmentId) {
-    if (confirm('Вы уверены, что хотите удалить это назначение?')) {
-        fetch(`/admin/test_assignments/${assignmentId}/delete`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token() }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Произошла ошибка при удалении назначения');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Произошла ошибка при удалении назначения');
-        });
-    }
-}
-</script>
+<script src="{{ url_for('static', filename='js/test_assignments.js') }}"></script>
 {% endblock %} 

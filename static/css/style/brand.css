@@ -11,6 +11,29 @@ body {
     padding: 0 1rem;
     border-bottom: 1px solid #e0e0e0;
     text-align: center;
+    background: linear-gradient(135deg, #212529 0%, #343a40 50%, #495057 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 0;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.brand-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    animation: headerShimmer 6s infinite;
+}
+
+@keyframes headerShimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
 }
 
 .brand-header-content {
@@ -18,21 +41,33 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
-    max-width: 1600px;
+    max-width: 1200px;
     margin: 0 auto;
+    padding: 0 2rem;
+    text-align: center;
+    position: relative;
+    z-index: 2;
 }
 
-.brand-header h1 {
-    font-size: 1.5rem;
-    color: #333;
-    margin-bottom: 0.5rem;
+.brand-title {
+    font-size: 2.325em !important;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #ffffff !important;
+    text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
+    position: relative;
+    line-height: 1.2;
     text-align: center;
-    font-weight: 500;
+    letter-spacing: 0.5px;
 }
 
 .brand-name {
-    color: #d35400;
-    font-weight: 600;
+    color: #ffffff;
+    font-weight: 800;
+    text-shadow: 0 3px 6px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(0, 0, 0, 0.5);
+    position: relative;
+    display: inline;
+    font-size: 1em;
     margin-left: 0.3em;
 }
 
@@ -74,15 +109,384 @@ body {
     margin: 0 auto;
 }
 
-.materials-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+/* Панель управления материалами */
+.materials-controls {
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    border-radius: 16px;
+    padding: 1.5rem;
     margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(108, 117, 125, 0.1);
+}
+
+.search-filter-container {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+    min-width: 250px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    z-index: 2;
+}
+
+.search-input {
     width: 100%;
-    max-width: 1800px;
-    margin-left: auto;
-    margin-right: auto;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.search-input:focus {
+    border-color: #495057;
+    box-shadow: 0 0 0 3px rgba(73, 80, 87, 0.1);
+    outline: none;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    background: white;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    min-width: 150px;
+}
+
+.filter-select:focus {
+    border-color: #495057;
+    box-shadow: 0 0 0 3px rgba(73, 80, 87, 0.1);
+    outline: none;
+}
+
+.reset-btn {
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.reset-btn:hover {
+    background: linear-gradient(135deg, #495057, #343a40);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.view-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.view-toggle {
+    display: flex;
+    background: #e9ecef;
+    border-radius: 10px;
+    padding: 0.25rem;
+}
+
+.view-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #6c757d;
+}
+
+.view-btn.active {
+    background: linear-gradient(135deg, #495057, #343a40);
+    color: white;
+    box-shadow: 0 2px 8px rgba(73, 80, 87, 0.3);
+}
+
+.materials-count {
+    color: #6c757d;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* Статусы материалов */
+.material-status {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 3;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.test-available {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.status-badge.no-test {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+}
+
+/* Улучшенные карточки материалов */
+.material-description {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin: 0.5rem 0;
+}
+
+/* Стили для HTML-контента в описании */
+.material-description p {
+    margin: 0.25rem 0;
+    line-height: 1.4;
+}
+
+.material-description strong,
+.material-description b {
+    font-weight: 600;
+    color: #495057;
+}
+
+.material-description em,
+.material-description i {
+    font-style: italic;
+}
+
+.material-description ul,
+.material-description ol {
+    margin: 0.25rem 0;
+    padding-left: 1rem;
+}
+
+.material-description li {
+    margin: 0.1rem 0;
+}
+
+.material-description a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.material-description a:hover {
+    text-decoration: underline;
+}
+
+.material-category {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #495057;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #e9ecef, #dee2e6);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    width: fit-content;
+}
+
+.material-meta {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #6c757d;
+    font-size: 0.8rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.material-test-info {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Прогресс бар */
+.material-progress {
+    margin-top: 0.75rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Сообщение "ничего не найдено" */
+.no-results {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(108, 117, 125, 0.1);
+}
+
+.no-results p {
+    font-size: 1.2rem;
+    color: #6c757d;
+    margin: 1rem 0 2rem;
+    font-weight: 500;
+}
+
+/* Список вид */
+.materials-grid.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.materials-grid.list-view .material-card {
+    display: flex;
+    flex-direction: row;
+    max-width: none;
+    height: auto;
+}
+
+.materials-grid.list-view .material-image {
+    width: 200px;
+    height: 150px;
+    flex-shrink: 0;
+}
+
+.materials-grid.list-view .material-content {
+    flex: 1;
+    padding: 1.5rem;
+}
+
+.materials-grid.list-view .material-title {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+}
+
+.materials-grid.list-view .material-description {
+    display: block;
+    margin: 0.75rem 0;
+    max-height: none;
+    overflow: visible;
+}
+
+.materials-grid.list-view .material-description p {
+    margin: 0.5rem 0;
+}
+
+.materials-grid.list-view .material-description p:first-child {
+    margin-top: 0;
+}
+
+.materials-grid.list-view .material-description p:last-child {
+    margin-bottom: 0;
+}
+
+/* Анимации */
+.material-card {
+    animation: fadeInUp 0.6s ease forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.material-card:nth-child(1) { animation-delay: 0.1s; }
+.material-card:nth-child(2) { animation-delay: 0.2s; }
+.material-card:nth-child(3) { animation-delay: 0.3s; }
+.material-card:nth-child(4) { animation-delay: 0.4s; }
+.material-card:nth-child(5) { animation-delay: 0.5s; }
+.material-card:nth-child(6) { animation-delay: 0.6s; }
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Адаптивность для новых элементов */
+@media (max-width: 768px) {
+    .brand-header {
+        padding: 1.6rem 0;
+    }
+    
+    .brand-title {
+        font-size: 1.5rem !important;
+    }
+    
+    .brand-header-content {
+        padding: 0 1rem;
+    }
+    
+    .materials-section {
+        padding: 2rem 1rem;
+    }
+    
+    .materials-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .brand-header {
+        padding: 1.2rem 0;
+    }
+    
+    .brand-title {
+        font-size: 1.5rem !important;
+    }
 }
 
 /* Карточка */
@@ -90,109 +494,60 @@ body {
     background: #fff;
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
     position: relative;
     display: flex;
     flex-direction: column;
-    border: 1px solid #eee;
+    border: 1px solid #ddd;
     width: 100%;
-    animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 .material-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    border-color: #ddd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .material-link {
     text-decoration: none;
     color: inherit;
-    display: flex;
-    flex-direction: column;
+    display: block;
     height: 100%;
 }
 
-/* Изображение */
 .material-image {
+    width: 100%;
     aspect-ratio: 1;
+    background: #f9f9f9;
     overflow: hidden;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f8f9fa;
 }
 
 .material-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
+    object-fit: contain;
 }
 
-.material-card:hover .material-image img {
-    transform: scale(1.05);
-}
-
-/* Контент карточки */
 .material-content {
-    padding: 0.5rem;
-    flex-grow: 1;
+    padding: 15px;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    background: #fff;
-    min-height: 36px;
+    gap: 8px;
 }
 
 .material-title {
-    font-size: 1.1rem;
+    font-size: 16px;
     font-weight: 600;
-    margin: 0 0 0.25rem;
-    color: #111;
-    line-height: 1.4;
+    margin: 0;
+    color: #333;
+    line-height: 1.3;
 }
 
-.material-category {
-    color: #555;
-    font-size: 0.9rem;
-    margin: 0 0 0.25rem;
-    line-height: 1.4;
-}
-
-.material-description {
-    color: #555;
-    font-size: 1.235rem;
-    margin: 0 0 1.3rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    line-height: 1.5;
-}
-
-.material-meta {
-    font-size: 0.8rem;
-    color: #888;
+.material-date {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding-top: 0.25rem;
-    border-top: 1px solid #eee;
-    margin-top: 0.25rem;
+    gap: 4px;
 }
 
 /* Действия */
@@ -411,103 +766,379 @@ body {
     font-weight: 500;
 }
 
-.brand-title {
-    font-size: 1.5rem;
-    color: #333;
-    margin-bottom: 1rem;
-    text-align: center;
+.brand-name::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
+    border-radius: 1px;
+    box-shadow: 0 1px 3px rgba(255, 255, 255, 0.3);
+}
+
+.add-material-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.8rem 1.6rem;
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.add-material-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.add-material-btn:hover::before {
+    left: 100%;
+}
+
+.add-material-btn:hover {
+    background: linear-gradient(135deg, #495057, #343a40);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(108, 117, 125, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+.add-material-btn i {
+    font-size: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.add-material-btn:hover i {
+    transform: rotate(90deg) scale(1.1);
+}
+
+.materials-section {
+    padding: 3rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.materials-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    max-width: 1800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.material-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    border-color: rgba(108, 117, 125, 0.2);
+}
+
+.material-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
+}
+
+.material-image {
+    height: 280px;
+    overflow: hidden;
+    position: relative;
+    background: linear-gradient(135deg, #e9ecef, #dee2e6);
+}
+
+.material-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.material-card:hover .material-image img {
+    transform: scale(1.1);
+}
+
+.material-content {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+}
+
+.material-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: #495057;
+    line-height: 1.3;
+    transition: color 0.3s ease;
+}
+
+.material-card:hover .material-title {
+    color: #343a40;
+}
+
+.material-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #6c757d;
+    font-size: 0.95rem;
     font-weight: 500;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(108, 117, 125, 0.1);
 }
 
-.brand-title strong {
-    color: #d35400;
-    font-weight: 600;
-    margin-left: 0.3em;
+.material-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.brand-name-framed {
-    display: inline;
-    color: #d35400;
-    font-weight: 600;
-    font-size: 1.5rem;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin-left: 0.3em;
+.material-actions {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
 }
 
-.brand-name-framed:hover {
-    background: rgba(108, 117, 125, 0.15);
-    border-color: #495057;
+.material-card:hover .material-actions {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+.action-btn.edit {
+    background: linear-gradient(135deg, #6c757d, #495057);
+}
+
+.action-btn.edit:hover {
+    background: linear-gradient(135deg, #495057, #343a40);
+    transform: scale(1.1);
+}
+
+.action-btn.delete {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.action-btn.delete:hover {
+    background: linear-gradient(135deg, #c82333, #bd2130);
+    transform: scale(1.1);
+}
+
+.action-btn img {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+}
+
+.no-materials {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(108, 117, 125, 0.1);
+}
+
+.no-materials p {
+    font-size: 1.3rem;
+    color: #6c757d;
+    margin: 0;
+    font-weight: 500;
 }
 
 .pagination {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 2rem 0;
     gap: 0.5rem;
+    margin-top: 3rem;
 }
 
 .page-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    color: #333;
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    color: #495057;
     text-decoration: none;
+    border-radius: 10px;
+    font-weight: 600;
     transition: all 0.3s ease;
+    border: 1px solid rgba(108, 117, 125, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .page-link:hover {
-    background-color: #f5f5f5;
-    border-color: #ccc;
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+    text-decoration: none;
 }
 
 .page-link.active {
-    background-color: #007bff;
+    background: linear-gradient(135deg, #495057, #343a40);
     color: white;
-    border-color: #007bff;
+    box-shadow: 0 6px 20px rgba(73, 80, 87, 0.3);
 }
 
 .page-link.disabled {
-    color: #999;
+    opacity: 0.5;
     cursor: not-allowed;
+    background: linear-gradient(135deg, #e9ecef, #dee2e6);
+    color: #6c757d;
 }
 
-/* Контент карточки */
-.materials-section .material-card .material-content {
-    padding: 0.75rem !important;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background: #fff;
-    min-height: 48px;
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
 }
 
-.materials-section .material-card .material-title {
+.modal-box {
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    margin: 10% auto;
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(108, 117, 125, 0.1);
+    position: relative;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-box h3 {
+    color: #495057;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.modal-box p {
+    color: #6c757d;
     font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0 0 0.25rem !important;
-    color: #111;
-    line-height: 1.4;
+    margin-bottom: 2rem;
+    text-align: center;
+    line-height: 1.5;
 }
 
-.materials-section .material-card .material-category {
-    color: #555;
-    font-size: 0.9rem;
-    margin: 0 0 0.25rem !important;
-    line-height: 1.4;
-}
-
-.materials-section .material-card .material-meta {
-    font-size: 0.8rem;
-    color: #888;
+.modal-actions {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 0.25rem !important;
-    border-top: 1px solid #eee;
-    margin-top: 0.25rem !important;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.modal-actions .btn {
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #495057, #343a40);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #c82333, #bd2130);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
+}
+
+/* Переключение описаний между режимами */
+.materials-grid .material-description.list-view {
+    display: none !important;
+}
+
+.materials-grid.list-view .material-description.grid-view {
+    display: none !important;
+}
+
+.materials-grid.list-view .material-description.list-view {
+    display: block !important;
+    margin: 0.75rem 0;
+    max-height: none;
+    overflow: visible;
+}
+
+.materials-grid.list-view .material-description.list-view p {
+    margin: 0.5rem 0;
+}
+
+.materials-grid.list-view .material-description.list-view p:first-child {
+    margin-top: 0;
+}
+
+.materials-grid.list-view .material-description.list-view p:last-child {
+    margin-bottom: 0;
 }

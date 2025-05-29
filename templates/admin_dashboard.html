@@ -1,169 +1,174 @@
 {% extends "base.html" %}
 
-{% block title %}Административная панель{% endblock %}
+{% block title %}Адміністративна панель{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style/admin_dashboard.css') }}">
-<!-- Chart.js для графиков -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
 {% endblock %}
 
 {% block content %}
-<div class="admin-container">
-    <div class="admin-header">
-        <h1>Административная панель</h1>
-        <p class="admin-subtitle">Статистика и аналитика тестирования пользователей</p>
-    </div>
+<div class="admin-dashboard">
+    <div class="container-fluid">
+        <!-- Заголовок дашборда -->
+        <div class="dashboard-header fade-in">
+            <h1 class="dashboard-title">
+                <i class="fas fa-chart-line me-3"></i>Адміністративна панель
+            </h1>
+            <p class="dashboard-subtitle">Статистика та аналітика тестування користувачів</p>
+        </div>
 
-    <!-- Общая статистика -->
-    <section class="stats-overview">
-        <h2>Общая статистика</h2>
-        
-        <div class="stats-cards">
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-tasks"></i>
-                </div>
-                <div class="stat-info">
+        <!-- Общая статистика -->
+        <div class="stats-section fade-in">
+            <h2 class="section-title">
+                <i class="fas fa-chart-bar"></i>Загальна статистика
+            </h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
                     <div class="stat-value">{{ total_attempts }}</div>
-                    <div class="stat-label">Всего попыток</div>
+                    <div class="stat-label">Всього спроб</div>
                 </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="stat-info">
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
                     <div class="stat-value">{{ avg_score }}%</div>
-                    <div class="stat-label">Средний балл</div>
+                    <div class="stat-label">Середній бал</div>
                 </div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="stat-info">
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
                     <div class="stat-value">{{ success_rate }}%</div>
-                    <div class="stat-label">Успешные тесты</div>
+                    <div class="stat-label">Успішні тести</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- График динамики -->
+        <div class="chart-section fade-in">
+            <h2 class="section-title">
+                <i class="fas fa-chart-area"></i>Динаміка тестування
+            </h2>
+            <div class="chart-container">
+                <canvas id="testsChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Аналитика проблемных областей -->
+        <div class="analytics-section fade-in">
+            <h2 class="section-title">
+                <i class="fas fa-analytics"></i>Аналітика проблемних областей
+            </h2>
+            
+            <div class="analytics-grid">
+                <!-- Проблемные тесты -->
+                <div class="analytics-card">
+                    <h3><i class="fas fa-exclamation-triangle me-2"></i>Проблемні тести</h3>
+                    <p class="analytics-description">Тести з найменшим середнім балом</p>
+                    
+                    <table class="analytics-table">
+                        <thead>
+                            <tr>
+                                <th>Матеріал</th>
+                                <th>Середній бал</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in problematic_tests %}
+                            <tr>
+                                <td>{{ item.test.material.title }}</td>
+                                <td class="text-score">{{ item.avg_score|round(1) }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Проблемные пользователи -->
+                <div class="analytics-card">
+                    <h3><i class="fas fa-user-times me-2"></i>Проблемні користувачі</h3>
+                    <p class="analytics-description">Користувачі з найменшим середнім балом</p>
+                    
+                    <table class="analytics-table">
+                        <thead>
+                            <tr>
+                                <th>Користувач</th>
+                                <th>Середній бал</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in problematic_users %}
+                            <tr>
+                                <td>{{ item.user.username }}</td>
+                                <td class="text-score">{{ item.avg_score|round(1) }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
         
-        <!-- График динамики -->
-        <div class="chart-container">
-            <h3>Динамика тестирования (последние 30 дней)</h3>
-            <canvas id="testsChart"></canvas>
-        </div>
-    </section>
-    
-    <!-- Аналитика проблемных областей -->
-    <section class="analytics-section">
-        <h2>Аналитика</h2>
-        
-        <div class="analytics-grid">
-            <!-- Проблемные тесты -->
-            <div class="analytics-card">
-                <h3>Проблемные тесты</h3>
-                <p class="analytics-description">Тесты с наименьшим средним баллом</p>
-                
-                <table class="analytics-table">
-                    <thead>
-                        <tr>
-                            <th>Материал</th>
-                            <th>Средний балл</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in problematic_tests %}
-                        <tr>
-                            <td>{{ item.test.material.title }}</td>
-                            <td class="text-score">{{ item.avg_score|round(1) }}%</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <!-- Детальные результаты пользователей -->
+        <div class="users-section fade-in">
+            <h2 class="section-title">
+                <i class="fas fa-users"></i>Детальні результати користувачів
+            </h2>
             
-            <!-- Проблемные пользователи -->
-            <div class="analytics-card">
-                <h3>Проблемные пользователи</h3>
-                <p class="analytics-description">Пользователи с наименьшим средним баллом</p>
+            <div class="users-filter">
+                <div class="search-box">
+                    <input type="text" id="userSearch" placeholder="Пошук користувача...">
+                    <i class="fas fa-search"></i>
+                </div>
                 
-                <table class="analytics-table">
-                    <thead>
-                        <tr>
-                            <th>Пользователь</th>
-                            <th>Средний балл</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in problematic_users %}
-                        <tr>
-                            <td>{{ item.user.username }}</td>
-                            <td class="text-score">{{ item.avg_score|round(1) }}%</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-    
-    <!-- Многоуровневая таблица с результатами тестов -->
-    <section class="users-tests-section">
-        <h2>Детальные результаты пользователей</h2>
-        
-        <div class="users-filter">
-            <div class="search-box">
-                <input type="text" id="userSearch" placeholder="Поиск пользователя...">
-                <i class="fas fa-search"></i>
-            </div>
-            
-            <div class="d-flex gap-2">
                 <div class="sort-options">
                     <select id="sortBy">
-                        <option value="name">По имени</option>
-                        <option value="tests">По количеству тестов</option>
-                        <option value="score">По среднему баллу</option>
+                        <option value="name">За іменем</option>
+                        <option value="tests">За кількістю тестів</option>
+                        <option value="score">За середнім балом</option>
                     </select>
                 </div>
             </div>
+            
+            <div class="nested-table">
+                <table class="users-table" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Дії</th>
+                            <th>Користувач</th>
+                            <th>Кількість тестів</th>
+                            <th>Середній бал</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr class="user-row" data-user-id="{{ user.id }}">
+                            <td class="actions">
+                                <button class="btn-expand" onclick="expandUserRow({{ user.id }})">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </td>
+                            <td>{{ user.username }}</td>
+                            <td class="text-center">-</td>
+                            <td class="text-center">-</td>
+                        </tr>
+                        <tr class="user-details-row" id="user-details-{{ user.id }}" style="display: none;">
+                            <td colspan="4">
+                                <div class="loading">Завантаження даних...</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-        
-        <div class="nested-table">
-            <table class="users-table" id="usersTable">
-                <thead>
-                    <tr>
-                        <th>Действия</th>
-                        <th>Пользователь</th>
-                        <th>Количество тестов</th>
-                        <th>Средний балл</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr class="user-row" data-user-id="{{ user.id }}">
-                        <td class="actions">
-                            <button class="btn-expand" onclick="expandUserRow({{ user.id }})">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </td>
-                        <td>{{ user.username }}</td>
-                        <td class="text-center">-</td>
-                        <td class="text-center">-</td>
-                    </tr>
-                    <tr class="user-details-row" id="user-details-{{ user.id }}" style="display: none;">
-                        <td colspan="5">
-                            <div class="loading">Загрузка данных...</div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </section>
+    </div>
 </div>
 {% endblock %}
 
@@ -175,59 +180,9 @@
 // Данные для графика
 const chartData = {{ chart_data|tojson }};
 
-// Инициализация графика
+// Инициализация дашборда
 document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('testsChart').getContext('2d');
-    
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartData.map(item => {
-                const date = new Date(item.date);
-                return date.toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'});
-            }),
-            datasets: [{
-                label: 'Средний балл',
-                data: chartData.map(item => item.value),
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 2,
-                tension: 0.3,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `Средний балл: ${context.raw.toFixed(1)}%`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    title: {
-                        display: true,
-                        text: 'Средний балл (%)'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Дата'
-                    }
-                }
-            }
-        }
-    });
+    initializeDashboard(chartData);
 });
 </script>
 {% endblock %} 
