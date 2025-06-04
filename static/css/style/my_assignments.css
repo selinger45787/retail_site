@@ -49,4 +49,56 @@
 
 .text-muted {
     color: #6c757d !important;
+}
+
+/* Медиа-запросы для мобильных устройств */
+@media (max-width: 576px) {
+    .card {
+        margin-bottom: 15px;
+    }
+    
+    .card-img-top {
+        height: 150px;
+    }
+    
+    .card-title {
+        font-size: 1.1rem;
+    }
+    
+    .card-text {
+        font-size: 0.9rem;
+    }
+    
+    .card-text small {
+        font-size: 0.8rem;
+    }
+    
+    .btn {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .card {
+        margin-bottom: 12px;
+    }
+    
+    .card-img-top {
+        height: 130px;
+    }
+    
+    .card-title {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .card-text {
+        font-size: 0.85rem;
+    }
+    
+    .btn {
+        padding: 5px 10px;
+        font-size: 0.85rem;
+    }
 } 

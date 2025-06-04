@@ -77,13 +77,19 @@
                             <tr>
                                 <th>Матеріал</th>
                                 <th>Середній бал</th>
+                                <th>Кількість проходжень</th>
+                                <th>Загальний час</th>
+                                <th>Середній час</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for item in problematic_tests %}
                             <tr>
                                 <td>{{ item.test.material.title }}</td>
-                                <td class="text-score">{{ item.avg_score|round(1) }}%</td>
+                                <td class="text-center {{ item.avg_score|score_color }}">{{ item.avg_score|round(1) }}%</td>
+                                <td class="text-center">{{ item.attempts_count }}</td>
+                                <td class="text-center">{{ item.total_time_formatted }}</td>
+                                <td class="text-center">{{ item.avg_time_formatted }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -100,13 +106,19 @@
                             <tr>
                                 <th>Користувач</th>
                                 <th>Середній бал</th>
+                                <th>Кількість тестів</th>
+                                <th>Загальний час</th>
+                                <th>Середній час</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for item in problematic_users %}
                             <tr>
                                 <td>{{ item.user.username }}</td>
-                                <td class="text-score">{{ item.avg_score|round(1) }}%</td>
+                                <td class="text-center {{ item.avg_score|score_color }}">{{ item.avg_score|round(1) }}%</td>
+                                <td class="text-center">{{ item.tests_count }}</td>
+                                <td class="text-center">{{ item.total_time_formatted }}</td>
+                                <td class="text-center">{{ item.avg_time_formatted }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -132,6 +144,8 @@
                         <option value="name">За іменем</option>
                         <option value="tests">За кількістю тестів</option>
                         <option value="score">За середнім балом</option>
+                        <option value="total_time">За загальним часом</option>
+                        <option value="avg_time">За середнім часом</option>
                     </select>
                 </div>
             </div>
@@ -144,22 +158,31 @@
                             <th>Користувач</th>
                             <th>Кількість тестів</th>
                             <th>Середній бал</th>
+                            <th>Загальний час</th>
+                            <th>Середній час</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for user in users %}
-                        <tr class="user-row" data-user-id="{{ user.id }}">
+                        {% for user in users_with_stats %}
+                        <tr class="user-row" data-user-id="{{ user.id }}" 
+                            data-username="{{ user.username }}" 
+                            data-tests-count="{{ user.tests_count }}" 
+                            data-avg-score="{{ user.avg_score }}" 
+                            data-total-time-seconds="{{ user.total_time_seconds }}"
+                            data-avg-time-seconds="{{ user.avg_time_seconds }}">
                             <td class="actions">
                                 <button class="btn-expand" onclick="expandUserRow({{ user.id }})">
                                     <i class="fas fa-chevron-right"></i>
                                 </button>
                             </td>
                             <td>{{ user.username }}</td>
-                            <td class="text-center">-</td>
-                            <td class="text-center">-</td>
+                            <td class="text-center">{{ user.tests_count }}</td>
+                            <td class="text-center {{ user.avg_score|score_color if user.avg_score > 0 else '' }}">{{ user.avg_score|round(1) if user.avg_score > 0 else '-' }}{% if user.avg_score > 0 %}%{% endif %}</td>
+                            <td class="text-center">{{ user.total_time_formatted }}</td>
+                            <td class="text-center">{{ user.avg_time_formatted }}</td>
                         </tr>
                         <tr class="user-details-row" id="user-details-{{ user.id }}" style="display: none;">
-                            <td colspan="4">
+                            <td colspan="6">
                                 <div class="loading">Завантаження даних...</div>
                             </td>
                         </tr>
@@ -175,14 +198,9 @@
 {% block scripts %}
 <!-- Chart.js для графиков -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-<script src="{{ url_for('static', filename='js/admin_dashboard.js') }}"></script>
 <script>
-// Данные для графика
-const chartData = {{ chart_data|tojson }};
-
-// Инициализация дашборда
-document.addEventListener('DOMContentLoaded', function() {
-    initializeDashboard(chartData);
-});
+// Передаем данные графика в глобальную область
+window.chartData = {{ chart_data|tojson }};
 </script>
+<script src="{{ url_for('static', filename='js/admin_dashboard.js') }}"></script>
 {% endblock %} 

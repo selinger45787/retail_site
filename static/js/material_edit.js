@@ -6,7 +6,54 @@ document.addEventListener('DOMContentLoaded', function() {
     // Инициализация CKEditor
     let editor;
     DecoupledEditor
-        .create(document.querySelector('#editor-container'))
+        .create(document.querySelector('#editor-container'), {
+            language: 'uk',
+            toolbar: {
+                items: [
+                    'heading',
+                    '|',
+                    'fontSize',
+                    'fontFamily',
+                    '|',
+                    'fontColor',
+                    'fontBackgroundColor',
+                    '|',
+                    'bold',
+                    'italic',
+                    'underline',
+                    'strikethrough',
+                    '|',
+                    'alignment',
+                    '|',
+                    'numberedList',
+                    'bulletedList',
+                    '|',
+                    'outdent',
+                    'indent',
+                    '|',
+                    'link',
+                    'imageUpload',  // Добавляем кнопку загрузки изображений
+                    'blockQuote',
+                    'insertTable',
+                    '|',
+                    'undo',
+                    'redo'
+                ],
+                shouldNotGroupWhenFull: true
+            },
+            placeholder: 'Введіть опис матеріалу...',
+            table: {
+                contentToolbar: [
+                    'tableColumn',
+                    'tableRow',
+                    'mergeTableCells'
+                ]
+            },
+            // Конфигурация загрузки изображений
+            ckfinder: {
+                uploadUrl: '/upload-image'
+            }
+        })
         .then(newEditor => {
             editor = newEditor;
             const toolbarContainer = document.querySelector('.toolbar-container');

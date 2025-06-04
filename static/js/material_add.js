@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'indent',
                     '|',
                     'link',
+                    'imageUpload',
                     'blockQuote',
                     'insertTable',
                     '|',
@@ -65,6 +66,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     'tableRow',
                     'mergeTableCells'
                 ]
+            },
+            ckfinder: {
+                uploadUrl: '/upload-image'
             }
         })
         .then(newEditor => {
@@ -105,7 +109,18 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Проверяем все обязательные поля
         const title = document.getElementById('title').value.trim();
-        const categoryId = document.getElementById('category_id').value;
+        
+        // Получаем category_id из видимого селекта или скрытого поля
+        let categoryId = '';
+        const categorySelect = document.getElementById('category_id');
+        const categoryHidden = document.querySelector('input[name="category_id"]');
+        
+        if (categorySelect && !categorySelect.disabled) {
+            categoryId = categorySelect.value;
+        } else if (categoryHidden) {
+            categoryId = categoryHidden.value;
+        }
+        
         const brandId = document.getElementById('brand_id') ? document.getElementById('brand_id').value : null;
         
         console.log('Данные формы перед отправкой:', {

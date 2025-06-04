@@ -16,6 +16,29 @@
     font-size: 1.8rem;
 }
 
+/* Стили для таймера */
+.test-timer {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.timer-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.timer-display i {
+    color: #007bff;
+}
+
 .test-progress {
     margin-bottom: 2rem;
 }

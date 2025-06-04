@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
     phone_number = db.Column(db.String(20))
     department = db.Column(db.String(50))  # 'online', 'offline', 'office', 'management'
     position = db.Column(db.String(50))  # 'seller', 'cashier', 'manager', 'merchandiser', 'other'
+    photo_path = db.Column(db.String(255))  # Путь к фотографии пользователя
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -50,6 +51,9 @@ class User(UserMixin, db.Model):
         'foreign_trade_manager': 'Менеджер ЗЕД',
         'warehouse_worker': 'Комірник',
         'analyst': 'Аналітик',
+        'production_manager': 'Менеджер виробництва',
+        'quality_controller': 'Контролер якості',
+        'production_worker': 'Робітник виробництва',
         'office_manager': 'Офіс менеджер',
         'cleaner': 'Прибиральниця',
         'other_position': 'Інше'
@@ -64,6 +68,12 @@ class User(UserMixin, db.Model):
     def position_name(self):
         """Возвращает читаемое название должности"""
         return self.POSITIONS.get(self.position, self.position)
+    
+    @property
+    def requires_photo(self):
+        """Проверяет, требуется ли фотография для данной позиции"""
+        photo_required_positions = ['founder', 'general_director', 'department_head']
+        return self.position in photo_required_positions
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -189,8 +199,24 @@ class TestResult(db.Model):
     test_id = db.Column(db.Integer, db.ForeignKey('tests.id'), nullable=False)
     score = db.Column(db.Integer, nullable=False)
     max_score = db.Column(db.Integer, nullable=False)
+    started_at = db.Column(db.DateTime)  # Время начала прохождения теста
+    time_taken = db.Column(db.Integer)  # Время прохождения в секундах
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     test = db.relationship('Test', backref=db.backref('test_results', lazy=True))
+    
+    @property
+    def time_taken_formatted(self):
+        """Возвращает отформатированное время прохождения теста"""
+        if not self.time_taken:
+            return "-"
+        
+        minutes = self.time_taken // 60
+        seconds = self.time_taken % 60
+        
+        if minutes > 0:
+            return f"{minutes}хв {seconds}с"
+        else:
+            return f"{seconds}с"
 
 class TestQuestionResult(db.Model):
     __tablename__ = 'test_question_result'
@@ -232,29 +258,30 @@ class Order(db.Model):
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False)
     number = db.Column(db.String(50), nullable=False)
-    department = db.Column(db.String(50), nullable=False)
+    department = db.Column(db.String(50), nullable=False)  # Отдел автора (старое поле, оставляем для совместимости)
+    departments = db.Column(db.JSON, nullable=True)  # Список отделов, которые могут видеть распоряжение
     status = db.Column(db.String(20), default='active')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     image_path = db.Column(db.String(255))
+    due_date_from = db.Column(db.DateTime, nullable=True)  # Дата начала выполнения
+    due_date_to = db.Column(db.DateTime, nullable=True)    # Дата окончания выполнения
     
     author = db.relationship('User', backref=db.backref('orders', lazy=True))
     
     @property
     def status_name(self):
         status_names = {
-            'active': 'Активне',
-            'completed': 'Виконане',
-            'cancelled': 'Скасоване'
+            'info': 'Інформаційний',
+            'todo': 'До виконання'
         }
         return status_names.get(self.status, self.status)
 
     @property
     def status_color(self):
         status_colors = {
-            'active': 'primary',
-            'completed': 'success',
-            'cancelled': 'danger'
+            'info': 'info',
+            'todo': 'warning'
         }
         return status_colors.get(self.status, 'secondary')
 
@@ -263,8 +290,30 @@ class Order(db.Model):
         return User.DEPARTMENTS.get(self.department, self.department)
 
     @property
+    def department_names(self):
+        """Возвращает список названий отделов, которые могут видеть распоряжение"""
+        if not self.departments:
+            return [self.department_name]  # Если новое поле не заполнено, используем старое
+        
+        if 'all' in self.departments:
+            return ['Всі відділи']
+        
+        return [User.DEPARTMENTS.get(dept, dept) for dept in self.departments]
+
+    @property
     def author_name(self):
         return self.author.username if self.author else 'Невідомий'
+    
+    def can_be_viewed_by_user(self, user):
+        """Проверяет, может ли пользователь просматривать это распоряжение"""
+        if not self.departments:
+            # Если новое поле departments не заполнено, используем старую логику
+            return user.department == self.department
+        
+        if 'all' in self.departments:
+            return True  # Распоряжение доступно всем отделам
+        
+        return user.department in self.departments
     
     def __repr__(self):
         return f'<Order {self.number}: {self.title}>'

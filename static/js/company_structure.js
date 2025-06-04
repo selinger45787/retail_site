@@ -58,19 +58,16 @@ function toggleDepartment(deptCode) {
         header.classList.remove('collapsed');
         icon.className = 'fas fa-chevron-down';
         
-        // Анимация разворачивания
-        content.style.maxHeight = content.scrollHeight + 'px';
-        setTimeout(() => {
-            content.style.maxHeight = '1000px';
-        }, 300);
+        // Убираем inline стили, чтобы работали CSS правила
+        content.style.maxHeight = '';
     } else {
         // Сворачиваем
-        content.style.maxHeight = content.scrollHeight + 'px';
-        setTimeout(() => {
-            content.classList.add('collapsed');
-            header.classList.add('collapsed');
-            icon.className = 'fas fa-chevron-right';
-        }, 10);
+        content.classList.add('collapsed');
+        header.classList.add('collapsed');
+        icon.className = 'fas fa-chevron-right';
+        
+        // Убираем inline стили, чтобы работали CSS правила
+        content.style.maxHeight = '';
     }
 }
 
@@ -86,7 +83,7 @@ function expandAllDepartments() {
             content.classList.remove('collapsed');
             header.classList.remove('collapsed');
             icon.className = 'fas fa-chevron-down';
-            content.style.maxHeight = '1000px';
+            content.style.maxHeight = '';
         }
     });
     
@@ -103,12 +100,10 @@ function collapseAllDepartments() {
         const icon = header.querySelector('.toggle-icon i');
         
         if (!content.classList.contains('collapsed')) {
-            content.style.maxHeight = content.scrollHeight + 'px';
-            setTimeout(() => {
-                content.classList.add('collapsed');
-                header.classList.add('collapsed');
-                icon.className = 'fas fa-chevron-right';
-            }, 10);
+            content.classList.add('collapsed');
+            header.classList.add('collapsed');
+            icon.className = 'fas fa-chevron-right';
+            content.style.maxHeight = '';
         }
     });
     

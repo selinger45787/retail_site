@@ -353,6 +353,19 @@
     background: #f8f9fa;
 }
 
+/* Изображения в описании материала */
+.material-description img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 15px 0;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    object-fit: contain;
+}
+
 /* Дополнительные изображения */
 .additional-images-section {
     background: white;
@@ -421,30 +434,84 @@
 /* Адаптивность */
 @media (max-width: 768px) {
     .material-page {
+        padding: 20px;
+    }
+
+    .material-brand-title {
+        font-size: 2rem;
+    }
+
+    .material-title {
+        font-size: 1.75rem;
+    }
+
+    .material-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .material-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    .main-image-container {
+        min-height: 300px;
+    }
+
+    .main-image {
+        max-height: 300px;
+    }
+
+    .thumbnail-gallery {
+        gap: 8px;
+    }
+
+    .image-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Дополнительные медиа-запросы для мобильных устройств */
+@media (max-width: 576px) {
+    .material-page {
         padding: 15px;
     }
     
+    .material-header {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
     .material-brand-title {
-        font-size: 1.8em;
+        font-size: 1.75rem;
+        margin-bottom: 15px;
     }
     
     .material-title {
-        font-size: 1.8em;
+        font-size: 1.5rem;
     }
     
     .material-actions {
-        flex-direction: column;
-        align-items: center;
+        gap: 10px;
+        margin-top: 15px;
     }
     
     .material-btn {
-        width: 100%;
-        max-width: 300px;
-        justify-content: center;
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        gap: 6px;
+    }
+    
+    .gallery-section,
+    .content-section,
+    .additional-images-section {
+        padding: 20px;
+        margin-bottom: 20px;
     }
     
     .main-image-container {
-        min-height: 300px;
+        min-height: 250px;
     }
     
     .main-image {
@@ -452,10 +519,77 @@
     }
     
     .thumbnail-gallery {
-        justify-content: center;
+        gap: 6px;
+        justify-content: flex-start;
     }
     
-    .image-grid {
-        grid-template-columns: 1fr;
+    .thumbnail-item {
+        width: 60px;
+        height: 60px;
     }
+    
+    .material-meta {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+    
+    .material-category {
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .material-page {
+        padding: 10px;
+    }
+    
+    .material-header {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .material-brand-title {
+        font-size: 1.5rem;
+        margin-bottom: 12px;
+    }
+    
+    .material-title {
+        font-size: 1.3rem;
+    }
+    
+    .material-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .gallery-section,
+    .content-section,
+    .additional-images-section {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .main-image-container {
+        min-height: 200px;
+    }
+    
+    .main-image {
+        max-height: 200px;
+    }
+    
+    .thumbnail-item {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .material-description {
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    .material-description h1 { font-size: 1.5rem; }
+    .material-description h2 { font-size: 1.35rem; }
+    .material-description h3 { font-size: 1.2rem; }
+    .material-description h4 { font-size: 1.1rem; }
 } 

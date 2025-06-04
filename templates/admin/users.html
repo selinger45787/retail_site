@@ -2,6 +2,10 @@
 
 {% block title %}Управління користувачами{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/users.css') }}">
+{% endblock %}
+
 {% block content %}
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="container">
@@ -13,7 +17,7 @@
             <h5 class="mb-0">Створити нового користувача</h5>
         </div>
         <div class="card-body">
-            <form method="POST" action="{{ url_for('add_user') }}" id="addUserForm">
+            <form method="POST" action="{{ url_for('add_user') }}" id="addUserForm" enctype="multipart/form-data">
                 {{ form.csrf_token }}
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -98,6 +102,24 @@
                         {% endif %}
                     </div>
                 </div>
+                <!-- Поле для фотографии (показывается только для руководящих позиций) -->
+                <div class="row" id="photoField" style="display: none;">
+                    <div class="col-md-6 mb-3">
+                        {{ form.photo.label(class="form-label") }}
+                        {{ form.photo(class="form-control") }}
+                        {% if form.photo.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.photo.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Рекомендований розмір: 200x200 пікселів</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div id="photoPreview" class="mt-2"></div>
+                    </div>
+                </div>
                 <div class="text-end">
                     <button type="submit" class="btn btn-primary">Додати користувача</button>
                 </div>
@@ -130,6 +152,9 @@
                         <option value="offline_sales">Відділ Офлайн продажу</option>
                         <option value="foreign_trade">Відділ ЗЕД</option>
                         <option value="warehouse">Складський відділ</option>
+                        <option value="analytics">Відділ аналітики</option>
+                        <option value="abrams_production">Виробництво Abrams</option>
+                        <option value="other">Інше</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -219,216 +244,9 @@
     </div>
 </div>
 
-<style>
-.custom-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1050;
-}
-
-.custom-modal-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-}
-
-.custom-modal-content {
-    position: relative;
-    margin: 10% auto;
-    width: 90%;
-    max-width: 500px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 1051;
-}
-
-.custom-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.custom-modal-header h5 {
-    margin: 0;
-    font-size: 1.25rem;
-}
-
-.custom-modal-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.custom-modal-close:hover {
-    background-color: #f8f9fa;
-    border-radius: 4px;
-}
-
-.custom-modal-body {
-    padding: 1rem;
-}
-
-.custom-modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    padding: 1rem;
-    border-top: 1px solid #dee2e6;
-}
-</style>
-
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/user_form.js') }}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация модального окна
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteUserModal'), {
-        backdrop: true,
-        keyboard: true
-    });
-    
-    // Функция для фильтрации таблицы
-    function filterTable() {
-        const searchText = document.getElementById('searchInput').value.toLowerCase();
-        const roleFilter = document.getElementById('roleFilter').value.toLowerCase();
-        const departmentFilter = document.getElementById('departmentFilter').value;
-        const rows = document.querySelectorAll('tbody tr');
-        
-        rows.forEach(row => {
-            const username = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-            const role = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-            const departmentCell = row.querySelector('td:nth-child(4)');
-            const department = departmentCell.getAttribute('data-department') || departmentCell.textContent.toLowerCase();
-            
-            const matchesSearch = username.includes(searchText);
-            const matchesRole = !roleFilter || role.includes(roleFilter);
-            const matchesDepartment = !departmentFilter || department.includes(departmentFilter);
-            
-            row.style.display = matchesSearch && matchesRole && matchesDepartment ? '' : 'none';
-        });
-        
-        // Обновляем счетчик пользователей
-        const visibleRows = document.querySelectorAll('tbody tr:not([style*="display: none"])').length;
-        document.getElementById('userCount').textContent = `Всього: ${visibleRows}`;
-    }
-    
-    // Обработчики событий для фильтров
-    document.getElementById('searchInput').addEventListener('input', filterTable);
-    document.getElementById('roleFilter').addEventListener('change', filterTable);
-    document.getElementById('departmentFilter').addEventListener('change', filterTable);
-    
-    // Сброс фильтров
-    document.getElementById('resetFilters').addEventListener('click', function() {
-        document.getElementById('searchInput').value = '';
-        document.getElementById('roleFilter').value = '';
-        document.getElementById('departmentFilter').value = '';
-        filterTable();
-    });
-    
-    // Обработчик удаления пользователя
-    document.querySelectorAll('.delete-user-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const userId = this.getAttribute('data-user-id');
-            const username = this.getAttribute('data-username');
-            
-            // Проверяем зависимости пользователя
-            fetch(`/admin/users/${userId}/dependencies`, {
-                method: 'GET',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.error || 'Помилка при перевірці залежностей');
-                }
-                
-                // Очищаем предыдущие предупреждения
-                const warningsDiv = document.getElementById('deleteWarnings');
-                warningsDiv.innerHTML = '';
-                
-                // Добавляем предупреждения, если есть зависимости
-                if (data.test_results_count > 0) {
-                    warningsDiv.innerHTML += `<div class="alert alert-warning">У користувача є ${data.test_results_count} результатів тестів, які також будуть видалені.</div>`;
-                }
-                
-                if (data.test_assignments_count > 0) {
-                    warningsDiv.innerHTML += `<div class="alert alert-danger">У користувача є ${data.test_assignments_count} призначених тестів, які також будуть видалені.</div>`;
-                }
-                
-                document.getElementById('deleteUserName').textContent = username;
-                document.getElementById('confirmDeleteBtn').setAttribute('data-user-id', userId);
-                deleteModal.show();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert(error.message || 'Помилка при перевірці залежностей користувача');
-            });
-        });
-    });
-    
-    // Подтверждение удаления
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-        const userId = this.getAttribute('data-user-id');
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        
-        fetch(`/admin/users/${userId}/delete`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({
-                csrf_token: csrfToken
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Показываем сообщение об успехе
-                const flashContainer = document.createElement('div');
-                flashContainer.className = 'alert alert-success alert-dismissible fade show';
-                flashContainer.innerHTML = `
-                    ${data.message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                `;
-                document.querySelector('.container').insertBefore(flashContainer, document.querySelector('.container').firstChild);
-                
-                // Перезагружаем страницу через небольшую задержку
-                setTimeout(() => {
-                    window.location.href = data.redirect;
-                }, 1000);
-            } else {
-                alert(data.error || 'Помилка при видаленні користувача');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Помилка при видаленні користувача');
-        })
-        .finally(() => {
-            deleteModal.hide();
-        });
-    });
-});
-</script>
+<script src="{{ url_for('static', filename='js/users.js') }}"></script>
 {% endblock %} 

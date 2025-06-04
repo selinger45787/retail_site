@@ -16,7 +16,6 @@ import psycopg2
 import decimal
 from forms import AddUserForm, LoginForm, TestAssignmentForm, EditTestAssignmentForm, EditUserForm
 from functools import wraps
-import re
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -57,7 +56,6 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(os.path.join(app.static_folder, 'img', 'materials'), exist_ok=True)
 os.makedirs(os.path.join(app.static_folder, 'img', 'brands'), exist_ok=True)
 os.makedirs(os.path.join(app.static_folder, 'img', 'icons'), exist_ok=True)
-os.makedirs(os.path.join(app.static_folder, 'uploads'), exist_ok=True)  # Папка для загружаемых изображений из CKEditor
 os.makedirs(os.path.join(app.root_path, 'tests'), exist_ok=True)  # Папка для CSV файлов с тестами
 
 # Добавляем отладочный вывод для проверки путей
@@ -137,35 +135,7 @@ def nl2br(value):
         return ''
     return markupsafe.Markup(value.replace('\n', '<br>'))
 
-def safe_html(value):
-    """Фильтр для безопасного отображения HTML контента"""
-    if not value:
-        return ''
-    # Используем bleach для очистки HTML от опасных тегов
-    allowed_tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'b', 'i', 'em', 'strong', 'u', 'ul', 'ol', 'li', 'a']
-    allowed_attributes = {'a': ['href', 'title']}
-    clean_html = bleach.clean(value, tags=allowed_tags, attributes=allowed_attributes, strip=True)
-    return markupsafe.Markup(clean_html)
-
-def replace_drive_links_with_images(text):
-    """Фильтр для автоматической замены ссылок Google Drive на изображения"""
-    if not text:
-        return ""
-
-    # Найти все ссылки вида drive.google.com/file/d/FILE_ID/view...
-    pattern = r'https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\/view[^\s"<]*'
-    
-    def replacer(match):
-        file_id = match.group(1)
-        direct_link = f'https://drive.google.com/uc?export=view&id={file_id}'
-        return f'<img src="{direct_link}" alt="Google Drive Image" class="img-fluid my-2" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">'
-
-    result = re.sub(pattern, replacer, text)
-    return markupsafe.Markup(result)
-
 app.jinja_env.filters['nl2br'] = nl2br
-app.jinja_env.filters['safe_html'] = safe_html
-app.jinja_env.filters['replace_drive_links_with_images'] = replace_drive_links_with_images
 
 def get_score_color_class(score):
     """Возвращает CSS класс для цветового форматирования балла"""
@@ -245,9 +215,6 @@ def add_material(brand_id):
     categories = Category.query.all()
     brands = Brand.query.all()
     
-    # Получаем category_id из параметров URL
-    preselected_category_id = request.args.get('category_id', type=int)
-    
     if request.method == 'POST':
         logger.info("Получен POST запрос на добавление материала")
         logger.info(f"Form data: {request.form}")
@@ -284,7 +251,7 @@ def add_material(brand_id):
             if request.headers.get('Accept') == 'application/json':
                 return jsonify({'error': 'Будь ласка, заповніть всі обов\'язкові поля'}), 400
             flash('Будь ласка, заповніть всі обов\'язкові поля', 'error')
-            return redirect(url_for('add_material', brand_id=brand_id, category_id=preselected_category_id))
+            return redirect(url_for('add_material', brand_id=brand_id))
         
         try:
             # Сохраняем главное изображение
@@ -337,16 +304,11 @@ def add_material(brand_id):
             if request.headers.get('Accept') == 'application/json':
                 return jsonify({
                     'success': True,
-                    'redirect': url_for('brand', brand_id=brand_id) if brand_id else url_for('category', category_id=category_id)
+                    'redirect': url_for('brand', brand_id=brand_id)
                 })
             
             flash('Матеріал успішно додано', 'success')
-            
-            # Перенаправляем на страницу категории, если пришли с категории
-            if preselected_category_id:
-                return redirect(url_for('category', category_id=preselected_category_id))
-            else:
-                return redirect(url_for('brand', brand_id=brand_id))
+            return redirect(url_for('brand', brand_id=brand_id))
             
         except Exception as e:
             db.session.rollback()
@@ -354,7 +316,7 @@ def add_material(brand_id):
             if request.headers.get('Accept') == 'application/json':
                 return jsonify({'error': 'Помилка при додаванні матеріалу'}), 500
             flash('Помилка при додаванні матеріалу', 'error')
-            return redirect(url_for('add_material', brand_id=brand_id, category_id=preselected_category_id))
+            return redirect(url_for('add_material', brand_id=brand_id))
     
     # Для GET запроса
     brand = None
@@ -365,7 +327,6 @@ def add_material(brand_id):
                          brand=brand,
                          brands=brands,
                          categories=categories,
-                         preselected_category_id=preselected_category_id,
                          show_brand_select=brand_id is None)
 
 @app.route('/material/<int:material_id>')
@@ -1320,7 +1281,7 @@ def admin_dashboard():
                 tests_stats[test_id]['scores'].append(result.score)
                 tests_stats[test_id]['attempts_count'] += 1
                 
-                # Добавляем время если оно есть (время в секундах из базы)
+                # Добавляем время если оно есть
                 if result.time_taken:
                     tests_stats[test_id]['times'].append(result.time_taken)
                     tests_stats[test_id]['total_time'] += result.time_taken
@@ -1345,8 +1306,6 @@ def admin_dashboard():
                     tests_stats[test_id]['avg_time_formatted'] = f"{minutes}хв {seconds}с"
                 else:
                     tests_stats[test_id]['avg_time_formatted'] = f"{seconds}с"
-            else:
-                tests_stats[test_id]['avg_time_formatted'] = '-'
             
             # Форматируем общее время
             total_minutes = tests_stats[test_id]['total_time'] // 60
@@ -1358,7 +1317,7 @@ def admin_dashboard():
             elif total_minutes > 0:
                 tests_stats[test_id]['total_time_formatted'] = f"{total_minutes}хв {total_seconds}с"
             else:
-                tests_stats[test_id]['total_time_formatted'] = f"{total_seconds}с" if tests_stats[test_id]['total_time'] > 0 else "-"
+                tests_stats[test_id]['total_time_formatted'] = f"{total_seconds}с" if tests_stats[test_id]['total_time'] > 0 else "N/A"
         
         # Сортируем тесты по среднему баллу (по возрастанию)
         problematic_tests = sorted(
@@ -1394,7 +1353,7 @@ def admin_dashboard():
                 users_stats[user_id]['scores'].append(result.score)
                 users_stats[user_id]['tests_count'] += 1
                 
-                # Добавляем время если оно есть (время в секундах из базы)
+                # Добавляем время если оно есть
                 if result.time_taken:
                     users_stats[user_id]['times'].append(result.time_taken)
                     users_stats[user_id]['total_time'] += result.time_taken
@@ -1419,8 +1378,6 @@ def admin_dashboard():
                     users_stats[user_id]['avg_time_formatted'] = f"{minutes}хв {seconds}с"
                 else:
                     users_stats[user_id]['avg_time_formatted'] = f"{seconds}с"
-            else:
-                users_stats[user_id]['avg_time_formatted'] = '-'
             
             # Форматируем общее время
             total_minutes = users_stats[user_id]['total_time'] // 60
@@ -1432,7 +1389,7 @@ def admin_dashboard():
             elif total_minutes > 0:
                 users_stats[user_id]['total_time_formatted'] = f"{total_minutes}хв {total_seconds}с"
             else:
-                users_stats[user_id]['total_time_formatted'] = f"{total_seconds}с" if users_stats[user_id]['total_time'] > 0 else "-"
+                users_stats[user_id]['total_time_formatted'] = f"{total_seconds}с" if users_stats[user_id]['total_time'] > 0 else "N/A"
         
         # Сортируем пользователей по среднему баллу (по возрастанию)
         problematic_users = sorted(
@@ -1468,8 +1425,8 @@ def admin_dashboard():
                     'username': user.username,
                     'tests_count': 0,
                     'avg_score': 0,
-                    'total_time_formatted': '-',
-                    'avg_time_formatted': '-',
+                    'total_time_formatted': 'N/A',
+                    'avg_time_formatted': 'N/A',
                     'total_time_seconds': 0,
                     'avg_time_seconds': 0
                 })
@@ -1593,7 +1550,7 @@ def api_user_tests(user_id):
                     brand_total_score += attempt['score']
                     
                     # Добавляем время если оно есть (время в секундах из базы)
-                    if attempt.get('time_taken') and attempt['time_taken'] != '-':
+                    if attempt.get('time_taken') and attempt['time_taken'] != 'N/A':
                         # Находим соответствующий результат для получения времени в секундах
                         result = TestResult.query.get(attempt['id'])
                         if result and result.time_taken:
@@ -1607,7 +1564,7 @@ def api_user_tests(user_id):
             # Форматируем время
             def format_time(seconds):
                 if seconds == 0:
-                    return '-'
+                    return 'N/A'
                 minutes = int(seconds // 60)
                 secs = int(seconds % 60)
                 if minutes > 0:
@@ -1625,7 +1582,7 @@ def api_user_tests(user_id):
             elif total_minutes > 0:
                 brand_total_time_formatted = f"{total_minutes}хв {total_seconds}с"
             else:
-                brand_total_time_formatted = f"{total_seconds}с" if brand_total_time_seconds > 0 else "-"
+                brand_total_time_formatted = f"{total_seconds}с" if brand_total_time_seconds > 0 else "N/A"
             
             brands_list.append({
                 'id': brand_id,
@@ -2256,32 +2213,13 @@ def company_structure():
 @login_required
 def orders():
     # Получаем все распоряжения
-    all_orders = Order.query.order_by(Order.created_at.desc()).all()
-    
-    # DEBUG: Временно отключаем фильтрацию для диагностики
-    filtered_orders = all_orders  # Показываем все заказы
-    
-    # Оригинальная фильтрация (временно отключена)
-    # filtered_orders = []
-    # for order in all_orders:
-    #     # Администраторы видят все распоряжения
-    #     if current_user.role == 'admin':
-    #         filtered_orders.append(order)
-    #     # Обычные пользователи видят только те распоряжения, которые предназначены для их отдела
-    #     elif order.can_be_viewed_by_user(current_user):
-    #         filtered_orders.append(order)
+    orders = Order.query.order_by(Order.created_at.desc()).all()
     
     # Получаем список отделов для фильтрации
     departments = User.DEPARTMENTS
     
-    # DEBUG: Добавляем отладочную информацию
-    print(f"DEBUG: Total orders: {len(all_orders)}")
-    print(f"DEBUG: Filtered orders: {len(filtered_orders)}")
-    if filtered_orders:
-        print(f"DEBUG: First order: {filtered_orders[0].title}")
-    
     return render_template('orders.html', 
-                         orders=filtered_orders,
+                         orders=orders,
                          departments=departments)
 
 @app.route('/orders/add', methods=['GET', 'POST'])
@@ -2290,54 +2228,12 @@ def add_order():
     if request.method == 'POST':
         title = request.form.get('title')
         description = request.form.get('description')
-        author_id = request.form.get('author_id')
-        status = request.form.get('status', 'info')  # По умолчанию 'info'
+        number = request.form.get('number')
+        department = request.form.get('department')
         image = request.files.get('image')
         
-        # Автоматически генерируем номер распоряжения
-        # Находим последнее распоряжение по ID и увеличиваем номер на 1
-        last_order = Order.query.order_by(Order.id.desc()).first()
-        if last_order:
-            next_number = last_order.id + 1
-        else:
-            next_number = 1
-        
-        # Форматируем номер как РОЗП-001, РОЗП-002 и т.д.
-        number = f"РОЗП-{next_number:03d}"
-        
-        # Обрабатываем даты для статуса "До виконання"
-        due_date_from = None
-        due_date_to = None
-        if status == 'todo':
-            due_date_from_str = request.form.get('due_date_from')
-            due_date_to_str = request.form.get('due_date_to')
-            
-            if due_date_from_str:
-                try:
-                    due_date_from = datetime.fromisoformat(due_date_from_str)
-                except ValueError:
-                    logger.warning(f"Invalid due_date_from format: {due_date_from_str}")
-            
-            if due_date_to_str:
-                try:
-                    due_date_to = datetime.fromisoformat(due_date_to_str)
-                except ValueError:
-                    logger.warning(f"Invalid due_date_to format: {due_date_to_str}")
-            
-            # Проверяем, что дата окончания позже даты начала
-            if due_date_from and due_date_to and due_date_to <= due_date_from:
-                flash('Дата завершення повинна бути пізніше дати початку', 'error')
-                return redirect(url_for('add_order'))
-        
-        # Обрабатываем выбор отделов
-        departments = []
-        if request.form.get('all_departments'):
-            departments = ['all']
-        else:
-            departments = request.form.getlist('departments')
-        
-        if not all([title, description, author_id, status]) or not departments:
-            flash('Будь ласка, заповніть усі поля та виберіть відділи', 'error')
+        if not all([title, description, number, department]):
+            flash('Будь ласка, заповніть усі поля', 'error')
             return redirect(url_for('add_order'))
         
         try:
@@ -2351,25 +2247,17 @@ def add_order():
                 image.save(image_path)
                 image_path = filename
             
-            # Получаем автора для определения его отдела (для обратной совместимости)
-            author = User.query.get(author_id)
-            author_department = author.department if author else 'other'
-            
             order = Order(
                 title=title,
                 description=description,
-                number=number,  # Используем автогенерированный номер
-                department=author_department,  # Старое поле для совместимости
-                departments=departments,  # Новое поле со списком отделов
-                author_id=author_id,
-                status=status,
-                due_date_from=due_date_from,
-                due_date_to=due_date_to,
+                number=number,
+                department=department,
+                author_id=current_user.id,
                 image_path=image_path
             )
             db.session.add(order)
             db.session.commit()
-            flash(f'Розпорядження {number} успішно додано', 'success')
+            flash('Розпорядження успішно додано', 'success')
             return redirect(url_for('orders'))
         except Exception as e:
             db.session.rollback()
@@ -2377,14 +2265,7 @@ def add_order():
             flash('Помилка при додаванні розпорядження', 'error')
             return redirect(url_for('add_order'))
     
-    # Для GET запроса получаем руководителей
-    leaders = User.query.filter(
-        User.position.in_(['founder', 'general_director', 'department_head'])
-    ).all()
-    
-    return render_template('order_add.html', 
-                         departments=User.DEPARTMENTS, 
-                         leaders=leaders)
+    return render_template('order_add.html', departments=User.DEPARTMENTS)
 
 @app.route('/orders/<int:order_id>')
 @login_required
@@ -2404,59 +2285,12 @@ def edit_order(order_id):
     
     if request.method == 'POST':
         try:
-            # Обновляем основные данные
+            # Обновляем данные
             order.title = request.form.get('title')
             order.description = request.form.get('description')
-            # order.number - номер не изменяется, генерируется автоматически
-            order.author_id = request.form.get('author_id')
+            order.number = request.form.get('number')
+            order.department = request.form.get('department')
             order.status = request.form.get('status')
-            
-            # Обрабатываем даты для статуса "До виконання"
-            if order.status == 'todo':
-                due_date_from_str = request.form.get('due_date_from')
-                due_date_to_str = request.form.get('due_date_to')
-                
-                order.due_date_from = None
-                order.due_date_to = None
-                
-                if due_date_from_str:
-                    try:
-                        order.due_date_from = datetime.fromisoformat(due_date_from_str)
-                    except ValueError:
-                        logger.warning(f"Invalid due_date_from format: {due_date_from_str}")
-                
-                if due_date_to_str:
-                    try:
-                        order.due_date_to = datetime.fromisoformat(due_date_to_str)
-                    except ValueError:
-                        logger.warning(f"Invalid due_date_to format: {due_date_to_str}")
-                
-                # Проверяем, что дата окончания позже даты начала
-                if order.due_date_from and order.due_date_to and order.due_date_to <= order.due_date_from:
-                    flash('Дата завершення повинна бути пізніше дати початку', 'error')
-                    return redirect(url_for('edit_order', order_id=order_id))
-            else:
-                # Если статус не "todo", очищаем даты
-                order.due_date_from = None
-                order.due_date_to = None
-            
-            # Обрабатываем выбор отделов
-            departments = []
-            if request.form.get('all_departments'):
-                departments = ['all']
-            else:
-                departments = request.form.getlist('departments')
-            
-            if not departments:
-                flash('Будь ласка, виберіть відділи', 'error')
-                return redirect(url_for('edit_order', order_id=order_id))
-            
-            order.departments = departments
-            
-            # Обновляем отдел автора для обратной совместимости
-            author = User.query.get(order.author_id)
-            if author:
-                order.department = author.department
             
             db.session.commit()
             flash('Розпорядження успішно оновлено', 'success')
@@ -2467,92 +2301,25 @@ def edit_order(order_id):
             logger.error(f"Error updating order: {str(e)}")
             flash('Помилка при оновленні розпорядження', 'error')
     
-    # Для GET запроса получаем руководителей
-    leaders = User.query.filter(
-        User.position.in_(['founder', 'general_director', 'department_head'])
-    ).all()
-    
-    return render_template('order_edit.html', 
-                         order=order, 
-                         departments=User.DEPARTMENTS,
-                         leaders=leaders)
+    return render_template('order_edit.html', order=order, departments=User.DEPARTMENTS)
 
 @app.route('/orders/<int:order_id>/delete', methods=['POST'])
 @login_required
 def delete_order(order_id):
-    logger.info(f"=== Начало удаления распоряжения {order_id} ===")
+    order = Order.query.get_or_404(order_id)
+    
+    # Проверяем права доступа
+    if current_user.role != 'admin' and order.author_id != current_user.id:
+        return jsonify({'error': 'У вас немає прав для видалення цього розпорядження'}), 403
+    
     try:
-        # Проверяем права доступа
-        order = Order.query.get_or_404(order_id)
-        if current_user.role != 'admin' and order.author_id != current_user.id:
-            logger.warning(f"Попытка удаления распоряжения {order_id} пользователем без прав")
-            return jsonify({'error': 'У вас немає прав для видалення цього розпорядження'}), 403
-
-        # Получаем CSRF-токен из JSON-данных
-        data = request.get_json()
-        logger.info(f"Полученные данные: {data}")
-        
-        if not data or 'csrf_token' not in data:
-            logger.error("CSRF token missing")
-            return jsonify({'error': 'CSRF token missing'}), 400
-
-        try:
-            validate_csrf(data['csrf_token'])
-        except Exception as e:
-            logger.error(f"CSRF validation error: {str(e)}")
-            return jsonify({'error': 'Invalid CSRF token'}), 400
-
-        # Если это первый запрос на удаление, возвращаем запрос подтверждения
-        if not data.get('confirmed'):
-            logger.info("Запрашиваем подтверждение удаления")
-            return jsonify({
-                'needs_confirmation': True,
-                'order_title': order.title,
-                'order_number': order.number
-            })
-
-        # Если пользователь подтвердил удаление
-        if data.get('confirmed'):
-            logger.info("Начинаем процесс удаления распоряжения")
-            try:
-                # Удаляем изображение, если есть
-                if order.image_path:
-                    try:
-                        image_path = os.path.join(app.static_folder, 'img', 'orders', order.image_path)
-                        logger.info(f"Удаляем изображение: {image_path}")
-                        if os.path.exists(image_path):
-                            os.remove(image_path)
-                    except Exception as e:
-                        logger.warning(f"Ошибка при удалении изображения: {e}")
-
-                # Удаляем само распоряжение
-                logger.info("Удаляем распоряжение из базы данных")
-                db.session.delete(order)
-                db.session.commit()
-                logger.info("Распоряжение успешно удалено")
-
-                return jsonify({
-                    'success': True,
-                    'redirect': url_for('orders'),
-                    'message': 'Розпорядження було успішно видалено'
-                })
-
-            except Exception as e:
-                db.session.rollback()
-                logger.error(f"Ошибка при удалении распоряжения: {str(e)}")
-                return jsonify({
-                    'error': 'Помилка при видаленні розпорядження',
-                    'details': str(e)
-                }), 500
-
+        db.session.delete(order)
+        db.session.commit()
+        return jsonify({'success': True})
     except Exception as e:
-        logger.error(f"Непредвиденная ошибка в delete_order: {str(e)}")
-        return jsonify({
-            'error': 'Помилка при видаленні розпорядження',
-            'details': str(e)
-        }), 500
-    finally:
-        logger.info(f"=== Завершение удаления распоряжения {order_id} ===")
+        db.session.rollback()
+        logger.error(f"Error deleting order: {str(e)}")
+        return jsonify({'error': 'Помилка при видаленні розпорядження'}), 500
 
 @app.route('/static/img/users/<path:filename>')
 def serve_user_photo(filename):
@@ -2579,6 +2346,11 @@ def serve_user_photo(filename):
         logger.error(f"Ошибка при загрузке фотографии пользователя {filename}: {str(e)}")
         return "Internal server error", 500
 
+@app.route('/brand/<int:brand_id>/history')
+def brand_history(brand_id):
+    brand = Brand.query.get_or_404(brand_id)
+    return render_template('brand_history.html', brand=brand)
+
 @app.route('/category/<int:category_id>')
 def category(category_id):
     category = Category.query.get_or_404(category_id)
@@ -2599,48 +2371,75 @@ def category(category_id):
                          pagination=materials_pagination,
                          brands=brands)
 
-@csrf.exempt  # Исключаем CSRF для загрузки изображений из CKEditor
-@app.route('/upload-image', methods=['POST'])
-def upload_image():
-    """Роут для загрузки изображений из CKEditor"""
-    try:
-        logger.info("Получен запрос на загрузку изображения")
+@app.route('/category/<int:category_id>/add_material', methods=['GET', 'POST'])
+@login_required
+def add_material_to_category(category_id):
+    if current_user.role != 'admin':
+        flash('У вас немає прав для додавання матеріалів', 'error')
+        return redirect(url_for('category', category_id=category_id))
+    
+    category = Category.query.get_or_404(category_id)
+    brands = Brand.query.all()
+    
+    if request.method == 'POST':
+        title = request.form.get('title')
+        raw_description = request.form.get('description') or ''
+        description = unescape(raw_description)
+        brand_id = request.form.get('brand_id')
+        main_image = request.files.get('image')
+        additional_images = request.files.getlist('additional_images')
         
-        if 'upload' not in request.files:
-            logger.error("Файл не найден в запросе")
-            return jsonify({"error": {"message": "No file part"}}), 400
+        if not all([title, description, brand_id]):
+            flash('Будь ласка, заповніть всі обов\'язкові поля', 'error')
+            return redirect(url_for('add_material_to_category', category_id=category_id))
+        
+        try:
+            # Сохраняем главное изображение
+            main_image_path = None
+            if main_image and main_image.filename:
+                filename = secure_filename(main_image.filename)
+                image_path = os.path.join(app.static_folder, 'img', 'materials', filename)
+                main_image.save(image_path)
+                main_image_path = filename
+            
+            # Создаем новый материал
+            material = Material(
+                title=title,
+                description=description,
+                image_path=main_image_path,
+                brand_id=brand_id,
+                category_id=category_id
+            )
+            
+            db.session.add(material)
+            db.session.flush()
+            
+            # Сохраняем дополнительные изображения
+            for image in additional_images:
+                if image and image.filename:
+                    filename = secure_filename(image.filename)
+                    image_path = os.path.join(app.static_folder, 'img', 'materials', filename)
+                    image.save(image_path)
+                    
+                    material_image = MaterialImage(
+                        image_path=filename,
+                        material_id=material.id
+                    )
+                    db.session.add(material_image)
+            
+            db.session.commit()
+            flash('Матеріал успішно додано', 'success')
+            return redirect(url_for('category', category_id=category_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Ошибка при сохранении материала: {str(e)}")
+            flash('Помилка при додаванні матеріалу', 'error')
+            return redirect(url_for('add_material_to_category', category_id=category_id))
+    
+    return render_template('material_add_to_category.html', 
+                         category=category,
+                         brands=brands)
 
-        file = request.files['upload']
-        if file.filename == '':
-            logger.error("Файл не выбран")
-            return jsonify({"error": {"message": "No selected file"}}), 400
-
-        if file:
-            # Генерируем безопасное имя файла
-            filename = secure_filename(file.filename)
-            
-            # Добавляем временную метку для уникальности
-            timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S_')
-            unique_filename = f"{timestamp}{filename}"
-            
-            # Путь для сохранения
-            upload_folder = os.path.join(app.static_folder, 'uploads')
-            filepath = os.path.join(upload_folder, unique_filename)
-            
-            # Сохраняем файл
-            file.save(filepath)
-            logger.info(f"Файл сохранен: {filepath}")
-            
-            # Генерируем URL для изображения
-            file_url = url_for('static', filename=f'uploads/{unique_filename}', _external=True)
-            logger.info(f"URL изображения: {file_url}")
-            
-            # Возвращаем ответ в формате, ожидаемом CKFinder
-            return jsonify({
-                'uploaded': True,
-                'url': file_url
-            })
-            
-    except Exception as e:
-        logger.error(f"Ошибка при загрузке изображения: {str(e)}")
-        return jsonify({"error": {"message": "Upload failed"}}), 500
+if __name__ == '__main__':
+    app.run(debug=True)

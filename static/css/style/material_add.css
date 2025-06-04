@@ -308,4 +308,147 @@
 
 /* Styles for material_add.html */
 
-/* Add your custom styles here */ 
+/* Add your custom styles here */
+
+/* File upload area styles */
+.file-upload-area {
+    position: relative;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    transition: border-color 0.3s ease;
+    background: #f8f9fa;
+}
+
+.file-upload-area:hover {
+    border-color: #007bff;
+    background: #f0f8ff;
+}
+
+.file-upload-area input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.upload-content {
+    pointer-events: none;
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: #007bff;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.upload-content p {
+    margin: 0.5rem 0;
+    font-weight: 500;
+    color: #333;
+}
+
+.upload-content small {
+    color: #666;
+    font-size: 0.875rem;
+}
+
+.images-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.images-preview-grid img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+/* Editor container styles */
+.editor-container {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    min-height: 200px;
+    background: white;
+}
+
+/* Form label with icons */
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-label i {
+    color: #007bff;
+}
+
+/* Back button styling for category page */
+.add-material-header .btn-secondary {
+    margin-top: 1rem;
+}
+
+/* Make form responsive */
+@media (max-width: 768px) {
+    .file-upload-area {
+        padding: 1.5rem;
+    }
+    
+    .upload-icon {
+        font-size: 2rem;
+    }
+    
+    .images-preview-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+}
+
+/* Disabled category select styling */
+.form-control:disabled {
+    background-color: #f8f9fa !important;
+    border-color: #e9ecef !important;
+    cursor: not-allowed !important;
+    opacity: 0.8;
+}
+
+.form-control:disabled option {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+/* Info text styling */
+.form-text.text-muted {
+    font-size: 0.875rem;
+    color: #6c757d !important;
+    margin-top: 0.25rem;
+}
+
+.form-text.text-muted i {
+    color: #17a2b8;
+    margin-right: 0.5rem;
+} 

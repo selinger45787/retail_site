@@ -9,6 +9,15 @@
 {% block content %}
 <div class="test-container">
     <h1>Тест: {{ material.title }}</h1>
+    
+    <!-- Таймер -->
+    <div class="test-timer">
+        <div class="timer-display">
+            <i class="fas fa-clock"></i>
+            <span id="timer">00:00</span>
+        </div>
+    </div>
+    
     <div class="test-progress">
         <div class="progress-bar">
             <div class="progress" style="width: 0%"></div>
@@ -18,6 +27,8 @@
 
     <form id="test-form" method="POST" action="{{ url_for('submit_test', test_id=test.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <!-- Скрытое поле для времени начала теста -->
+        <input type="hidden" name="test_started_at" id="test-started-at" value="">
         
         {% for question in questions %}
         <div class="question-container" data-question="{{ loop.index }}" {% if not loop.first %}style="display: none;"{% endif %}>

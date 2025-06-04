@@ -51,6 +51,7 @@ header {
     left: 2rem;
     display: flex;
     align-items: center;
+    gap: 1rem;
 }
 
 .header-logo-container a {
@@ -62,6 +63,31 @@ header {
     height: 50px;
     width: auto;
     display: block;
+}
+
+.mobile-menu-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    display: none;
+}
+
+.mobile-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+}
+
+.mobile-menu-btn i {
+    transition: transform 0.3s ease;
+}
+
+.mobile-menu-btn.active i {
+    transform: rotate(90deg);
 }
 
 .site-name {
@@ -344,25 +370,85 @@ header {
 
 /* Responsive Styles */
 @media (max-width: 768px) {
+    .mobile-menu-btn {
+        display: block;
+    }
+    
     .header-content {
         padding: 0 1rem;
-        flex-direction: column;
-        gap: 0.5rem;
+        position: relative;
+    }
+
+    .header-logo-container {
+        position: static;
+        left: auto;
     }
 
     .site-title {
         font-size: 1.4rem;
+        position: static;
+        width: auto;
+        height: auto;
+        padding: 0;
     }
 
     .auth-buttons {
-        flex-direction: column;
+        position: static;
+        right: auto;
+        display: flex;
         gap: 0.5rem;
-        width: 100%;
+        align-items: center;
     }
 
     .main-content {
         margin-left: 0;
-        padding: 0.5rem;
+        padding: 1rem 0.5rem;
+    }
+    
+    .user-info {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+        margin-right: 0.5rem;
+    }
+    
+    .login-btn, .logout-btn {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content {
+        padding: 0 0.5rem;
+    }
+    
+    .header-logo-container {
+        gap: 0.5rem;
+    }
+    
+    .header-logo {
+        height: 40px;
+    }
+    
+    .auth-buttons {
+        flex-direction: column;
+        gap: 0.25rem;
+        align-items: flex-end;
+    }
+    
+    .user-info {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.6rem;
+        margin: 0;
+    }
+    
+    .login-btn, .logout-btn {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+    }
+    
+    .main-content {
+        padding: 0.5rem 0.25rem;
     }
 }
 
@@ -502,4 +588,114 @@ header {
     padding: 2px 8px;
     border-radius: 12px;
     margin-left: 8px;
+}
+
+/* Общие медиа-запросы для всех карточек и контейнеров */
+@media (max-width: 576px) {
+    /* Bootstrap row и column адаптация */
+    .row > [class*="col-"] {
+        margin-bottom: 1rem;
+    }
+    
+    /* Общие стили для всех карточек */
+    .card, .material-card, .order-card, .test-card {
+        margin-bottom: 1rem;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Контейнеры с grid */
+    .row.row-cols-1.row-cols-md-2.row-cols-lg-3.g-4,
+    .row.row-cols-1.row-cols-md-2.row-cols-xl-3.g-4,
+    .row.row-cols-1.row-cols-sm-2.row-cols-md-3.g-4 {
+        --bs-gutter-x: 0.75rem;
+        --bs-gutter-y: 0.75rem;
+    }
+    
+    /* Принуждение 1 колонки для всех grid контейнеров */
+    .row.row-cols-md-2 > .col,
+    .row.row-cols-lg-3 > .col,
+    .row.row-cols-xl-3 > .col,
+    .row.row-cols-sm-2 > .col,
+    .row.row-cols-md-3 > .col {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Отступы для контейнеров */
+    .container, .container-fluid {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    /* Кнопки */
+    .btn {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .btn-group-vertical .btn {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Заголовки */
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
+    h4 { font-size: 1.1rem; }
+    h5 { font-size: 1rem; }
+    
+    /* Отступы */
+    .mb-4 { margin-bottom: 1.5rem !important; }
+    .mb-3 { margin-bottom: 1rem !important; }
+    .mt-4 { margin-top: 1.5rem !important; }
+    .mt-3 { margin-top: 1rem !important; }
+}
+
+@media (max-width: 480px) {
+    /* Еще более компактные стили для очень маленьких экранов */
+    .container, .container-fluid {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .card, .material-card, .order-card, .test-card {
+        margin-bottom: 0.75rem;
+    }
+    
+    .btn {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.35rem; }
+    h3 { font-size: 1.15rem; }
+    h4 { font-size: 1rem; }
+    h5 { font-size: 0.95rem; }
+    
+    .mb-4 { margin-bottom: 1rem !important; }
+    .mb-3 { margin-bottom: 0.75rem !important; }
+    .mt-4 { margin-top: 1rem !important; }
+    .mt-3 { margin-top: 0.75rem !important; }
+}
+
+/* Общие стили для изображений из CKEditor */
+.ck-content img,
+.ckeditor-content img {
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 15px auto;
+    display: block;
+    object-fit: contain !important;
+}
+
+/* Убираем принудительные размеры у изображений */
+img[style*="width"],
+img[style*="height"] {
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
 } 

@@ -181,98 +181,27 @@ function resetDeleteButton(button, originalText) {
     button.textContent = originalText;
 }
 
-// Подключаем обработчики после загрузки страницы
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, initializing button handlers...');
+// Глобальная функция для кнопки сброса в шаблоне
+function resetFilters() {
+    const searchInput = document.getElementById('materialSearch');
+    const brandFilter = document.getElementById('brandFilter');
+    const sortSelect = document.getElementById('sortBy');
     
-    // Кнопки редактирования
-    document.querySelectorAll('.action-btn.edit').forEach(btn => {
-        console.log('Found edit button:', btn);
-        btn.addEventListener('click', () => {
-            const id = btn.getAttribute('data-material-id');
-            console.log('Edit button clicked, material ID:', id);
-            if (id) editMaterial(id);
-        });
-    });
-
-    // Кнопки удаления
-    document.querySelectorAll('.action-btn.delete').forEach(btn => {
-        console.log('Found delete button:', btn);
-        btn.addEventListener('click', () => {
-            const id = btn.getAttribute('data-material-id');
-            console.log('Delete button clicked, material ID:', id);
-            if (id) showDeleteModal(id);
-        });
-    });
-
-    // Кнопка подтверждения удаления в модальном окне
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', deleteMaterial);
-    }
-
-    // Закрытие модального окна при клике вне его содержимого
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeModal(modal.id);
-            }
-        });
-    });
-
-    // Инициализация кнопок закрытия для флеш-сообщений
-    document.querySelectorAll('.alert .btn-close').forEach(button => {
-        button.addEventListener('click', function() {
-            this.closest('.alert').remove();
-        });
-    });
-
-    // Intersection Observer для анимации появления карточек
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.animationPlayState = 'running';
-            }
-        });
-    }, observerOptions);
-
-    // Наблюдаем за всеми карточками материалов
-    const materialCards = document.querySelectorAll('.material-card');
-    materialCards.forEach(card => {
-        card.style.animationPlayState = 'paused';
-        observer.observe(card);
-    });
+    if (searchInput) searchInput.value = '';
+    if (brandFilter) brandFilter.value = '';
+    if (sortSelect) sortSelect.value = 'date_desc';
     
-    // Обработка ошибок загрузки изображений
-    const materialImages = document.querySelectorAll('.material-img');
-    materialImages.forEach(img => {
-        img.addEventListener('error', function() {
-            this.src = '/static/img/matertial_logo.png';
-        });
-    });
-});
-
-// Закрытие модального окна при клике вне его
-window.onclick = function(event) {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
+    // Триггерим событие для обновления фильтров
+    if (searchInput) searchInput.dispatchEvent(new Event('input'));
 }
 
-// Enhanced Brand Page JavaScript
-
+// Enhanced Category Page JavaScript
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Category page JavaScript loaded');
+    
     // Элементы управления
     const searchInput = document.getElementById('materialSearch');
-    const categoryFilter = document.getElementById('categoryFilter');
+    const brandFilter = document.getElementById('brandFilter');
     const sortSelect = document.getElementById('sortBy');
     const resetBtn = document.getElementById('resetFilters');
     const viewBtns = document.querySelectorAll('.view-btn');
@@ -284,30 +213,36 @@ document.addEventListener('DOMContentLoaded', function() {
     let allMaterials = Array.from(document.querySelectorAll('.material-card'));
     let filteredMaterials = [...allMaterials];
     
+    console.log('Found materials:', allMaterials.length);
+    
     // Инициализация
     init();
     
     function init() {
         // Обработчики событий
         if (searchInput) {
-            searchInput.addEventListener('input', debounce(handleSearch, 300));
+            searchInput.addEventListener('input', debounce(applyAllFilters, 300));
+            console.log('Search input listener added');
         }
         
-        if (categoryFilter) {
-            categoryFilter.addEventListener('change', handleFilter);
+        if (brandFilter) {
+            brandFilter.addEventListener('change', applyAllFilters);
+            console.log('Brand filter listener added');
         }
         
         if (sortSelect) {
-            sortSelect.addEventListener('change', handleSort);
+            sortSelect.addEventListener('change', applyAllFilters);
+            console.log('Sort select listener added');
         }
         
         if (resetBtn) {
             resetBtn.addEventListener('click', resetFilters);
+            console.log('Reset button listener added');
         }
         
         // Переключение видов
         viewBtns.forEach(btn => {
-            btn.addEventListener('click', () => switchView(btn.dataset.view));
+            btn.addEventListener('click', (e) => switchView(e.target.closest('.view-btn').dataset.view));
         });
         
         // Обработчики для кнопок действий
@@ -315,50 +250,46 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Анимация появления карточек
         animateCards();
+        
+        // Инициальное обновление счетчика
+        updateCount();
     }
     
-    // Поиск материалов
-    function handleSearch() {
-        const query = searchInput.value.toLowerCase().trim();
+    // Применить все фильтры и сортировку
+    function applyAllFilters() {
+        console.log('Applying all filters...');
         
-        filteredMaterials = allMaterials.filter(card => {
-            const title = card.dataset.title || '';
-            return title.includes(query);
-        });
+        const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        const selectedBrand = brandFilter ? brandFilter.value : '';
+        const sortType = sortSelect ? sortSelect.value : 'date_desc';
         
-        applyFiltersAndSort();
-    }
-    
-    // Фильтрация по категории
-    function handleFilter() {
-        const selectedCategory = categoryFilter.value;
+        console.log('Search query:', searchQuery);
+        console.log('Selected brand:', selectedBrand);
+        console.log('Sort type:', sortType);
         
-        if (!selectedCategory) {
-            filteredMaterials = [...allMaterials];
-        } else {
-            filteredMaterials = allMaterials.filter(card => {
-                return card.dataset.category === selectedCategory;
-            });
-        }
+        // Начинаем с всех материалов
+        filteredMaterials = [...allMaterials];
         
-        // Применяем поиск к отфильтрованным результатам
-        if (searchInput && searchInput.value.trim()) {
-            const query = searchInput.value.toLowerCase().trim();
+        // Применяем поиск
+        if (searchQuery) {
             filteredMaterials = filteredMaterials.filter(card => {
                 const title = card.dataset.title || '';
-                return title.includes(query);
+                return title.includes(searchQuery);
             });
         }
         
-        applyFiltersAndSort();
-    }
-    
-    // Сортировка материалов
-    function handleSort() {
-        const sortBy = sortSelect.value;
+        // Применяем фильтр по бренду
+        if (selectedBrand) {
+            filteredMaterials = filteredMaterials.filter(card => {
+                return card.dataset.brand === selectedBrand;
+            });
+        }
         
+        console.log('Filtered materials count:', filteredMaterials.length);
+        
+        // Применяем сортировку
         filteredMaterials.sort((a, b) => {
-            switch (sortBy) {
+            switch (sortType) {
                 case 'date_desc':
                     return new Date(b.dataset.date) - new Date(a.dataset.date);
                 case 'date_asc':
@@ -375,128 +306,84 @@ document.addEventListener('DOMContentLoaded', function() {
         updateDisplay();
     }
     
-    // Применение фильтров и сортировки
-    function applyFiltersAndSort() {
-        handleSort();
-    }
-    
-    // Обновление отображения
     function updateDisplay() {
-        // Скрываем все карточки
-        allMaterials.forEach(card => {
-            card.style.display = 'none';
-        });
+        // Очищаем контейнер
+        materialsContainer.innerHTML = '';
         
-        // Показываем отфильтрованные карточки
-        if (filteredMaterials.length > 0) {
-            filteredMaterials.forEach((card, index) => {
-                card.style.display = 'block';
-                card.style.animationDelay = `${index * 0.1}s`;
-            });
+        if (filteredMaterials.length === 0) {
+            noResults.style.display = 'block';
+            updateCount(0);
+        } else {
+            noResults.style.display = 'none';
+            updateCount(filteredMaterials.length);
             
-            // Перестраиваем порядок в DOM
+            // Добавляем отфильтрованные карточки
             filteredMaterials.forEach(card => {
                 materialsContainer.appendChild(card);
             });
-            
-            noResults.style.display = 'none';
-        } else {
-            noResults.style.display = 'block';
         }
         
-        // Обновляем счетчик
-        if (materialsCount) {
-            materialsCount.textContent = filteredMaterials.length;
-        }
+        // Переустанавливаем обработчики кнопок для новых элементов
+        setupActionButtons();
         
-        // Перезапускаем анимации
+        // Обновляем анимации
         animateCards();
     }
     
-    // Сброс фильтров
-    function resetFilters() {
-        if (searchInput) searchInput.value = '';
-        if (categoryFilter) categoryFilter.value = '';
-        if (sortSelect) sortSelect.value = 'date_desc';
-        
-        filteredMaterials = [...allMaterials];
-        updateDisplay();
-    }
-    
-    // Переключение вида отображения
-    function switchView(view) {
-        viewBtns.forEach(btn => btn.classList.remove('active'));
-        event.target.closest('.view-btn').classList.add('active');
-        
-        if (view === 'list') {
-            materialsContainer.classList.add('list-view');
-        } else {
-            materialsContainer.classList.remove('list-view');
+    function updateCount(count = null) {
+        const displayCount = count !== null ? count : filteredMaterials.length;
+        if (materialsCount) {
+            materialsCount.textContent = displayCount;
         }
     }
     
-    // Настройка кнопок действий
+    function switchView(view) {
+        viewBtns.forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[data-view="${view}"]`).classList.add('active');
+        
+        materialsContainer.className = view === 'list' ? 'materials-list' : 'materials-grid';
+    }
+    
     function setupActionButtons() {
         // Кнопки редактирования
+        document.querySelectorAll('.action-btn.edit').forEach(btn => {
+            // Удаляем старые обработчики
+            btn.replaceWith(btn.cloneNode(true));
+        });
+        
         document.querySelectorAll('.action-btn.edit').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const materialId = btn.dataset.materialId;
-                window.location.href = `/material/${materialId}/edit`;
+                const id = btn.getAttribute('data-material-id');
+                if (id) editMaterial(id);
             });
         });
-        
+
         // Кнопки удаления
+        document.querySelectorAll('.action-btn.delete').forEach(btn => {
+            // Удаляем старые обработчики
+            btn.replaceWith(btn.cloneNode(true));
+        });
+        
         document.querySelectorAll('.action-btn.delete').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const materialId = btn.dataset.materialId;
-                showDeleteModal(materialId);
+                const id = btn.getAttribute('data-material-id');
+                if (id) showDeleteModal(id);
             });
         });
     }
     
-    // Анимация карточек
     function animateCards() {
-        const visibleCards = filteredMaterials.filter(card => 
-            card.style.display !== 'none'
-        );
-        
-        visibleCards.forEach((card, index) => {
-            card.style.animation = 'none';
-            card.offsetHeight; // Trigger reflow
-            card.style.animation = `fadeInUp 0.6s ease forwards`;
+        const cards = materialsContainer.querySelectorAll('.material-card');
+        cards.forEach((card, index) => {
             card.style.animationDelay = `${index * 0.1}s`;
+            card.classList.add('animate-in');
         });
     }
     
-    // Уведомления
-    function showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `alert alert-${type} alert-dismissible fade show notification`;
-        notification.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
-        `;
-        
-        // Добавляем в начало контейнера
-        const container = document.querySelector('.materials-section');
-        container.insertBefore(notification, container.firstChild);
-        
-        // Автоматически скрыть через 5 секунд
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, 5000);
-    }
-    
-    // Глобальная функция сброса фильтров
-    window.resetFilters = resetFilters;
-    
-    // Debounce функция
     function debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -508,40 +395,64 @@ document.addEventListener('DOMContentLoaded', function() {
             timeout = setTimeout(later, wait);
         };
     }
+    
+    // Инициализация кнопок закрытия для флеш-сообщений
+    document.querySelectorAll('.alert .btn-close').forEach(button => {
+        button.addEventListener('click', function() {
+            this.closest('.alert').remove();
+        });
+    });
+
+    // Обработка ошибок загрузки изображений
+    const materialImages = document.querySelectorAll('.material-img');
+    materialImages.forEach(img => {
+        img.addEventListener('error', function() {
+            this.src = '/static/img/matertial_logo.png';
+        });
+    });
+    
+    // Кнопка подтверждения удаления в модальном окне
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', deleteMaterial);
+    }
+
+    // Закрытие модального окна при клике вне его содержимого
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal(modal.id);
+            }
+        });
+    });
+    
+    // Intersection Observer для анимации появления карточек
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animationPlayState = 'running';
+            }
+        });
+    }, observerOptions);
+
+    // Наблюдаем за всеми карточками материалов
+    allMaterials.forEach(card => {
+        card.style.animationPlayState = 'paused';
+        observer.observe(card);
+    });
 });
 
-// CSS анимации
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes fadeOut {
-        from {
-            opacity: 1;
-            transform: scale(1);
+// Закрытие модального окна при клике вне его
+window.onclick = function(event) {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
         }
-        to {
-            opacity: 0;
-            transform: scale(0.8);
-        }
-    }
-    
-    .notification {
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        z-index: 9999;
-        min-width: 300px;
-        animation: slideInRight 0.3s ease;
-    }
-    
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-`;
-document.head.appendChild(style);
+    });
+} 

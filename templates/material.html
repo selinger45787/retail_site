@@ -106,7 +106,7 @@
             </div>
             
             <div class="material-description">
-                {{ material.description|safe }}
+                {{ material.description|replace_drive_links_with_images|safe }}
             </div>
         </div>
         

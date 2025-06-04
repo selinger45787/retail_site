@@ -65,57 +65,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Загружаем статистику для всех пользователей
-    const userRows = document.querySelectorAll('.user-row');
-    userRows.forEach(row => {
-        const userId = row.dataset.userId;
-        loadUserStats(userId);
-    });
+    // Проверяем, есть ли данные графика в глобальной области
+    if (typeof window.chartData !== 'undefined') {
+        initializeDashboard(window.chartData);
+    }
 });
 
 // Admin Dashboard JavaScript
 
 // Глобальные переменные
 let expandedUsers = new Set();
-
-// Функции для работы с уведомлениями
-function showSuccess(message) {
-    const alert = document.createElement('div');
-    alert.className = 'alert alert-success alert-dismissible fade show';
-    alert.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    const container = document.querySelector('.container');
-    container.insertBefore(alert, container.firstChild);
-    
-    // Автоматически скрыть через 5 секунд
-    setTimeout(() => {
-        if (alert.parentNode) {
-            alert.remove();
-        }
-    }, 5000);
-}
-
-function showError(message) {
-    const alert = document.createElement('div');
-    alert.className = 'alert alert-danger alert-dismissible fade show';
-    alert.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    const container = document.querySelector('.container');
-    container.insertBefore(alert, container.firstChild);
-    
-    // Автоматически скрыть через 5 секунд
-    setTimeout(() => {
-        if (alert.parentNode) {
-            alert.remove();
-        }
-    }, 5000);
-}
 
 function expandUserRow(userId) {
     const button = document.querySelector(`.user-row[data-user-id="${userId}"] .btn-expand`);
@@ -148,7 +107,15 @@ function expandUserRow(userId) {
                             html += `
                                 <div class="brand-section">
                                     <div class="brand-header" onclick="toggleBrandContent(this)">
-                                        <h4>${brand.name}</h4>
+                                        <div class="brand-title">
+                                            <h4>${brand.name}</h4>
+                                            <div class="brand-stats">
+                                                <span class="brand-stat">Тести: <strong>${brand.stats.tests_count}</strong></span>
+                                                <span class="brand-stat ${getScoreColorClass(brand.stats.avg_score)}">Бал: <strong>${brand.stats.avg_score}%</strong></span>
+                                                <span class="brand-stat">Загальний час: <strong>${brand.stats.total_time_formatted}</strong></span>
+                                                <span class="brand-stat">Середній час: <strong>${brand.stats.avg_time_formatted}</strong></span>
+                                            </div>
+                                        </div>
                                         <span class="toggle-icon"><i class="fas fa-chevron-right"></i></span>
                                     </div>
                                     <div class="brand-content" style="display: none;">
@@ -182,12 +149,19 @@ function expandUserRow(userId) {
                                     `;
                                     
                                     material.attempts.forEach(attempt => {
-                                        const statusClass = attempt.score >= 80 ? 'success' : attempt.score >= 60 ? 'warning' : 'danger';
+                                        const statusClass = getScoreBadgeClass(attempt.score);
                                         const statusText = attempt.score >= 80 ? 'Отлично' : attempt.score >= 60 ? 'Хорошо' : 'Неудовлетворительно';
+                                        
+                                        // Правильное форматирование даты
+                                        let formattedDate = 'N/A';
+                                        if (attempt.date) {
+                                            // Если дата уже отформатирована на сервере, используем её как есть
+                                            formattedDate = attempt.date;
+                                        }
                                         
                                         html += `
                                             <tr class="attempt-row">
-                                                <td>${new Date(attempt.completed_at).toLocaleDateString('uk-UA')}</td>
+                                                <td>${formattedDate}</td>
                                                 <td class="text-center">
                                                     <span class="score-badge ${statusClass}">${attempt.score}%</span>
                                                 </td>
@@ -314,45 +288,6 @@ function toggleAttemptDetails(button) {
     }
 }
 
-function loadUserStats(userId) {
-    fetch(`/api/admin/user_tests/${userId}`)
-        .then(response => response.json())
-        .then(data => {
-            const userRow = document.querySelector(`.user-row[data-user-id="${userId}"]`);
-            if (!userRow) return;
-
-            let totalTests = 0;
-            let totalScore = 0;
-            let attemptsCount = 0;
-            
-            if (data.brands && data.brands.length > 0) {
-                data.brands.forEach(brand => {
-                    brand.materials.forEach(material => {
-                        if (material.attempts) {
-                            attemptsCount += material.attempts.length;
-                            material.attempts.forEach(attempt => {
-                                totalScore += attempt.score;
-                                totalTests++;
-                            });
-                        }
-                    });
-                });
-            }
-            
-            const avgScore = totalTests > 0 ? Math.round(totalScore / totalTests) : 0;
-            
-            // Обновляем ячейки в таблице
-            const testCountCell = userRow.querySelector('td:nth-child(3)');
-            const avgScoreCell = userRow.querySelector('td:nth-child(4)');
-            
-            testCountCell.textContent = attemptsCount;
-            avgScoreCell.textContent = avgScore + '%';
-        })
-        .catch(error => {
-            console.error('Error loading user stats:', error);
-        });
-}
-
 function sortTable(sortType) {
     const tbody = document.querySelector('.users-table tbody');
     const rows = Array.from(tbody.querySelectorAll('.user-row'));
@@ -362,18 +297,28 @@ function sortTable(sortType) {
         
         switch(sortType) {
             case 'name':
-                valueA = a.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                valueB = b.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                valueA = a.dataset.username.toLowerCase();
+                valueB = b.dataset.username.toLowerCase();
                 return valueA.localeCompare(valueB);
                 
             case 'tests':
-                valueA = parseInt(a.querySelector('td:nth-child(3)').textContent) || 0;
-                valueB = parseInt(b.querySelector('td:nth-child(3)').textContent) || 0;
+                valueA = parseInt(a.dataset.testsCount) || 0;
+                valueB = parseInt(b.dataset.testsCount) || 0;
                 return valueB - valueA; // Сортировка по убыванию
                 
             case 'score':
-                valueA = parseInt(a.querySelector('td:nth-child(4)').textContent) || 0;
-                valueB = parseInt(b.querySelector('td:nth-child(4)').textContent) || 0;
+                valueA = parseFloat(a.dataset.avgScore) || 0;
+                valueB = parseFloat(b.dataset.avgScore) || 0;
+                return valueB - valueA; // Сортировка по убыванию
+                
+            case 'total_time':
+                valueA = parseInt(a.dataset.totalTimeSeconds) || 0;
+                valueB = parseInt(b.dataset.totalTimeSeconds) || 0;
+                return valueB - valueA; // Сортировка по убыванию
+                
+            case 'avg_time':
+                valueA = parseFloat(a.dataset.avgTimeSeconds) || 0;
+                valueB = parseFloat(b.dataset.avgTimeSeconds) || 0;
                 return valueB - valueA; // Сортировка по убыванию
                 
             default:
@@ -400,118 +345,54 @@ function sortTable(sortType) {
     });
 }
 
-// Инициализация графика и анимаций
+// Функция инициализации дашборда с данными графика
 function initializeDashboard(chartData) {
-    // Анимация появления элементов при прокрутке
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, observerOptions);
-
-    // Наблюдаем за элементами с классом fade-in
-    document.querySelectorAll('.fade-in').forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'all 0.6s ease';
-        observer.observe(el);
-    });
-
-    // Инициализация графика
+    if (!chartData) {
+        console.error('Chart data not provided');
+        return;
+    }
+    
     const ctx = document.getElementById('testsChart');
-    if (ctx && chartData) {
-        new Chart(ctx.getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: chartData.map(item => {
-                    const date = new Date(item.date);
-                    return date.toLocaleDateString('uk-UA', {day: '2-digit', month: '2-digit'});
-                }),
-                datasets: [{
-                    label: 'Середній бал',
-                    data: chartData.map(item => item.value),
-                    backgroundColor: 'rgba(108, 117, 125, 0.2)',
-                    borderColor: 'rgba(108, 117, 125, 1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: 'rgba(108, 117, 125, 1)',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                }]
+    if (!ctx) {
+        console.error('Chart canvas not found');
+        return;
+    }
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: chartData.datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
             },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            font: {
-                                size: 14
-                            },
-                            color: '#495057'
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(73, 80, 87, 0.9)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        borderColor: '#6c757d',
-                        borderWidth: 1,
-                        callbacks: {
-                            label: function(context) {
-                                return `Середній бал: ${context.raw.toFixed(1)}%`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        title: {
-                            display: true,
-                            text: 'Середній бал (%)',
-                            font: {
-                                size: 14
-                            },
-                            color: '#495057'
-                        },
-                        grid: {
-                            color: 'rgba(108, 117, 125, 0.1)'
-                        },
-                        ticks: {
-                            color: '#6c757d'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Дата',
-                            font: {
-                                size: 14
-                            },
-                            color: '#495057'
-                        },
-                        grid: {
-                            color: 'rgba(108, 117, 125, 0.1)'
-                        },
-                        ticks: {
-                            color: '#6c757d'
-                        }
-                    }
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
                 }
             }
-        });
-    }
+        }
+    });
+}
+
+// Функция для определения CSS класса цвета по баллу
+function getScoreColorClass(score) {
+    if (score >= 80) return 'score-excellent';
+    if (score >= 60) return 'score-good';
+    return 'score-poor';
+}
+
+// Функция для определения CSS класса для бейджей
+function getScoreBadgeClass(score) {
+    if (score >= 80) return 'excellent';
+    if (score >= 60) return 'good';
+    return 'poor';
 } 

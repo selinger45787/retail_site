@@ -1,53 +1,164 @@
 {% extends "base.html" %}
 
-{% block title %}Редактирование пользователя{% endblock %}
+{% block title %}Редагування користувача{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/users.css') }}">
+{% endblock %}
 
 {% block content %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="container">
-    <h1 class="mb-4">Редактирование пользователя</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Редагування користувача: {{ user.username }}</h1>
+        <a href="{{ url_for('users') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Назад до списку
+        </a>
+    </div>
     
+    <!-- Форма редагування користувача -->
     <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-user-edit me-2"></i>Редагувати інформацію про користувача
+            </h5>
+        </div>
         <div class="card-body">
-            <form method="POST">
+            <form method="POST" action="{{ url_for('edit_user', user_id=user.id) }}" id="editUserForm" enctype="multipart/form-data">
                 {{ form.csrf_token }}
+                
+                <!-- Основная информация -->
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         {{ form.username.label(class="form-label") }}
                         {{ form.username(class="form-control") }}
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="col-md-6 mb-3">
                         {{ form.phone_number.label(class="form-label") }}
                         {{ form.phone_number(class="form-control") }}
+                        {% if form.phone_number.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.phone_number.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
+
+                <!-- Пароль (опциональный) -->
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         {{ form.password.label(class="form-label") }}
-                        {{ form.password(class="form-control") }}
-                        <small class="form-text text-muted">Оставьте пустым, если не хотите менять пароль</small>
+                        {{ form.password(class="form-control", autocomplete="new-password") }}
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Залиште порожнім, якщо не хочете змінювати пароль</div>
                     </div>
                     <div class="col-md-6 mb-3">
                         {{ form.confirm_password.label(class="form-label") }}
-                        {{ form.confirm_password(class="form-control") }}
+                        {{ form.confirm_password(class="form-control", autocomplete="new-password") }}
+                        {% if form.confirm_password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.confirm_password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
+
+                <!-- Роль, отдел, позиция -->
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         {{ form.role.label(class="form-label") }}
                         {{ form.role(class="form-select") }}
+                        {% if form.role.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.role.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="col-md-4 mb-3">
                         {{ form.department.label(class="form-label") }}
                         {{ form.department(class="form-select") }}
+                        {% if form.department.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.department.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="col-md-4 mb-3">
                         {{ form.position.label(class="form-label") }}
                         {{ form.position(class="form-select") }}
+                        {% if form.position.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.position.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
+
+                <!-- Текущая фотография и загрузка новой -->
+                <div class="row" id="photoSection">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Поточна фотографія</label>
+                        <div id="currentPhoto">
+                            {% if user.photo_path %}
+                                <div class="current-photo-container">
+                                    <img src="{{ url_for('static', filename='img/users/' + user.photo_path) }}" 
+                                         alt="Поточне фото {{ user.username }}"
+                                         style="width: 120px; height: 120px; border-radius: 8px; object-fit: cover; border: 2px solid #ddd;">
+                                    <div class="mt-2 text-muted small">{{ user.photo_path }}</div>
+                                </div>
+                            {% else %}
+                                <div class="no-photo text-muted">
+                                    <i class="fas fa-user-circle" style="font-size: 60px;"></i>
+                                    <div class="mt-2">Фотографія відсутня</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Поле для новой фотографии (показывается только для руководящих позиций) -->
+                    <div class="col-md-6 mb-3" id="photoField" style="display: none;">
+                        {{ form.photo.label(class="form-label") }}
+                        {{ form.photo(class="form-control") }}
+                        {% if form.photo.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.photo.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Рекомендований розмір: 200x200 пікселів</div>
+                        <div id="photoPreview" class="mt-2"></div>
+                    </div>
+                </div>
+
                 <div class="text-end">
-                    <a href="{{ url_for('users') }}" class="btn btn-secondary">Отмена</a>
-                    {{ form.submit(class="btn btn-primary") }}
+                    <a href="{{ url_for('users') }}" class="btn btn-secondary me-2">Скасувати</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Оновити користувача
+                    </button>
                 </div>
             </form>
         </div>
@@ -56,5 +167,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/user_form.js') }}"></script>
+<script src="{{ url_for('static', filename='js/user_form_edit.js') }}"></script>
 {% endblock %} 

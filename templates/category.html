@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/brand.css') }}?v=1.1">
+{% endblock %}
+
+{% block content %}
+<div class="brand-page">
+    <div class="brand-header">
+        <div class="brand-header-content">
+            <h1 class="brand-title">Навчальний матеріал категорії <span class="brand-name">{{ category.name }}</span></h1>
+            {% if current_user.is_authenticated and current_user.role == 'admin' %}
+            <a href="{{ url_for('add_material', category_id=category.id) }}" class="add-material-btn">
+                <i class="fas fa-plus"></i>
+                Додати матеріал
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="materials-section">
+        {% if materials %}
+            <!-- Панель фильтров и поиска -->
+            <div class="materials-controls">
+                <div class="search-filter-container">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="materialSearch" placeholder="Пошук матеріалів..." class="search-input">
+                    </div>
+                    
+                    <div class="filter-controls">
+                        <select id="brandFilter" class="filter-select">
+                            <option value="">Всі бренди</option>
+                            {% for brand in brands %}
+                            <option value="{{ brand.id }}">{{ brand.name }}</option>
+                            {% endfor %}
+                        </select>
+                        
+                        <select id="sortBy" class="filter-select">
+                            <option value="date_desc">Найновіші</option>
+                            <option value="date_asc">Найстаріші</option>
+                            <option value="title_asc">За назвою (А-Я)</option>
+                            <option value="title_desc">За назвою (Я-А)</option>
+                        </select>
+                        
+                        <button id="resetFilters" class="reset-btn">
+                            <i class="fas fa-undo"></i>
+                            Скинути
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="view-controls">
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-view="grid" title="Сітка">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="view-btn" data-view="list" title="Список">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="materials-count">
+                        <span id="materialsCount">{{ materials|length }}</span> матеріалів
+                    </div>
+                </div>
+            </div>
+
+            <div class="materials-grid" id="materialsContainer">
+                {% for material in materials %}
+                <div class="material-card" 
+                     data-title="{{ material.title|lower }}" 
+                     data-brand="{{ material.brand.id }}"
+                     data-date="{{ material.date.strftime('%Y-%m-%d') }}">
+                    <a href="{{ url_for('view_material', material_id=material.id) }}" class="material-link">
+                        <div class="material-image">
+                            <img src="{{ url_for('static', filename='img/materials/' + material.image_path) if material.image_path else url_for('static', filename='img/matertial_logo.png') }}" 
+                                 alt="{{ material.title }}"
+                                 class="material-img"
+                                 loading="lazy">
+                            
+                            <!-- Статус тестов -->
+                            <div class="material-status">
+                                {% if material.tests %}
+                                    <span class="status-badge test-available">
+                                        <i class="fas fa-clipboard-check"></i>
+                                        Тест доступний
+                                    </span>
+                                {% else %}
+                                    <span class="status-badge no-test">
+                                        <i class="fas fa-clipboard"></i>
+                                        Без тесту
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="material-content">
+                            <h3 class="material-title">{{ material.title }}</h3>
+                            
+                            <div class="material-category">
+                                <i class="fas fa-building"></i>
+                                {{ material.brand.name }}
+                            </div>
+                            
+                            <div class="material-meta">
+                                <div class="material-date">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    {{ material.date.strftime('%d.%m.%Y') }}
+                                </div>
+                                
+                                {% if material.tests %}
+                                <div class="material-test-info">
+                                    <i class="fas fa-question-circle"></i>
+                                    {{ material.tests[0].questions|length }} питань
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Прогресс бар для пользователей -->
+                            {% if current_user.is_authenticated %}
+                            <div class="material-progress">
+                                {% set user_result = material.get_user_test_result(current_user.id) %}
+                                {% if user_result %}
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: {{ user_result.score }}%"></div>
+                                    </div>
+                                    <span class="progress-text">Результат: {{ user_result.score }}%</span>
+                                {% elif material.tests %}
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <span class="progress-text">Тест не пройдено</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </a>
+                    
+                    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                    <div class="material-actions">
+                        <button class="action-btn edit" title="Редагувати" data-material-id="{{ material.id }}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Видалити" data-material-id="{{ material.id }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Сообщение о том, что ничего не найдено -->
+            <div id="noResults" class="no-results" style="display: none;">
+                <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem; display: block; color: #dee2e6;"></i>
+                <p>За вашим запитом нічого не знайдено</p>
+                <button onclick="resetFilters()" class="btn btn-primary">Скинути фільтри</button>
+            </div>
+
+            {% if pagination and pagination.pages > 1 %}
+            <div class="pagination">
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('category', category_id=category.id, page=pagination.prev_num) }}" class="page-link">
+                    <i class="fas fa-chevron-left"></i> Попередня
+                </a>
+                {% endif %}
+
+                {% for page in pagination.iter_pages() %}
+                    {% if page %}
+                        {% if page != pagination.page %}
+                        <a href="{{ url_for('category', category_id=category.id, page=page) }}" class="page-link">
+                            {{ page }}
+                        </a>
+                        {% else %}
+                        <span class="page-link active">{{ page }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="page-link disabled">...</span>
+                    {% endif %}
+                {% endfor %}
+
+                {% if pagination.has_next %}
+                <a href="{{ url_for('category', category_id=category.id, page=pagination.next_num) }}" class="page-link">
+                    Наступна <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        {% else %}
+        <div class="no-materials">
+            <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; display: block; color: #dee2e6;"></i>
+            <p>Поки що немає матеріалів для цієї категорії</p>
+            {% if current_user.is_authenticated and current_user.role == 'admin' and not materials %}
+            <a href="{{ url_for('add_material', category_id=category.id) }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Додати перший матеріал
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/category.js') }}"></script>
+{% endblock %} 

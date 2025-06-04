@@ -27,26 +27,81 @@
                         
                         <div class="mb-3">
                             <label for="number" class="form-label">Номер розпорядження</label>
-                            <input type="text" class="form-control" id="number" name="number" value="{{ order.number }}" required>
+                            <input type="text" class="form-control" id="number" name="number" value="{{ order.number }}" readonly>
+                            <div class="form-text">Номер розпорядження генерується автоматично і не може бути змінений</div>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="department" class="form-label">Відділ</label>
-                            <select class="form-select" id="department" name="department" required>
-                                <option value="">Виберіть відділ</option>
-                                {% for code, name in departments.items() %}
-                                <option value="{{ code }}" {% if code == order.department %}selected{% endif %}>{{ name }}</option>
+                            <label for="author_id" class="form-label">Автор розпорядження</label>
+                            <select class="form-select" id="author_id" name="author_id" required>
+                                <option value="">Виберіть автора</option>
+                                {% for leader in leaders %}
+                                <option value="{{ leader.id }}" {% if leader.id == order.author_id %}selected{% endif %}>
+                                    {{ leader.username }} - {{ leader.position_name }}
+                                </option>
                                 {% endfor %}
                             </select>
                         </div>
                         
                         <div class="mb-3">
+                            <label class="form-label">Відділи, які будуть бачити розпорядження</label>
+                            <div class="border rounded p-3">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="all_departments" name="all_departments" 
+                                           {% if order.departments and 'all' in order.departments %}checked{% endif %}
+                                           onchange="toggleAllDepartments()">
+                                    <label class="form-check-label fw-bold text-primary" for="all_departments">
+                                        Всі відділи
+                                    </label>
+                                </div>
+                                <hr class="my-2">
+                                <div id="department_checkboxes">
+                                    {% for code, name in departments.items() %}
+                                    {% if code not in ['founders', 'general_director'] %}
+                                    <div class="form-check">
+                                        <input class="form-check-input department-checkbox" type="checkbox" 
+                                               name="departments" value="{{ code }}" id="dept_{{ code }}"
+                                               {% if order.departments and code in order.departments %}checked{% endif %}
+                                               {% if order.departments and 'all' in order.departments %}disabled{% endif %}>
+                                        <label class="form-check-label" for="dept_{{ code }}">
+                                            {{ name }}
+                                        </label>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
                             <label for="status" class="form-label">Статус</label>
-                            <select class="form-select" id="status" name="status" required>
-                                <option value="active" {% if order.status == 'active' %}selected{% endif %}>Активне</option>
-                                <option value="completed" {% if order.status == 'completed' %}selected{% endif %}>Виконане</option>
-                                <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Скасоване</option>
+                            <select class="form-select" id="status" name="status" required onchange="toggleDateFields()">
+                                <option value="info" {% if order.status == 'info' %}selected{% endif %}>Інформаційний</option>
+                                <option value="todo" {% if order.status == 'todo' %}selected{% endif %}>До виконання</option>
                             </select>
+                        </div>
+
+                        <!-- Поля дат для статуса "До виконання" -->
+                        <div id="dateFields" class="mb-3" {% if order.status != 'todo' %}style="display: none;"{% endif %}>
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Терміни виконання</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label for="due_date_from" class="form-label">Дата початку</label>
+                                            <input type="datetime-local" class="form-control" id="due_date_from" name="due_date_from" 
+                                                   value="{% if order.due_date_from %}{{ order.due_date_from.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="due_date_to" class="form-label">Дата завершення</label>
+                                            <input type="datetime-local" class="form-control" id="due_date_to" name="due_date_to"
+                                                   value="{% if order.due_date_to %}{{ order.due_date_to.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="mb-3">
@@ -66,4 +121,52 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleAllDepartments() {
+    const allDeptCheckbox = document.getElementById('all_departments');
+    const deptCheckboxes = document.querySelectorAll('.department-checkbox');
+    
+    if (allDeptCheckbox.checked) {
+        deptCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+            checkbox.disabled = true;
+        });
+    } else {
+        deptCheckboxes.forEach(checkbox => {
+            checkbox.disabled = false;
+        });
+    }
+}
+
+// Обработчик для снятия галочки "Все отделы" при выборе конкретного отдела
+document.addEventListener('DOMContentLoaded', function() {
+    const deptCheckboxes = document.querySelectorAll('.department-checkbox');
+    const allDeptCheckbox = document.getElementById('all_departments');
+    
+    deptCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                allDeptCheckbox.checked = false;
+            }
+        });
+    });
+});
+
+function toggleDateFields() {
+    const statusSelect = document.getElementById('status');
+    const dateFields = document.getElementById('dateFields');
+    
+    if (statusSelect.value === 'todo') {
+        dateFields.style.display = 'block';
+    } else {
+        dateFields.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.ckeditor.com/ckeditor5/27.1.0/classic/ckeditor.js"></script>
+<script src="{{ url_for('static', filename='js/order_edit.js') }}"></script>
 {% endblock %} 

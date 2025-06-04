@@ -30,19 +30,36 @@
 
         <div class="form-group mb-3">
             <label for="category_id">Категорія</label>
+            {% if preselected_category_id %}
+            <!-- Предустановленная категория - только для чтения -->
+            <select class="form-control" id="category_id" name="category_id_display" disabled style="background-color: #f8f9fa; cursor: not-allowed;">
+                {% for category in categories %}
+                {% if category.id == preselected_category_id %}
+                <option value="{{ category.id }}" selected>{{ category.name }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+            <!-- Скрытое поле для отправки значения -->
+            <input type="hidden" name="category_id" value="{{ preselected_category_id }}">
+            <small class="form-text text-muted">
+                <i class="fas fa-info-circle"></i> Категорія вибрана автоматично на основі розділу, з якого ви перейшли
+            </small>
+            {% else %}
+            <!-- Обычный селект когда категория не предустановлена -->
             <select class="form-control" id="category_id" name="category_id" required>
                 <option value="">Виберіть категорію</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}">{{ category.name }}</option>
                 {% endfor %}
             </select>
+            {% endif %}
         </div>
 
         <div class="form-group mb-3">
             <label for="description">Опис</label>
             <div class="toolbar-container"></div>
             <div id="editor-container"></div>
-            <textarea class="form-control" id="description" name="description" style="display: none;" required></textarea>
+            <textarea class="form-control" id="description" name="description" style="display: none;"></textarea>
         </div>
 
         <div class="form-group mb-3">

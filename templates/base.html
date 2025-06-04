@@ -20,6 +20,9 @@
     <header>
         <div class="header-content">
             <div class="header-logo-container">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <a href="{{ url_for('index') }}">
                     <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Логотип" class="header-logo">
                 </a>
@@ -87,6 +90,24 @@
                             <span class="submenu-text">{{ brand.name }}</span>
                             {% if brand.materials|length > 0 %}
                             <span class="material-count">{{ brand.materials|length }}</span>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <div class="menu-title">
+                        <img src="{{ url_for('static', filename='img/sidebar_left/category-icon.svg') }}" alt="Категорії" class="menu-icon">
+                        Категорії
+                    </div>
+                    <div class="submenu">
+                        {% for category in categories %}
+                        <a href="{{ url_for('category', category_id=category.id) }}" class="submenu-item">
+                            <div class="submenu-icon default-icon">{{ category.name[0] }}</div>
+                            <span class="submenu-text">{{ category.name }}</span>
+                            {% if category.materials|length > 0 %}
+                            <span class="material-count">{{ category.materials|length }}</span>
                             {% endif %}
                         </a>
                         {% endfor %}
@@ -200,9 +221,36 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('deleteMaterialModal')">Скасувати</button>
-                    <button type="submit" class="btn btn-danger">Видалити</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Видалити</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно предупреждения о зависимостях -->
+    <div id="dependenciesWarningModal" class="modal">
+        <div class="modal-box warning-modal">
+            <div class="warning-header">
+                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                <h3>Увага! Виявлено залежності</h3>
+            </div>
+            <div class="warning-content">
+                <p>Цей матеріал має наступні зв'язки:</p>
+                <div id="dependenciesList" class="dependencies-list">
+                    <!-- Динамически заполняется JavaScript -->
+                </div>
+                <div class="warning-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Видалення матеріалу також видалить всі пов'язані дані. Цю дію неможливо скасувати.</span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('dependenciesWarningModal')">Скасувати</button>
+                <button type="button" class="btn btn-danger" id="confirmDependentDeleteBtn">
+                    <i class="fas fa-trash"></i>
+                    Видалити разом із залежностями
+                </button>
+            </div>
         </div>
     </div>
 

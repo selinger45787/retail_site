@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     const departmentSelect = document.getElementById('department');
     const positionSelect = document.getElementById('position');
-    const positionDiv = positionSelect.closest('.col-md-4');
     const photoField = document.getElementById('photoField');
     const photoInput = document.getElementById('photo');
     const photoPreview = document.getElementById('photoPreview');
+    const photoSection = document.getElementById('photoSection');
 
     // Определяем структуру зависимостей отделов и должностей
     const departmentPositions = {
@@ -61,21 +61,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updatePositionOptions() {
         const selectedDepartment = departmentSelect.value;
+        const currentPosition = positionSelect.value; // Сохраняем текущую позицию
         const positions = departmentPositions[selectedDepartment] || [];
 
         // Очищаем текущие опции
         positionSelect.innerHTML = '';
-        
-        // Показываем поле должности для всех отделов
-        positionDiv.style.display = 'block';
         
         // Добавляем новые опции
         positions.forEach(position => {
             const option = document.createElement('option');
             option.value = position.value;
             option.textContent = position.label;
+            
+            // Восстанавливаем выбранную позицию, если она есть в новом отделе
+            if (position.value === currentPosition) {
+                option.selected = true;
+            }
+            
             positionSelect.appendChild(option);
         });
+
+        // Если текущая позиция не найдена в новом отделе, выбираем первую
+        if (!positionSelect.value && positions.length > 0) {
+            positionSelect.value = positions[0].value;
+        }
 
         // Проверяем, нужно ли показать поле фото
         updatePhotoFieldVisibility();
@@ -83,13 +92,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updatePhotoFieldVisibility() {
         const selectedPosition = positionSelect.value;
-        if (photoField && photoRequiredPositions.includes(selectedPosition)) {
-            photoField.style.display = 'block';
-        } else if (photoField) {
-            photoField.style.display = 'none';
-            // Очищаем превью при скрытии поля
-            if (photoPreview) {
-                photoPreview.innerHTML = '';
+        
+        if (photoRequiredPositions.includes(selectedPosition)) {
+            // Показываем секцию с фотографией и поле загрузки
+            photoSection.style.display = 'block';
+            if (photoField) {
+                photoField.style.display = 'block';
+            }
+        } else {
+            // Скрываем только поле загрузки, но показываем секцию
+            photoSection.style.display = 'block';
+            if (photoField) {
+                photoField.style.display = 'none';
+                // Очищаем превью при скрытии поля
+                if (photoPreview) {
+                    photoPreview.innerHTML = '';
+                }
             }
         }
     }
@@ -102,8 +120,9 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.onload = function(e) {
                 photoPreview.innerHTML = `
                     <div class="photo-preview-container">
+                        <label class="form-label">Попередній перегляд нової фотографії:</label>
                         <img src="${e.target.result}" alt="Попередній перегляд" 
-                             style="max-width: 150px; max-height: 150px; border-radius: 8px; border: 2px solid #ddd;">
+                             style="max-width: 120px; max-height: 120px; border-radius: 8px; border: 2px solid #007bff;">
                         <div class="mt-2 text-muted small">${file.name}</div>
                     </div>
                 `;
@@ -113,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Инициализация при загрузке страницы
-    updatePositionOptions();
+    updatePhotoFieldVisibility();
 
     // Обработчики событий
     departmentSelect.addEventListener('change', updatePositionOptions);

@@ -38,11 +38,31 @@
                         <div class="col-md-6">
                             <h5 class="mb-3">Інформація про розпорядження</h5>
                             <dl class="row">
-                                <dt class="col-sm-4">Відділ:</dt>
-                                <dd class="col-sm-8">{{ order.department_name }}</dd>
+                                <dt class="col-sm-4">Відділи:</dt>
+                                <dd class="col-sm-8">
+                                    {% for dept_name in order.department_names %}
+                                        <span class="badge bg-info me-1">{{ dept_name }}</span>
+                                    {% endfor %}
+                                </dd>
                                 
                                 <dt class="col-sm-4">Автор:</dt>
                                 <dd class="col-sm-8">{{ order.author_name }}</dd>
+                                
+                                {% if order.status == 'todo' and (order.due_date_from or order.due_date_to) %}
+                                <dt class="col-sm-4">Терміни виконання:</dt>
+                                <dd class="col-sm-8">
+                                    {% if order.due_date_from and order.due_date_to %}
+                                        <i class="fas fa-calendar-alt text-warning me-2"></i>
+                                        {{ order.due_date_from.strftime('%d.%m.%Y %H:%M') }} - {{ order.due_date_to.strftime('%d.%m.%Y %H:%M') }}
+                                    {% elif order.due_date_to %}
+                                        <i class="fas fa-calendar-alt text-warning me-2"></i>
+                                        до {{ order.due_date_to.strftime('%d.%m.%Y %H:%M') }}
+                                    {% elif order.due_date_from %}
+                                        <i class="fas fa-calendar-alt text-warning me-2"></i>
+                                        з {{ order.due_date_from.strftime('%d.%m.%Y %H:%M') }}
+                                    {% endif %}
+                                </dd>
+                                {% endif %}
                                 
                                 <dt class="col-sm-4">Дата створення:</dt>
                                 <dd class="col-sm-8">{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</dd>
@@ -54,7 +74,7 @@
                         <h5 class="mb-3">Опис</h5>
                         <div class="card">
                             <div class="card-body">
-                                {{ order.description|nl2br|safe }}
+                                {{ order.description|replace_drive_links_with_images|nl2br|safe }}
                             </div>
                         </div>
                     </div>

@@ -158,12 +158,12 @@
 .department-header {
     background: linear-gradient(135deg, #495057, #343a40);
     color: white;
-    padding: 15px 20px;
+    padding: 12px 15px;
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
     user-select: none;
-    min-height: 80px;
+    height: 60px;
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -179,15 +179,19 @@
     font-size: 1.3em;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     width: 100%;
     font-weight: 500;
+    text-align: center;
+    position: relative;
 }
 
 .department-header .toggle-icon {
     font-size: 1.1em;
     transition: transform 0.3s ease;
     opacity: 0.8;
+    position: absolute;
+    right: 0;
 }
 
 .department-header.collapsed .toggle-icon {
@@ -198,12 +202,14 @@
     padding: 20px;
     transition: all 0.3s ease;
     overflow: hidden;
+    max-height: 1000px;
+    opacity: 1;
 }
 
 .department-content.collapsed {
-    max-height: 0;
-    padding: 0 20px;
-    opacity: 0;
+    max-height: 0 !important;
+    padding: 0 20px !important;
+    opacity: 0 !important;
 }
 
 .department-content:not(.collapsed) {
@@ -365,30 +371,207 @@
 
 @media (max-width: 768px) {
     .org-level {
-        flex-direction: column;
-        align-items: center;
+        margin: 1rem 0;
+    }
+
+    .org-node {
+        margin: 0.5rem 0;
+        padding: 1rem;
+    }
+
+    .node-title {
+        font-size: 1rem;
+    }
+
+    .employee-info {
+        gap: 0.5rem;
+    }
+
+    .employee-card {
+        min-width: 120px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .positions-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .department-header h3 {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .container-fluid {
+        padding: 10px;
+    }
+    
+    .dashboard-title {
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-card {
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 10px;
+    }
+    
+    .stat-number {
+        font-size: 1.75rem;
+    }
+    
+    .stat-label {
+        font-size: 0.85rem;
+    }
+    
+    .org-chart {
+        padding: 15px;
+    }
+    
+    .org-level {
+        margin: 0.75rem 0;
     }
     
     .org-node {
-        min-width: 280px;
+        padding: 15px;
+        margin: 0.5rem auto;
+        max-width: 100%;
     }
     
-    .positions-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .control-panel {
-        flex-direction: column;
+    .node-title {
+        font-size: 0.95rem;
         text-align: center;
+    }
+    
+    .node-subtitle {
+        font-size: 0.8rem;
+    }
+    
+    .node-count {
+        font-size: 0.85rem;
+    }
+    
+    .employee-info {
+        gap: 0.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .employee-card {
+        min-width: 100px;
+        text-align: center;
+    }
+    
+    .employee-name {
+        font-size: 0.8rem;
+    }
+    
+    .employee-phone {
+        font-size: 0.75rem;
+    }
+    
+    .department-section {
+        margin-bottom: 15px;
     }
     
     .department-header {
         padding: 12px 15px;
-        min-height: 50px;
     }
     
     .department-header h3 {
-        font-size: 1.2em;
+        font-size: 1.1rem;
+    }
+    
+    .department-stats {
+        font-size: 0.8rem;
+    }
+    
+    .positions-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem;
+        padding: 15px;
+    }
+    
+    .position .node-title {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container-fluid {
+        padding: 8px;
+    }
+    
+    .dashboard-title {
+        font-size: 1.5rem;
+    }
+    
+    .stats-card {
+        padding: 12px;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+    }
+    
+    .org-chart {
+        padding: 10px;
+    }
+    
+    .org-node {
+        padding: 12px;
+    }
+    
+    .node-title {
+        font-size: 0.9rem;
+    }
+    
+    .node-subtitle {
+        font-size: 0.75rem;
+    }
+    
+    .employee-card {
+        min-width: 90px;
+    }
+    
+    .employee-name {
+        font-size: 0.75rem;
+    }
+    
+    .employee-phone {
+        font-size: 0.7rem;
+    }
+    
+    .department-header {
+        padding: 10px 12px;
+    }
+    
+    .department-header h3 {
+        font-size: 1rem;
+    }
+    
+    .positions-grid {
+        padding: 12px;
+        gap: 0.5rem;
     }
 }
 

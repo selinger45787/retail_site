@@ -2,195 +2,292 @@
 .modal {
     display: none;
     position: fixed;
-    top: 0;
+    z-index: 9999;
     left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
     justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .modal.show {
-    display: flex;
+    opacity: 1;
 }
 
 .modal-box {
     background: #fff;
     padding: 2rem;
     border-radius: 12px;
-    width: 90%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
     position: relative;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
-.modal-box h3 {
-    margin: 0 0 1rem 0;
+.modal.show .modal-box {
+    transform: scale(1);
+}
+
+.modal-box h2, .modal-box h3 {
+    margin-bottom: 1rem;
     color: #333;
-    font-size: 1.5rem;
 }
 
 .modal-box p {
-    margin: 0 0 1.5rem 0;
+    margin-bottom: 1.5rem;
     color: #666;
-    font-size: 1rem;
     line-height: 1.5;
 }
 
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
+.form-group {
+    margin-bottom: 1rem;
 }
 
-.modal-actions .btn {
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.modal-buttons, .modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+
+.btn {
     padding: 0.75rem 1.5rem;
+    border: none;
     border-radius: 6px;
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
-    border: none;
     transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.modal-actions .btn-secondary {
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
     background: #6c757d;
     color: white;
 }
 
-.modal-actions .btn-secondary:hover {
-    background: #5a6268;
-    box-shadow: 0 4px 12px rgba(90, 98, 104, 0.2);
+.btn-secondary:hover {
+    background: #545b62;
+    transform: translateY(-1px);
 }
 
-.modal-actions .btn-danger {
-    background: linear-gradient(145deg, #dc3545, #c82333);
+.btn-danger {
+    background: #dc3545;
     color: white;
 }
 
-.modal-actions .btn-danger:hover {
-    background: linear-gradient(145deg, #c82333, #dc3545);
-    box-shadow: 0 4px 12px rgba(200, 35, 51, 0.2);
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
 }
 
-/* Кнопка закрытия */
-.modal-box .close {
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.close {
     position: absolute;
-    top: 15px;
-    right: 15px;
-    font-size: 28px;
-    color: #a0a0a0;
+    top: 1rem;
+    right: 1rem;
+    background: none;
     border: none;
-    background: transparent;
+    font-size: 1.5rem;
     cursor: pointer;
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
-    text-align: center;
-    padding: 0;
+    color: #999;
     transition: color 0.2s ease;
-    z-index: 10;
 }
 
-.modal-box .close:hover {
+.close:hover {
     color: #333;
 }
 
-/* Стили для форм внутри модалок */
-.modal-box .form-group {
-    margin-bottom: 20px;
-}
-
-.modal-box label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 8px;
-    color: #2c3e50;
-}
-
-.modal-box input[type="text"],
-.modal-box input[type="password"],
-.modal-box input[type="email"],
-.modal-box input[type="file"],
-.modal-box select,
-.modal-box textarea {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    background-color: #f9f9f9;
-}
-
-.modal-box input[type="text"]:focus,
-.modal-box input[type="password"]:focus,
-.modal-box input[type="email"]:focus,
-.modal-box input[type="file"]:focus,
-.modal-box select:focus,
-.modal-box textarea:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-    background-color: #fff;
-}
-
-.modal-box small.form-text {
-    display: block;
-    margin-top: 5px;
-    color: #6c757d;
-    font-size: 12px;
-}
-
-/* Кнопки в модальных окнах */
-.modal-box .btn,
-.modal-box .submit-btn {
-    display: block;
-    width: 100%;
-    padding: 12px 20px;
-    font-size: 16px;
-    font-weight: 500;
-    text-align: center;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background: linear-gradient(145deg, #007bff, #0069d9);
-    color: white;
-}
-
-.modal-box .btn:hover,
-.modal-box .submit-btn:hover {
-    background: linear-gradient(145deg, #0069d9, #007bff);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 105, 217, 0.2);
-}
-
-.modal-box .text-center {
-    text-align: center;
-    margin-top: 15px;
-}
-
-.modal-box .text-center a {
-    color: #007bff;
-    text-decoration: none;
-    font-size: 14px;
-    transition: color 0.2s ease;
-}
-
-.modal-box .text-center a:hover {
-    color: #0056b3;
-    text-decoration: underline;
-}
-
-/* Сообщения об ошибках */
 .error-text {
     color: #dc3545;
-    font-size: 14px;
-    margin-top: 5px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+/* Стили для модального окна предупреждения */
+.warning-modal {
+    max-width: 600px;
+}
+
+.warning-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #ffc107;
+}
+
+.warning-icon {
+    font-size: 2rem;
+    color: #ff6b35;
+    animation: pulse 2s infinite;
+}
+
+.warning-header h3 {
+    margin: 0;
+    color: #ff6b35;
+    font-size: 1.3rem;
+}
+
+.warning-content {
+    margin-bottom: 2rem;
+}
+
+.warning-content p {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.dependencies-list {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.dependency-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1c40f;
+    color: #856404;
+    font-weight: 500;
+}
+
+.dependency-item:last-child {
+    border-bottom: none;
+}
+
+.dependency-item i {
+    color: #f39c12;
+    width: 20px;
     text-align: center;
+}
+
+.dependency-count {
+    background: #f39c12;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-left: auto;
+}
+
+.warning-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #495057;
+}
+
+.warning-note i {
+    color: #17a2b8;
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+}
+
+.warning-note span {
+    line-height: 1.4;
+    font-size: 0.95rem;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .modal-box {
+        margin: 1rem;
+        padding: 1.5rem;
+        max-width: none;
+        width: calc(100% - 2rem);
+    }
+    
+    .warning-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .warning-header h3 {
+        font-size: 1.1rem;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .btn {
+        justify-content: center;
+    }
 }
 
 /* Специфичные стили для модальных окон */

@@ -9,9 +9,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const progressBar = document.querySelector('.progress');
     const currentQuestionSpan = document.getElementById('current-question');
     const totalQuestionsSpan = document.getElementById('total-questions');
+    const timerElement = document.getElementById('timer');
+    const testStartedAtInput = document.getElementById('test-started-at');
     
     let currentQuestion = 1;
     const totalQuestions = questions.length;
+    let startTime = Date.now();
+    let timerInterval;
+    
+    // Инициализация таймера
+    function initTimer() {
+        startTime = Date.now();
+        // Сохраняем время начала в ISO формате
+        testStartedAtInput.value = new Date(startTime).toISOString();
+        
+        // Запускаем таймер
+        timerInterval = setInterval(updateTimer, 1000);
+        updateTimer(); // Обновляем сразу
+    }
+    
+    function updateTimer() {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        
+        timerElement.textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
     
     function updateProgress() {
         const progress = ((currentQuestion - 1) / totalQuestions) * 100;
@@ -62,9 +86,23 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             alert('Будь ласка, відповідьте на всі питання');
             showQuestion(parseInt(unansweredQuestions[0].dataset.question));
+            return;
+        }
+        
+        // Останавливаем таймер при отправке формы
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+    });
+    
+    // Останавливаем таймер при закрытии/перезагрузке страницы
+    window.addEventListener('beforeunload', () => {
+        if (timerInterval) {
+            clearInterval(timerInterval);
         }
     });
     
     // Инициализация
     updateProgress();
+    initTimer();
 }); 

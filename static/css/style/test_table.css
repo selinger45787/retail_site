@@ -57,4 +57,56 @@
 
 .test-table-container::-webkit-scrollbar-thumb:hover {
     background: #555;
+}
+
+/* Медиа-запросы для мобильных устройств */
+@media (max-width: 768px) {
+    .test-table-container {
+        max-height: 300px;
+        overflow-x: auto;
+    }
+    
+    .test-table th,
+    .test-table td {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .test-table th {
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 576px) {
+    .test-table-container {
+        max-height: 250px;
+        margin: 0.75rem 0;
+    }
+    
+    .test-table th,
+    .test-table td {
+        padding: 0.4rem;
+        font-size: 0.85rem;
+    }
+    
+    .test-table {
+        min-width: 500px; /* Обеспечивает горизонтальную прокрутку */
+    }
+}
+
+@media (max-width: 480px) {
+    .test-table-container {
+        max-height: 200px;
+        margin: 0.5rem 0;
+    }
+    
+    .test-table th,
+    .test-table td {
+        padding: 0.3rem;
+        font-size: 0.8rem;
+    }
+    
+    .test-table {
+        min-width: 450px;
+    }
 } 

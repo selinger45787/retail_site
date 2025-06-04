@@ -16,23 +16,6 @@
                 </h1>
             </div>
 
-            <!-- Панель управления -->
-            <div class="control-panel">
-                <div>
-                    <h5 class="mb-0">
-                        <i class="fas fa-cogs me-2"></i>Управління відображенням
-                    </h5>
-                </div>
-                <div class="control-buttons">
-                    <button class="btn-control btn-expand-all" onclick="expandAllDepartments()">
-                        <i class="fas fa-expand-arrows-alt me-2"></i>Розгорнути всі
-                    </button>
-                    <button class="btn-control btn-collapse-all" onclick="collapseAllDepartments()">
-                        <i class="fas fa-compress-arrows-alt me-2"></i>Згорнути всі
-                    </button>
-                </div>
-            </div>
-
             <!-- Статистика -->
             <div class="stats-card fade-in">
                 <h5 class="mb-4">
@@ -57,12 +40,6 @@
                             <i class="fas fa-user-tie me-1"></i>Керівників
                         </div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ vacant_positions }}</div>
-                        <div class="stat-label">
-                            <i class="fas fa-briefcase me-1"></i>Вакантних посад
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -80,6 +57,13 @@
                             <div class="employee-info">
                                 {% for founder in founders %}
                                     <div class="employee-card">
+                                        {% if founder.photo_path %}
+                                            <div class="employee-photo">
+                                                <img src="{{ url_for('static', filename='img/users/' + founder.photo_path) }}" 
+                                                     alt="Фото {{ founder.username }}"
+                                                     style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 8px;">
+                                            </div>
+                                        {% endif %}
                                         <div class="employee-name">{{ founder.username }}</div>
                                     </div>
                                 {% endfor %}
@@ -100,6 +84,13 @@
                         {% if general_director %}
                             <div class="employee-info">
                                 <div class="employee-card">
+                                    {% if general_director.photo_path %}
+                                        <div class="employee-photo">
+                                            <img src="{{ url_for('static', filename='img/users/' + general_director.photo_path) }}" 
+                                                 alt="Фото {{ general_director.username }}"
+                                                 style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 8px;">
+                                        </div>
+                                    {% endif %}
                                     <div class="employee-name">{{ general_director.username }}</div>
                                     {% if general_director.phone_number %}
                                         <div class="employee-phone">
@@ -147,14 +138,14 @@
                         </span>
                     </h3>
                     <div class="department-stats">
-                        Всього співробітників: {{ dept_info.employees|length }} | 
-                        Вакансій: {{ dept_info.positions|length - dept_info.employees|length }}
+                        Всього співробітників: {{ dept_info.employees|length }}
                     </div>
                 </div>
 
                 <div class="department-content" id="content-{{ dept_code }}">
                     <div class="positions-grid">
-                        <!-- Руководитель отдела -->
+                        <!-- Руководитель отдела (только для отделов, которые его имеют) -->
+                        {% if 'department_head' in dept_info.positions %}
                         <div class="org-node position">
                             <div class="node-title">
                                 <i class="fas fa-user-tie me-2"></i>Керівник відділу
@@ -163,6 +154,13 @@
                             {% if head %}
                                 <div class="employee-info">
                                     <div class="employee-card">
+                                        {% if head.photo_path %}
+                                            <div class="employee-photo">
+                                                <img src="{{ url_for('static', filename='img/users/' + head.photo_path) }}" 
+                                                     alt="Фото {{ head.username }}"
+                                                     style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 8px;">
+                                            </div>
+                                        {% endif %}
                                         <div class="employee-name">{{ head.username }}</div>
                                         {% if head.phone_number %}
                                             <div class="employee-phone">
@@ -177,6 +175,7 @@
                                 </div>
                             {% endif %}
                         </div>
+                        {% endif %}
 
                         <!-- Остальные позиции -->
                         {% for position_code, position_name in dept_info.positions.items() %}
