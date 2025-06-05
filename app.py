@@ -33,6 +33,12 @@ if environment == 'production':
 else:
     app.config.from_object(config['development'])
 
+# Исправление URL для PostgreSQL на Heroku
+database_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+if database_url and database_url.startswith("postgres://"):
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url.replace("postgres://", "postgresql://", 1)
+    logger.info(f"Fixed database URL from postgres:// to postgresql://")
+
 # Инициализация CSRF-защиты
 csrf = CSRFProtect()
 csrf.init_app(app)
