@@ -25,8 +25,13 @@ logger = logging.getLogger(__name__)
 # Инициализация приложения
 app = Flask(__name__)
 
-# Базовые настройки
-app.config.from_object(config['development'])
+# Настройки конфигурации в зависимости от окружения
+environment = os.getenv('FLASK_ENV', 'development')
+if environment == 'production':
+    from config_production import ProductionConfig
+    app.config.from_object(ProductionConfig)
+else:
+    app.config.from_object(config['development'])
 
 # Инициализация CSRF-защиты
 csrf = CSRFProtect()
@@ -2644,3 +2649,20 @@ def upload_image():
     except Exception as e:
         logger.error(f"Ошибка при загрузке изображения: {str(e)}")
         return jsonify({"error": {"message": "Upload failed"}}), 500
+
+# Запуск приложения
+if __name__ == '__main__':
+    with app.app_context():
+        try:
+            db.create_all()
+            logger.info("База данных инициализирована")
+        except Exception as e:
+            logger.error(f"Ошибка инициализации базы данных: {e}")
+    
+    # Запуск в зависимости от окружения
+    if os.getenv('FLASK_ENV') == 'production':
+        # В продакшене приложение запускается через gunicorn
+        app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    else:
+        # В разработке - с отладкой
+        app.run(debug=True, host='127.0.0.1', port=5000)

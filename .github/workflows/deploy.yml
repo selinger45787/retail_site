@@ -16,7 +16,7 @@ jobs:
       uses: akhileshns/heroku-deploy@v3.12.14
       with:
         heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-        heroku_app_name: "portalabrams"
+        heroku_app_name: "abbramsspace"
         heroku_email: ${{secrets.HEROKU_EMAIL}}
         
     - name: Run migrations
@@ -28,4 +28,4 @@ jobs:
         echo "${{ secrets.HEROKU_API_KEY }}" | heroku auth:token
         
         # Запуск миграций
-        heroku run flask db upgrade --app portalabrams 
+        heroku run flask db upgrade --app abbramsspace 
