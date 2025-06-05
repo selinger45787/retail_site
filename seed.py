@@ -10,13 +10,17 @@ def create_admin():
             return
         
         # Создаем нового администратора
-        admin = User(username='admin', email='admin@abramsspace.com.ua', role='admin')
+        admin = User(
+            username='admin',
+            role='admin',
+            department='other',
+            position='other_position'
+        )
         admin.set_password('HerokuDBUdmYlo12345')
         db.session.add(admin)
         db.session.commit()
         print('Администратор успешно создан!')
         print(f'Логин: admin')
-        print(f'Email: admin@abramsspace.com.ua')
         print(f'Пароль: HerokuDBUdmYlo12345')
 
 if __name__ == '__main__':
