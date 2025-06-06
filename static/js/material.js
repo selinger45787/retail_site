@@ -99,6 +99,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
+
+    groupImagesIntoGrid();
 });
 
 function deleteMaterial(materialId) {
@@ -157,5 +159,138 @@ function deleteMaterial(materialId) {
     .catch(error => {
         console.error('Error:', error);
         alert('Помилка при видаленні матеріалу');
+    });
+}
+
+// Автоматическое группирование изображений в grid
+function groupImagesIntoGrid() {
+    const description = document.querySelector('.material-description');
+    if (!description) return;
+    
+    // Ищем все группы последовательных изображений
+    const allElements = Array.from(description.children);
+    let imageGroups = [];
+    let currentGroup = [];
+    
+    allElements.forEach((element, index) => {
+        // Проверяем любые элементы (P, H1, H2, H3, DIV и т.д.) содержащие изображения
+        if (element.tagName === 'P' || element.tagName.startsWith('H') || element.tagName === 'DIV') {
+            const images = element.querySelectorAll('img');
+            
+            if (images.length > 1) {
+                // Если в элементе несколько изображений, группируем их
+                images.forEach(img => currentGroup.push(img));
+                // Сохраняем группу сразу
+                if (currentGroup.length > 1) {
+                    imageGroups.push([...currentGroup]);
+                }
+                currentGroup = [];
+            } else if (images.length === 1) {
+                // Если одно изображение, добавляем к текущей группе
+                currentGroup.push(images[0]);
+            } else {
+                // Элемент без изображений - завершаем группу если есть
+                if (currentGroup.length > 1) {
+                    imageGroups.push([...currentGroup]);
+                }
+                currentGroup = [];
+            }
+        } else if (element.tagName === 'IMG') {
+            currentGroup.push(element);
+        } else {
+            // Любой другой элемент завершает группу
+            if (currentGroup.length > 1) {
+                imageGroups.push([...currentGroup]);
+            }
+            currentGroup = [];
+        }
+    });
+    
+    // Не забываем последнюю группу
+    if (currentGroup.length > 1) {
+        imageGroups.push(currentGroup);
+    }
+    
+    // Создаем grid для каждой группы
+    imageGroups.forEach(group => {
+        if (group.length > 1) {
+            createImageGrid(group);
+        }
+    });
+}
+
+// Получить текст между двумя элементами
+function getTextBetweenElements(element1, element2) {
+    let text = '';
+    let current = element1.nextSibling;
+    
+    while (current && current !== element2) {
+        if (current.nodeType === Node.TEXT_NODE) {
+            text += current.textContent;
+        } else if (current.nodeType === Node.ELEMENT_NODE) {
+            text += current.textContent;
+        }
+        current = current.nextSibling;
+    }
+    
+    return text.trim();
+}
+
+// Создать grid из группы изображений
+function createImageGrid(imageGroup) {
+    if (imageGroup.length < 2) return;
+    
+    // Создаем контейнер grid
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'image-grid';
+    
+    // Находим родительский элемент первого изображения
+    const firstImage = imageGroup[0];
+    const parentElement = firstImage.closest('p') || firstImage.closest('h1') || firstImage.closest('h2') || firstImage.closest('h3') || firstImage.closest('h4') || firstImage.closest('h5') || firstImage.closest('h6') || firstImage.closest('div') || firstImage.parentNode;
+    
+    // Вставляем grid после родительского элемента
+    if (parentElement.nextSibling) {
+        parentElement.parentNode.insertBefore(gridContainer, parentElement.nextSibling);
+    } else {
+        parentElement.parentNode.appendChild(gridContainer);
+    }
+    
+    // Перемещаем все изображения в grid и удаляем пустые параграфы
+    const elementsToRemove = new Set();
+    
+    imageGroup.forEach(img => {
+        // Клонируем изображение для сохранения атрибутов
+        const clonedImg = img.cloneNode(true);
+        gridContainer.appendChild(clonedImg);
+        
+        // Отмечаем родительские элементы для удаления
+        const imgParent = img.closest('p') || img.closest('h1') || img.closest('h2') || img.closest('h3') || img.closest('h4') || img.closest('h5') || img.closest('h6') || img.closest('div') || img.parentNode;
+        elementsToRemove.add(imgParent);
+        
+        // Удаляем оригинальное изображение
+        img.remove();
+    });
+    
+    // Обрабатываем родительские элементы
+    elementsToRemove.forEach(element => {
+        // Если элемент - заголовок, сохраняем текст без изображений
+        if (element.tagName && element.tagName.startsWith('H')) {
+            // Клонируем заголовок
+            const newHeader = element.cloneNode(false);
+            // Добавляем только текстовые узлы (без изображений)
+            Array.from(element.childNodes).forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE || (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'IMG')) {
+                    newHeader.appendChild(node.cloneNode(true));
+                }
+            });
+            // Заменяем оригинальный заголовок если в нем остался текст
+            if (newHeader.textContent.trim().length > 0) {
+                element.parentNode.insertBefore(newHeader, element);
+            }
+            element.remove();
+        } else if (element.textContent.trim().length === 0) {
+            // Удаляем пустые элементы
+            element.remove();
+        }
     });
 }
