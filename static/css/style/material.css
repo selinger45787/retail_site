@@ -424,6 +424,33 @@
     object-fit: contain;
 }
 
+/* Стили для сетки изображений в контенте материала */
+.material-description .image-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-start;
+    margin: 20px 0;
+}
+
+.material-description .image-grid img {
+    width: calc(33.333% - 8px); /* 3 в ряд */
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 0; /* Убираем отступы для изображений в сетке */
+    display: block;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    object-fit: cover;
+    aspect-ratio: 1/1; /* Квадратные изображения */
+}
+
+.material-description .image-grid img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
 /* Дополнительные изображения */
 .additional-images-section {
     background: white;
@@ -551,6 +578,11 @@
     .image-grid {
         grid-template-columns: 1fr;
     }
+
+    /* Стили для сетки изображений в контенте на планшетах */
+    .material-description .image-grid img {
+        width: calc(50% - 6px); /* 2 в ряд на планшетах */
+    }
 }
 
 /* Дополнительные медиа-запросы для мобильных устройств */
@@ -618,6 +650,11 @@
     .material-category {
         margin-bottom: 10px;
     }
+
+    /* Стили для сетки изображений в контенте на мобильных */
+    .material-description .image-grid img {
+        width: calc(50% - 6px); /* 2 в ряд на мобильных */
+    }
 }
 
 @media (max-width: 480px) {
@@ -673,4 +710,10 @@
     .material-description h2 { font-size: 1.35rem; }
     .material-description h3 { font-size: 1.2rem; }
     .material-description h4 { font-size: 1.1rem; }
+
+    /* Стили для сетки изображений в контенте на очень маленьких экранах */
+    .material-description .image-grid img {
+        width: 100%; /* 1 в ряд на маленьких экранах */
+        aspect-ratio: auto; /* Убираем принудительное соотношение сторон */
+    }
 } 
