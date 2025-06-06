@@ -435,11 +435,15 @@ def update_view_time(material_id):
         
         # Ищем сегодняшнюю запись просмотра
         today = datetime.utcnow().date()
-        view_record = MaterialView.query.filter(
-            MaterialView.material_id == material_id,
-            MaterialView.user_id == current_user.id,
-            db.func.date(MaterialView.viewed_at) == today
-        ).first()
+        try:
+            view_record = MaterialView.query.filter(
+                MaterialView.material_id == material_id,
+                MaterialView.user_id == current_user.id,
+                db.func.date(MaterialView.viewed_at) == today
+            ).first()
+        except Exception as e:
+            logger.warning(f"MaterialView table not accessible: {str(e)}")
+            return jsonify({'success': False, 'error': 'MaterialView table error'}), 500
         
         if view_record:
             # Обновляем время просмотра
@@ -573,9 +577,14 @@ def delete_material(material_id):
         test_results_count = 0
         has_test_results = False
         if test:
-            test_results_count = TestResult.query.filter_by(test_id=test.id).count()
-            has_test_results = test_results_count > 0
-        logger.info(f"Результатов тестов: {test_results_count}")
+            try:
+                test_results_count = TestResult.query.filter_by(test_id=test.id).count()
+                has_test_results = test_results_count > 0
+                logger.info(f"Результатов тестов: {test_results_count}")
+            except Exception as e:
+                logger.warning(f"Ошибка при проверке результатов тестов: {str(e)}")
+                test_results_count = 0
+                has_test_results = False
 
         # Если это первый запрос на удаление, проверяем наличие зависимостей
         if not data.get('confirmed'):
@@ -605,13 +614,19 @@ def delete_material(material_id):
                             logger.warning(f"Ошибка при удалении дополнительного изображения: {e}")
 
                     # Удаляем все записи просмотров материала
-                    MaterialView.query.filter_by(material_id=material_id).delete()
-                    logger.info("Записи просмотров материала удалены")
+                    try:
+                        MaterialView.query.filter_by(material_id=material_id).delete()
+                        logger.info("Записи просмотров материала удалены")
+                    except Exception as e:
+                        logger.warning(f"Ошибка при удалении записей просмотров: {str(e)}")
 
                     # Удаляем результаты тестов
                     if test:
-                        TestResult.query.filter_by(test_id=test.id).delete()
-                        logger.info("Результаты тестов удалены")
+                        try:
+                            TestResult.query.filter_by(test_id=test.id).delete()
+                            logger.info("Результаты тестов удалены")
+                        except Exception as e:
+                            logger.warning(f"Ошибка при удалении результатов тестов: {str(e)}")
 
                     # Удаляем сам материал
                     logger.info("Удаляем материал из базы данных")
@@ -654,37 +669,49 @@ def delete_material(material_id):
                 # Сначала удаляем все связанные результаты тестов
                 if test:
                     logger.info("Удаляем связанные результаты теста")
-                    # Удаляем результаты вопросов теста
-                    TestQuestionResult.query.filter(
-                        TestQuestionResult.test_result_id.in_(
-                            TestResult.query.filter_by(test_id=test.id).with_entities(TestResult.id)
-                        )
-                    ).delete(synchronize_session=False)
-                    
-                    # Удаляем результаты тестов
-                    TestResult.query.filter_by(test_id=test.id).delete()
-                    
-                    # Удаляем ответы на вопросы
-                    TestAnswer.query.filter(
-                        TestAnswer.question_id.in_(
-                            TestQuestion.query.filter_by(test_id=test.id).with_entities(TestQuestion.id)
-                        )
-                    ).delete(synchronize_session=False)
-                    
-                    # Удаляем вопросы теста
-                    TestQuestion.query.filter_by(test_id=test.id).delete()
-                    
-                    # Удаляем сам тест
-                    db.session.delete(test)
-                    logger.info("Тест успешно удален")
+                    try:
+                        # Удаляем результаты вопросов теста
+                        TestQuestionResult.query.filter(
+                            TestQuestionResult.test_result_id.in_(
+                                TestResult.query.filter_by(test_id=test.id).with_entities(TestResult.id)
+                            )
+                        ).delete(synchronize_session=False)
+                        
+                        # Удаляем результаты тестов
+                        TestResult.query.filter_by(test_id=test.id).delete()
+                        
+                        # Удаляем ответы на вопросы
+                        TestAnswer.query.filter(
+                            TestAnswer.question_id.in_(
+                                TestQuestion.query.filter_by(test_id=test.id).with_entities(TestQuestion.id)
+                            )
+                        ).delete(synchronize_session=False)
+                        
+                        # Удаляем вопросы теста
+                        TestQuestion.query.filter_by(test_id=test.id).delete()
+                        
+                        # Удаляем сам тест
+                        db.session.delete(test)
+                        logger.info("Тест успешно удален")
+                    except Exception as e:
+                        logger.warning(f"Ошибка при удалении теста: {str(e)}")
+                        # Пытаемся удалить тест альтернативным способом
+                        try:
+                            db.session.delete(test)
+                            logger.info("Тест удален упрощенным способом")
+                        except Exception as e2:
+                            logger.error(f"Не удалось удалить тест: {str(e2)}")
 
                 # Удаляем все назначения теста
                 TestAssignment.query.filter_by(material_id=material_id).delete()
                 logger.info("Назначения теста удалены")
 
                 # Удаляем все записи просмотров материала
-                MaterialView.query.filter_by(material_id=material_id).delete()
-                logger.info("Записи просмотров материала удалены")
+                try:
+                    MaterialView.query.filter_by(material_id=material_id).delete()
+                    logger.info("Записи просмотров материала удалены")
+                except Exception as e:
+                    logger.warning(f"Ошибка при удалении записей просмотров: {str(e)}")
 
                 # Удаление изображений
                 if material.image_path:
@@ -705,14 +732,7 @@ def delete_material(material_id):
                     except Exception as e:
                         logger.warning(f"Ошибка при удалении дополнительного изображения: {e}")
 
-                # Удаляем все записи просмотров материала  
-                MaterialView.query.filter_by(material_id=material_id).delete()
-                logger.info("Записи просмотров материала удалены")
 
-                # Удаляем результаты тестов
-                if test:
-                    TestResult.query.filter_by(test_id=test.id).delete()
-                    logger.info("Результаты тестов удалены")
 
                 # Удаляем сам материал
                 logger.info("Удаляем материал из базы данных")
