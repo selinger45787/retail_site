@@ -55,4 +55,22 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Принудительно устанавливаем украинскую локаль для datetime-local элементов
+document.addEventListener('DOMContentLoaded', function() {
+    const datetimeInputs = document.querySelectorAll('input[type="datetime-local"]');
+    datetimeInputs.forEach(function(input) {
+        // Устанавливаем атрибут lang для каждого datetime input
+        input.setAttribute('lang', 'uk');
+        
+        // Для дополнительной совместимости с браузерами
+        input.addEventListener('focus', function() {
+            this.setAttribute('lang', 'uk-UA');
+        });
+    });
+});
+</script>
 {% endblock %} 

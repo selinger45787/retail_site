@@ -1,0 +1,167 @@
+/* Test Assignments page styles */
+
+/* Принудительно устанавливаем украинскую локаль для datetime-local полей */
+input[type="datetime-local"] {
+    /* Используем CSS псевдо-селектор для украинской локали */
+}
+
+input[type="datetime-local"]:lang(uk) {
+    /* Стили для украинской локали */
+}
+
+/* Дополнительные стили для форм */
+.form-select, .form-control {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-select:focus, .form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background-color: #f8f9fa;
+    border-top: none;
+    color: #495057;
+    font-weight: 600;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 0.875rem;
+    border-radius: 6px;
+}
+
+.btn-outline-primary {
+    color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-outline-primary:hover {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.badge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Стили для выбора пользователей */
+.user-selection-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+.department-section {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e3e6ea;
+}
+
+.department-header {
+    border-bottom: 1px solid #e3e6ea;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.department-header h6 {
+    color: #495057;
+    margin: 0;
+}
+
+.users-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 0.5rem;
+}
+
+.user-checkbox-item {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.user-checkbox-item:hover {
+    background-color: #f8f9fa;
+}
+
+.user-checkbox-item .form-check-input {
+    margin-top: 0.125em;
+}
+
+.user-checkbox-item .form-check-label {
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: block;
+    padding-left: 0.25rem;
+}
+
+.department-checkbox {
+    margin-right: 0.5rem !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .users-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .user-selection-container {
+        max-height: 300px;
+    }
+    
+    .department-section {
+        padding: 0.75rem;
+    }
+} 

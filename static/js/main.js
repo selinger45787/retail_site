@@ -117,7 +117,7 @@ function submitTest() {
     })
     .catch(error => {
         console.error('Error:', error);
-        showError('Произошла ошибка при отправке теста');
+        showError('Сталася помилка при відправці тесту');
     });
 }
 
@@ -160,7 +160,7 @@ function generateTest(materialId) {
     })
     .catch(error => {
         console.error('Error:', error);
-        showError('Произошла ошибка при генерации теста');
+                    showError('Сталася помилка при генерації тесту');
     });
 }
 

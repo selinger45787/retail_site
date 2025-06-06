@@ -82,7 +82,7 @@ class TimeTracker {
                 console.log(`Время просмотра обновлено: ${this.totalTime} секунд`);
             }
         }).catch(error => {
-            console.error('Ошибка при сохранении времени просмотра:', error);
+            console.error('Помилка при збереженні часу перегляду:', error);
         });
     }
     

@@ -76,8 +76,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         confirmed: true
                     })
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Delete response data:', data);
                     if (data.success) {
                         window.location.href = data.redirect;
                     } else {
@@ -111,8 +117,14 @@ function deleteMaterial(materialId) {
             csrf_token: csrfToken
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.needs_confirmation) {
             // Показываем предупреждения
             const warningsDiv = document.getElementById('deleteWarnings');
@@ -125,6 +137,10 @@ function deleteMaterial(materialId) {
                 
                 if (data.has_active_assignments) {
                     warningsDiv.innerHTML += `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>У цього матеріалу є ${data.active_assignments_count} активних призначень тестів, які також будуть видалені.</div>`;
+                }
+                
+                if (data.has_test_results) {
+                    warningsDiv.innerHTML += `<div class="alert alert-warning"><i class="fas fa-chart-bar me-2"></i>У цього матеріалу є ${data.test_results_count} результатів проходження тестів, які також будуть видалені.</div>`;
                 }
             }
             

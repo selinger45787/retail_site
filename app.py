@@ -523,6 +523,8 @@ def edit_material(material_id):
 def delete_material(material_id):
     logger.info(f"=== Начало удаления материала {material_id} ===")
     try:
+        logger.info(f"Пользователь: {current_user.username}, роль: {current_user.role}")
+        
         if current_user.role != 'admin':
             logger.warning(f"Попытка удаления материала {material_id} пользователем без прав админа")
             return jsonify({'error': 'У вас немає прав для видалення матеріалів', 'redirect': url_for('view_material', material_id=material_id)}), 403
@@ -530,15 +532,22 @@ def delete_material(material_id):
         # Получаем CSRF-токен из JSON-данных
         data = request.get_json()
         logger.info(f"Полученные данные: {data}")
+        logger.info(f"Content-Type: {request.content_type}")
+        logger.info(f"Headers: {dict(request.headers)}")
+        logger.info(f"Request method: {request.method}")
+        logger.info(f"Request URL: {request.url}")
         
         if not data or 'csrf_token' not in data:
             logger.error("CSRF token missing")
             return jsonify({'error': 'CSRF token missing'}), 400
 
         try:
+            logger.info("Валидация CSRF токена...")
             validate_csrf(data['csrf_token'])
+            logger.info("CSRF токен валидный")
         except Exception as e:
             logger.error(f"CSRF validation error: {str(e)}")
+            logger.error(f"CSRF токен из запроса: {data.get('csrf_token', 'НЕТ')}")
             return jsonify({'error': 'Invalid CSRF token'}), 400
 
         # Проверяем существование материала
@@ -560,13 +569,81 @@ def delete_material(material_id):
         has_active_assignments = active_assignments > 0
         logger.info(f"Активных назначений: {active_assignments}")
 
-        # Если это первый запрос на удаление, возвращаем информацию о зависимостях
+        # Проверяем наличие результатов тестов
+        test_results_count = 0
+        has_test_results = False
+        if test:
+            test_results_count = TestResult.query.filter_by(test_id=test.id).count()
+            has_test_results = test_results_count > 0
+        logger.info(f"Результатов тестов: {test_results_count}")
+
+        # Если это первый запрос на удаление, проверяем наличие зависимостей
         if not data.get('confirmed'):
-            logger.info("Возвращаем информацию о зависимостях")
+            logger.info("Проверяем зависимости")
+            
+            # Если нет зависимостей, удаляем сразу
+            if not has_test and not has_active_assignments and not has_test_results:
+                logger.info("Зависимостей нет, удаляем материал сразу")
+                try:
+                    # Удаляем изображения
+                    if material.image_path:
+                        try:
+                            image_path = os.path.join(app.static_folder, 'img', 'materials', material.image_path)
+                            logger.info(f"Удаляем главное изображение: {image_path}")
+                            if os.path.exists(image_path):
+                                os.remove(image_path)
+                        except Exception as e:
+                            logger.warning(f"Ошибка при удалении главного изображения: {e}")
+
+                    for image in material.images:
+                        try:
+                            image_path = os.path.join(app.static_folder, 'img', 'materials', image.image_path)
+                            logger.info(f"Удаляем дополнительное изображение: {image_path}")
+                            if os.path.exists(image_path):
+                                os.remove(image_path)
+                        except Exception as e:
+                            logger.warning(f"Ошибка при удалении дополнительного изображения: {e}")
+
+                    # Удаляем все записи просмотров материала
+                    MaterialView.query.filter_by(material_id=material_id).delete()
+                    logger.info("Записи просмотров материала удалены")
+
+                    # Удаляем результаты тестов
+                    if test:
+                        TestResult.query.filter_by(test_id=test.id).delete()
+                        logger.info("Результаты тестов удалены")
+
+                    # Удаляем сам материал
+                    logger.info("Удаляем материал из базы данных")
+                    db.session.delete(material)
+                    db.session.commit()
+                    logger.info("Материал успешно удален")
+
+                    # Добавляем флеш-сообщение
+                    flash('Матеріал було успішно видалено', 'success')
+                    
+                    return jsonify({
+                        'success': True,
+                        'redirect': url_for('brand', brand_id=brand_id),
+                        'message': 'Матеріал було успішно видалено'
+                    })
+
+                except Exception as e:
+                    db.session.rollback()
+                    logger.error(f"Ошибка при удалении материала: {str(e)}")
+                    return jsonify({
+                        'error': 'Помилка при видаленні матеріалу',
+                        'details': str(e)
+                    }), 500
+            
+            # Если есть зависимости, возвращаем информацию о них
+            logger.info("Есть зависимости, возвращаем информацию")
             return jsonify({
                 'has_test': has_test,
                 'has_active_assignments': has_active_assignments,
                 'active_assignments_count': active_assignments,
+                'has_test_results': has_test_results,
+                'test_results_count': test_results_count,
                 'needs_confirmation': True
             })
 
@@ -605,6 +682,10 @@ def delete_material(material_id):
                 TestAssignment.query.filter_by(material_id=material_id).delete()
                 logger.info("Назначения теста удалены")
 
+                # Удаляем все записи просмотров материала
+                MaterialView.query.filter_by(material_id=material_id).delete()
+                logger.info("Записи просмотров материала удалены")
+
                 # Удаление изображений
                 if material.image_path:
                     try:
@@ -624,12 +705,24 @@ def delete_material(material_id):
                     except Exception as e:
                         logger.warning(f"Ошибка при удалении дополнительного изображения: {e}")
 
+                # Удаляем все записи просмотров материала  
+                MaterialView.query.filter_by(material_id=material_id).delete()
+                logger.info("Записи просмотров материала удалены")
+
+                # Удаляем результаты тестов
+                if test:
+                    TestResult.query.filter_by(test_id=test.id).delete()
+                    logger.info("Результаты тестов удалены")
+
                 # Удаляем сам материал
                 logger.info("Удаляем материал из базы данных")
                 db.session.delete(material)
                 db.session.commit()
                 logger.info("Материал успешно удален")
 
+                # Добавляем флеш-сообщение
+                flash('Матеріал було успішно видалено', 'success')
+                
                 return jsonify({
                     'success': True,
                     'redirect': url_for('brand', brand_id=brand_id),
@@ -824,7 +917,7 @@ def create_test(material_id):
     
     if current_user.role != 'admin':
         logger.warning(f"Попытка создания теста пользователем без прав админа: {current_user.username}")
-        flash('У вас нет прав для создания тестов', 'danger')
+        flash('У вас немає прав для створення тестів', 'danger')
         return redirect(url_for('view_material', material_id=material_id))
     
     material = Material.query.get_or_404(material_id)
@@ -1164,14 +1257,14 @@ def moderate_test(material_id):
 @login_required
 def edit_test(material_id):
     if current_user.role != 'admin':
-        flash('У вас нет прав для редактирования тестов', 'error')
+        flash('У вас немає прав для редагування тестів', 'error')
         return redirect(url_for('view_material', material_id=material_id))
     
     material = Material.query.get_or_404(material_id)
     test = Test.query.filter_by(material_id=material_id).first()
     
     if not test:
-        flash('Тест не найден', 'error')
+        flash('Тест не знайдено', 'error')
         return redirect(url_for('view_material', material_id=material_id))
     
     if request.method == 'POST':
@@ -1259,7 +1352,7 @@ def edit_test(material_id):
                     db.session.add(answer)
             
             db.session.commit()
-            flash('Тест успешно обновлен', 'success')
+            flash('Тест успішно оновлено', 'success')
             return redirect(url_for('view_material', material_id=material_id))
             
         except Exception as e:
@@ -1267,7 +1360,7 @@ def edit_test(material_id):
             logger.error(f"Ошибка при обновлении теста: {str(e)}")
             logger.error(f"Тип ошибки: {type(e)}")
             logger.error(f"Детали ошибки: {traceback.format_exc()}")
-            flash('Произошла ошибка при обновлении теста', 'error')
+            flash('Сталася помилка при оновленні тесту', 'error')
             return render_template('test_edit.html', 
                                 material=material, 
                                 test=test, 
@@ -1319,25 +1412,26 @@ def user_profile(user_id):
     failed_tests = total_tests - passed_tests
     avg_score = sum(r.score for r in test_results) / total_tests if total_tests > 0 else 0
     
-    # Для администратора получаем статистику всех пользователей
-    all_users_stats = None
-    if current_user.role == 'admin':
-        all_users_stats = []
-        for user in User.query.all():
-            user_results = TestResult.query.filter_by(user_id=user.id).all()
-            
-            user_total = len(user_results)
-            user_passed = sum(1 for r in user_results if r.score >= 80)
-            user_failed = user_total - user_passed
-            user_avg = sum(r.score for r in user_results) / user_total if user_total > 0 else 0
-            
-            all_users_stats.append({
-                'username': user.username,
-                'total_tests': user_total,
-                'passed_tests': user_passed,
-                'failed_tests': user_failed,
-                'avg_score': round(user_avg, 1)
-            })
+    # Находим руководителя отдела пользователя
+    department_head = None
+    if user.department:
+        department_head = User.query.filter_by(
+            department=user.department,
+            position='department_head'
+        ).first()
+    
+    # Получаем назначенные тесты пользователя
+    from datetime import datetime, timedelta
+    assigned_tests = TestAssignment.query.filter_by(user_id=user.id).order_by(TestAssignment.created_at.desc()).all()
+    
+    # Добавляем информацию о днях до окончания срока для каждого назначенного теста
+    for assignment in assigned_tests:
+        now = datetime.utcnow()
+        if assignment.end_date > now:
+            days_left = (assignment.end_date - now).days
+            assignment.days_left = days_left
+        else:
+            assignment.days_left = 0
     
     return render_template('user_profile.html', 
                         user=user,
@@ -1346,7 +1440,8 @@ def user_profile(user_id):
                         passed_tests=passed_tests,
                         failed_tests=failed_tests,
                         avg_score=round(avg_score, 1),
-                        all_users_stats=all_users_stats)
+                        department_head=department_head,
+                        assigned_tests=assigned_tests)
 
 @app.route('/admin/dashboard')
 @login_required
@@ -1368,32 +1463,45 @@ def admin_dashboard():
         passed_tests = sum(1 for r in test_results if r.score >= 80)
         success_rate = (passed_tests / total_attempts * 100) if total_attempts > 0 else 0
         
-        # Статистика по времени (последние 30 дней)
-        time_data = {}
-        today = datetime.utcnow().date()
-        for i in range(30):
-            date = today - timedelta(days=i)
-            date_str = date.strftime('%Y-%m-%d')
-            time_data[date_str] = {
-                'count': 0,
-                'sum_score': 0,
-                'avg_score': 0
+        # Статистика по брендам для графика "Найкраще знають"
+        brands_stats = {}
+        
+        # Получаем все бренды
+        all_brands = Brand.query.all()
+        for brand in all_brands:
+            brands_stats[brand.id] = {
+                'brand': brand,
+                'scores': [],
+                'avg_score': 0,
+                'tests_count': 0
             }
         
+        # Собираем результаты по брендам
         for result in test_results:
-            date_str = result.created_at.strftime('%Y-%m-%d')
-            if date_str in time_data:
-                time_data[date_str]['count'] += 1
-                time_data[date_str]['sum_score'] += result.score
+            test = Test.query.get(result.test_id)
+            if test:
+                material = Material.query.get(test.material_id)
+                if material and material.brand_id in brands_stats:
+                    brands_stats[material.brand_id]['scores'].append(result.score)
+                    brands_stats[material.brand_id]['tests_count'] += 1
         
-        # Рассчитываем средний балл для каждого дня
-        for date_str in time_data:
-            if time_data[date_str]['count'] > 0:
-                time_data[date_str]['avg_score'] = time_data[date_str]['sum_score'] / time_data[date_str]['count']
+        # Рассчитываем средние баллы для брендов
+        for brand_id in brands_stats:
+            scores = brands_stats[brand_id]['scores']
+            if scores:
+                brands_stats[brand_id]['avg_score'] = sum(scores) / len(scores)
         
-        # Превращаем словарь в список для шаблона, сортируем по дате
-        chart_data = [{'date': date, 'value': data['avg_score']} for date, data in time_data.items()]
-        chart_data.sort(key=lambda x: x['date'])
+        # Формируем данные для графика, сортируем по убыванию среднего балла
+        chart_data = []
+        for brand_id, data in brands_stats.items():
+            if data['tests_count'] > 0:  # Только бренды с тестами
+                chart_data.append({
+                    'label': data['brand'].name,
+                    'value': round(data['avg_score'], 1),
+                    'tests_count': data['tests_count']
+                })
+        
+        chart_data.sort(key=lambda x: x['value'], reverse=True)
         
         # Проблемные тесты (с низким средним баллом)
         tests_stats = {}
@@ -1583,7 +1691,7 @@ def admin_dashboard():
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error in admin_dashboard: {str(e)}")
-        flash('Произошла ошибка при загрузке панели администратора', 'error')
+        flash('Сталася помилка при завантаженні панелі адміністратора', 'error')
         return redirect(url_for('index'))
 
 @app.route('/api/admin/user_tests/<int:user_id>')
@@ -1866,54 +1974,132 @@ def delete_material_image(image_id):
 @admin_required
 def test_assignments():
     form = TestAssignmentForm()
-    if form.validate_on_submit():
+    
+    # Группируем пользователей по отделам
+    users_by_department = {}
+    
+    # Словарь перевода отделов
+    department_names = {
+        'founders': 'Засновники компанії',
+        'general_director': 'Генеральний директор',
+        'accounting': 'Відділ Бухгалтерії',
+        'marketing': 'Відділ Маркетингу',
+        'online_sales': 'Відділ Онлайн продажу',
+        'offline_sales': 'Відділ Офлайн продажу',
+        'foreign_trade': 'Відділ ЗЕД',
+        'warehouse': 'Складський відділ',
+        'analytics': 'Відділ аналітики',
+        'other': 'Інше',
+        'abrams_production': 'Виробництво Abrams'
+    }
+    
+    # Словарь перевода должностей
+    position_names = {
+        'founder': 'Засновник',
+        'general_director': 'Генеральний директор',
+        'accountant': 'Бухгалтер',
+        'chief_accountant': 'Головний бухгалтер',
+        'department_head': 'Начальник відділу',
+        'marketer': 'Маркетолог',
+        'marketing_manager': 'Маркетинг менеджер',
+        'sales_manager': 'Менеджер з продажу',
+        'online_sales_manager': 'Менеджер онлайн продажу',
+        'offline_sales_manager': 'Менеджер офлайн продажу',
+        'sales_representative': 'Торговий представник',
+        'foreign_trade_manager': 'Менеджер ЗЕД',
+        'warehouse_manager': 'Завідувач складу',
+        'warehouse_worker': 'Складський працівник',
+        'analyst': 'Аналітик',
+        'data_analyst': 'Аналітик даних',
+        'content_manager': 'Контент менеджер',
+        'administrator': 'Адміністратор',
+        'other': 'Інше'
+    }
+    
+    users = User.query.order_by(User.department, User.username).all()
+    for user in users:
+        dept_key = user.department or 'other'
+        if dept_key not in users_by_department:
+            users_by_department[dept_key] = {
+                'name': department_names.get(dept_key, dept_key),
+                'users': []
+            }
+        
+        # Добавляем переведенную должность к объекту пользователя
+        user.position_ua = position_names.get(user.position, user.position) if user.position else None
+        users_by_department[dept_key]['users'].append(user)
+    
+    if request.method == 'POST' and form.validate_on_submit():
         try:
+            # Получаем выбранных пользователей
+            selected_user_ids = request.form.getlist('user_ids')
+            
+            if not selected_user_ids:
+                flash('Будь ласка, оберіть хоча б одного співробітника', 'error')
+                return redirect(url_for('test_assignments'))
+            
             # Проверяем, что дата окончания позже даты начала
             if form.end_date.data <= form.start_date.data:
-                flash('Дата окончания должна быть позже даты начала', 'error')
+                flash('Дата закінчення повинна бути пізніше дати початку', 'error')
                 return redirect(url_for('test_assignments'))
             
             # Проверяем, что у материала есть тест
             material = Material.query.get(form.material_id.data)
             if not Test.query.filter_by(material_id=material.id).first():
-                flash('Для этого материала еще не создан тест', 'error')
+                flash('Для цього матеріалу ще не створено тест', 'error')
                 return redirect(url_for('test_assignments'))
             
-            # Проверяем, нет ли уже активного назначения для этого пользователя и материала
-            existing_assignment = TestAssignment.query.filter(
-                TestAssignment.user_id == form.user_id.data,
-                TestAssignment.material_id == form.material_id.data,
-                TestAssignment.is_completed == False
-            ).first()
+            # Создаем назначения для каждого выбранного пользователя
+            created_count = 0
+            skipped_count = 0
             
-            if existing_assignment:
-                flash('Цьому користувачу вже призначено цей тест', 'error')
-                return redirect(url_for('test_assignments'))
+            for user_id in selected_user_ids:
+                user_id = int(user_id)
+                
+                # Проверяем, нет ли уже активного назначения для этого пользователя и материала
+                existing_assignment = TestAssignment.query.filter(
+                    TestAssignment.user_id == user_id,
+                    TestAssignment.material_id == form.material_id.data,
+                    TestAssignment.is_completed == False
+                ).first()
+                
+                if existing_assignment:
+                    skipped_count += 1
+                    continue
+                
+                # Создаем новое назначение
+                assignment = TestAssignment(
+                    user_id=user_id,
+                    material_id=form.material_id.data,
+                    start_date=form.start_date.data,
+                    end_date=form.end_date.data,
+                    created_by=current_user.id
+                )
+                
+                db.session.add(assignment)
+                created_count += 1
             
-            # Создаем новое назначение
-            assignment = TestAssignment(
-                user_id=form.user_id.data,
-                material_id=form.material_id.data,
-                start_date=form.start_date.data,
-                end_date=form.end_date.data,
-                created_by=current_user.id
-            )
-            
-            db.session.add(assignment)
             db.session.commit()
             
-            flash('Тест успешно назначен', 'success')
+            if created_count > 0:
+                flash(f'Тест успішно призначено {created_count} співробітникам', 'success')
+                if skipped_count > 0:
+                    flash(f'{skipped_count} співробітників вже мають активне призначення цього тесту', 'warning')
+            else:
+                flash('Усі обрані співробітники вже мають активне призначення цього тесту', 'warning')
+            
             return redirect(url_for('test_assignments'))
             
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Error creating test assignment: {str(e)}")
-            flash('Произошла ошибка при назначении теста', 'error')
+            logger.error(f"Error creating test assignments: {str(e)}")
+            flash('Сталася помилка при призначенні тестів', 'error')
 
     assignments = TestAssignment.query.order_by(TestAssignment.created_at.desc()).all()
     return render_template('test_assignments.html', 
                          form=form, 
                          assignments=assignments,
+                         users_by_department=users_by_department,
                          now=datetime.utcnow())
 
 @app.route('/admin/test_assignments/<int:assignment_id>/delete', methods=['POST'])
@@ -1942,7 +2128,7 @@ def edit_test_assignment(assignment_id):
         try:
             # Проверяем, что дата окончания позже даты начала
             if form.end_date.data <= form.start_date.data:
-                flash('Дата окончания должна быть позже даты начала', 'error')
+                flash('Дата закінчення повинна бути пізніше дати початку', 'error')
                 return redirect(url_for('edit_test_assignment', assignment_id=assignment_id))
             
             # Обновляем даты
@@ -1956,7 +2142,7 @@ def edit_test_assignment(assignment_id):
         except Exception as e:
             db.session.rollback()
             logger.error(f"Error updating test assignment: {str(e)}")
-            flash('Произошла ошибка при обновлении дат', 'error')
+            flash('Сталася помилка при оновленні дат', 'error')
     
     # Для GET запроса заполняем форму текущими значениями
     if request.method == 'GET':

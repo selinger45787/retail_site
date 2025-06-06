@@ -1,7 +1,7 @@
 // Test Assignments page JavaScript
 
 function deleteAssignment(assignmentId) {
-    if (confirm('Вы уверены, что хотите удалить это назначение?')) {
+    if (confirm('Ви впевнені, що хочете видалити це призначення?')) {
         // Get CSRF token from meta tag or form
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         
@@ -17,12 +17,12 @@ function deleteAssignment(assignmentId) {
             if (data.success) {
                 location.reload();
             } else {
-                alert('Произошла ошибка при удалении назначения');
+                alert('Сталася помилка при видаленні призначення');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Произошла ошибка при удалении назначения');
+            alert('Сталася помилка при видаленні призначення');
         });
     }
 } 

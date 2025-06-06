@@ -44,9 +44,15 @@ function deleteMaterial() {
             csrf_token: csrfToken
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
-        if (data.needs_confirmation && !data.confirmed) {
+        console.log('Response data:', data);
+        if (data.needs_confirmation) {
             // Показываем модальное окно с зависимостями
             showDependenciesWarning(data);
             resetDeleteButton(confirmBtn, originalText);
@@ -95,6 +101,18 @@ function showDependenciesWarning(data) {
         dependenciesList.appendChild(assignmentItem);
     }
 
+    // Добавляем информацию о результатах тестов
+    if (data.has_test_results) {
+        const resultsItem = document.createElement('div');
+        resultsItem.className = 'dependency-item';
+        resultsItem.innerHTML = `
+            <i class="fas fa-chart-bar"></i>
+            <span>Результати проходження тестів</span>
+            <span class="dependency-count">${data.test_results_count}</span>
+        `;
+        dependenciesList.appendChild(resultsItem);
+    }
+
     // Показываем модальное окно
     const modal = document.getElementById('dependenciesWarningModal');
     modal.style.display = 'flex';
@@ -127,8 +145,14 @@ function confirmDependentDelete() {
             confirmed: true
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Delete response data:', data);
         if (data.success) {
             // Показываем успешное сообщение перед перенаправлением
             showSuccessMessage('Матеріал успішно видалено!');
@@ -139,11 +163,14 @@ function confirmDependentDelete() {
             alert(data.error || 'Помилка при видаленні матеріалу');
             resetConfirmDependentDeleteButton(confirmBtn, originalText);
         }
+        
+        closeModal('dependenciesWarningModal');
     })
     .catch(error => {
         console.error('Error:', error);
         alert('Помилка при видаленні матеріалу');
         resetConfirmDependentDeleteButton(confirmBtn, originalText);
+        closeModal('dependenciesWarningModal');
     });
 }
 

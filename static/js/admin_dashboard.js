@@ -347,22 +347,50 @@ function sortTable(sortType) {
 
 // Функция инициализации дашборда с данными графика
 function initializeDashboard(chartData) {
-    if (!chartData) {
-        console.error('Chart data not provided');
+    if (!chartData || !Array.isArray(chartData)) {
+        console.error('Chart data not provided or invalid format');
         return;
     }
     
-    const ctx = document.getElementById('testsChart');
+    const ctx = document.getElementById('brandsChart');
     if (!ctx) {
         console.error('Chart canvas not found');
         return;
     }
     
+    // Формируем данные для гистограммы по брендам
+    const labels = chartData.map(item => item.label);
+    const values = chartData.map(item => item.value);
+    const testsCounts = chartData.map(item => item.tests_count);
+    
+    // Цвета столбцов в зависимости от результата
+    const backgroundColors = values.map(value => {
+        if (value >= 80) return 'rgba(40, 167, 69, 0.8)';   // Зеленый для отличных результатов
+        if (value >= 60) return 'rgba(255, 193, 7, 0.8)';   // Оранжевый для хороших результатов
+        return 'rgba(220, 53, 69, 0.8)';                    // Красный для плохих результатов
+    });
+    
+    const borderColors = values.map(value => {
+        if (value >= 80) return 'rgba(40, 167, 69, 1)';
+        if (value >= 60) return 'rgba(255, 193, 7, 1)';
+        return 'rgba(220, 53, 69, 1)';
+    });
+    
     new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
-            labels: chartData.labels,
-            datasets: chartData.datasets
+            labels: labels,
+            datasets: [{
+                label: 'Середній бал (%)',
+                data: values,
+                backgroundColor: backgroundColors,
+                borderColor: borderColors,
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false,
+                barThickness: 60, // Ограничиваем ширину столбцов
+                maxBarThickness: 80, // Максимальная ширина столбцов
+            }]
         },
         options: {
             responsive: true,
@@ -370,16 +398,87 @@ function initializeDashboard(chartData) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Середній бал (%)'
+                    }
+                },
+                x: {
+                    categoryPercentage: 0.6, // Уменьшаем общую ширину категорий
+                    barPercentage: 0.8, // Уменьшаем ширину столбцов внутри категории
+                    title: {
+                        display: true,
+                        text: 'Бренди'
+                    }
                 }
             },
             plugins: {
                 legend: {
+                    display: false
+                },
+                title: {
                     display: true,
-                    position: 'top'
+                    text: 'Рейтинг брендів за середнім балом знань співробітників',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const index = context.dataIndex;
+                            return `Кількість тестів: ${testsCounts[index]}`;
+                        }
+                    }
+                },
+                // Добавляем метки данных на столбцы
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: '#333',
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    formatter: function(value) {
+                        return value + '%';
+                    }
                 }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutBounce'
             }
-        }
+        },
+        plugins: [{
+            // Встроенный плагин для отображения меток данных
+            afterDatasetsDraw: function(chart) {
+                const ctx = chart.ctx;
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    meta.data.forEach((bar, index) => {
+                        const data = dataset.data[index];
+                        
+                        ctx.fillStyle = '#333';
+                        ctx.font = 'bold 12px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        
+                        const x = bar.x;
+                        const y = bar.y - 5;
+                        
+                        ctx.fillText(data + '%', x, y);
+                    });
+                });
+            }
+        }]
     });
 }
 

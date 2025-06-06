@@ -73,37 +73,32 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Увійти')
 
 class TestAssignmentForm(FlaskForm):
-    user_id = SelectField('Сотрудник', coerce=int, validators=[DataRequired()])
-    material_id = SelectField('Материал', coerce=int, validators=[DataRequired()])
-    start_date = DateTimeField('Дата начала', format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
-    end_date = DateTimeField('Дата окончания', format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
-    submit = SubmitField('Назначить тест')
+    material_id = SelectField('Матеріал', coerce=int, validators=[DataRequired()])
+    start_date = DateTimeField('Дата початку', format='%Y-%m-%dT%H:%M', validators=[DataRequired()], render_kw={"lang": "uk"})
+    end_date = DateTimeField('Дата закінчення', format='%Y-%m-%dT%H:%M', validators=[DataRequired()], render_kw={"lang": "uk"})
+    submit = SubmitField('Призначити тест')
 
     def __init__(self, *args, **kwargs):
         super(TestAssignmentForm, self).__init__(*args, **kwargs)
-        self.user_id.choices = [(u.id, u.username) for u in User.query.order_by(User.username).all()]
         # Загружаем только материалы, у которых есть тесты
         materials_with_tests = Material.query.join(Test).order_by(Material.title).all()
         self.material_id.choices = [(m.id, m.title) for m in materials_with_tests]
 
-    def validate_user_id(self, field):
-        user = User.query.get(field.data)
-        if not user:
-            raise ValidationError('Выбранный сотрудник не существует')
+
 
     def validate_material_id(self, field):
         material = Material.query.get(field.data)
         if not material:
-            raise ValidationError('Выбранный материал не существует')
+            raise ValidationError('Обраний матеріал не існує')
         
         # Проверяем, есть ли тест для этого материала
         test = Test.query.filter_by(material_id=material.id).first()
         if not test:
-            raise ValidationError('Для этого материала еще не создан тест')
+            raise ValidationError('Для цього матеріалу ще не створено тест')
 
     def validate_end_date(self, field):
         if field.data <= self.start_date.data:
-            raise ValidationError('Дата окончания должна быть позже даты начала')
+            raise ValidationError('Дата закінчення повинна бути пізніше дати початку')
 
 class EditUserForm(FlaskForm):
     username = StringField('Ім\'я користувача', validators=[DataRequired(), Length(min=2, max=50)])
@@ -183,10 +178,10 @@ class EditUserForm(FlaskForm):
             raise ValidationError('Паролі повинні співпадати')
 
 class EditTestAssignmentForm(FlaskForm):
-    start_date = DateTimeField('Дата начала', format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
-    end_date = DateTimeField('Дата окончания', format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
-    submit = SubmitField('Сохранить изменения')
+    start_date = DateTimeField('Дата початку', format='%Y-%m-%dT%H:%M', validators=[DataRequired()], render_kw={"lang": "uk"})
+    end_date = DateTimeField('Дата закінчення', format='%Y-%m-%dT%H:%M', validators=[DataRequired()], render_kw={"lang": "uk"})
+    submit = SubmitField('Зберегти зміни')
 
     def validate_end_date(self, field):
         if field.data <= self.start_date.data:
-            raise ValidationError('Дата окончания должна быть позже даты начала') 
+            raise ValidationError('Дата закінчення повинна бути пізніше дати початку') 

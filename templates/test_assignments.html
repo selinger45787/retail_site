@@ -2,6 +2,10 @@
 
 {% block title %}Управління призначеннями тестів{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style/test_assignments.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <h1 class="mb-4">Управління призначеннями тестів</h1>
@@ -14,22 +18,66 @@
         <div class="card-body">
             <form method="POST" action="{{ url_for('test_assignments') }}">
                 {{ form.csrf_token }}
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        {{ form.user_id.label(class="form-label") }}
-                        {{ form.user_id(class="form-select") }}
+                
+                <!-- Выбор пользователей по отделам -->
+                <div class="mb-4">
+                    <label class="form-label"><strong>Співробітники</strong></label>
+                    <div class="user-selection-container">
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectAllUsers()">
+                                <i class="fas fa-check-square"></i> Обрати всіх
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="unselectAllUsers()">
+                                <i class="fas fa-square"></i> Зняти всі
+                            </button>
+                        </div>
+                        
+                        {% for department_key, department_info in users_by_department.items() %}
+                        <div class="department-section mb-4">
+                            <div class="department-header">
+                                <h6 class="mb-2">
+                                    <input type="checkbox" class="form-check-input me-2 department-checkbox" 
+                                           id="dept_{{ department_key }}" 
+                                           onchange="toggleDepartment('{{ department_key }}')">
+                                    <label for="dept_{{ department_key }}" class="form-check-label fw-bold">
+                                        {{ department_info.name }}
+                                    </label>
+                                    <span class="badge bg-secondary ms-2">{{ department_info.users|length }}</span>
+                                </h6>
+                            </div>
+                            <div class="users-list">
+                                {% for user in department_info.users %}
+                                <div class="form-check user-checkbox-item">
+                                    <input class="form-check-input user-checkbox dept-{{ department_key }}" 
+                                           type="checkbox" 
+                                           name="user_ids" 
+                                           value="{{ user.id }}" 
+                                           id="user_{{ user.id }}"
+                                           onchange="updateDepartmentCheckbox('{{ department_key }}')">
+                                    <label class="form-check-label" for="user_{{ user.id }}">
+                                        {{ user.username }}
+                                        {% if user.position_ua %}
+                                            <small class="text-muted">({{ user.position_ua }})</small>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
-                    <div class="col-md-6 mb-3">
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
                         {{ form.material_id.label(class="form-label") }}
                         {{ form.material_id(class="form-select") }}
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         {{ form.start_date.label(class="form-label") }}
                         {{ form.start_date(class="form-control", type="datetime-local") }}
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         {{ form.end_date.label(class="form-label") }}
                         {{ form.end_date(class="form-control", type="datetime-local") }}
                     </div>
@@ -105,4 +153,72 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/test_assignments.js') }}"></script>
+<script>
+// Принудительно устанавливаем украинскую локаль для datetime-local элементов
+document.addEventListener('DOMContentLoaded', function() {
+    const datetimeInputs = document.querySelectorAll('input[type="datetime-local"]');
+    datetimeInputs.forEach(function(input) {
+        // Устанавливаем атрибут lang для каждого datetime input
+        input.setAttribute('lang', 'uk');
+        
+        // Для дополнительной совместимости с браузерами
+        input.addEventListener('focus', function() {
+            this.setAttribute('lang', 'uk-UA');
+        });
+    });
+});
+
+// Функции для управления выбором пользователей
+function selectAllUsers() {
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    const departmentCheckboxes = document.querySelectorAll('.department-checkbox');
+    
+    userCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    
+    departmentCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+}
+
+function unselectAllUsers() {
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    const departmentCheckboxes = document.querySelectorAll('.department-checkbox');
+    
+    userCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    departmentCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
+function toggleDepartment(departmentKey) {
+    const departmentCheckbox = document.getElementById('dept_' + departmentKey);
+    const userCheckboxes = document.querySelectorAll('.dept-' + departmentKey);
+    
+    userCheckboxes.forEach(checkbox => {
+        checkbox.checked = departmentCheckbox.checked;
+    });
+}
+
+function updateDepartmentCheckbox(departmentKey) {
+    const departmentCheckbox = document.getElementById('dept_' + departmentKey);
+    const userCheckboxes = document.querySelectorAll('.dept-' + departmentKey);
+    const checkedCount = document.querySelectorAll('.dept-' + departmentKey + ':checked').length;
+    
+    if (checkedCount === 0) {
+        departmentCheckbox.checked = false;
+        departmentCheckbox.indeterminate = false;
+    } else if (checkedCount === userCheckboxes.length) {
+        departmentCheckbox.checked = true;
+        departmentCheckbox.indeterminate = false;
+    } else {
+        departmentCheckbox.checked = false;
+        departmentCheckbox.indeterminate = true;
+    }
+}
+</script>
 {% endblock %} 

@@ -43,7 +43,7 @@ function submitLoginForm() {
     }
   })
   .catch(error => {
-    console.error('Ошибка при отправке формы:', error);
+    console.error('Помилка при відправці форми:', error);
     errorElement.innerText = 'Помилка з\'єднання з сервером. Спробуйте пізніше.';
   });
 }
