@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const descriptionTextarea = document.getElementById('description');
     let editor = null;
 
-    console.log('Элементы формы:', {
+    console.log('Елементи форми:', {
         form: form,
         imageInput: imageInput,
         imagePreview: imagePreview,
@@ -72,23 +72,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .then(newEditor => {
-            console.log('CKEditor успешно инициализирован');
+            console.log('CKEditor успішно ініціалізовано');
             editor = newEditor;
             
-            // Добавляем панель инструментов в контейнер
+            // Додаємо панель інструментів у контейнер
             const toolbarContainer = document.querySelector('.toolbar-container');
             toolbarContainer.appendChild(editor.ui.view.toolbar.element);
             
-            // Добавляем слушатель изменений
+            // Додаємо слухач змін
             editor.model.document.on('change:data', () => {
                 const data = editor.getData();
-                console.log('Содержимое редактора обновлено');
-                // Обновляем скрытое поле textarea с данными для отправки формы
+                console.log('Вміст редактора оновлено');
+                // Оновлюємо приховане поле textarea з даними для відправки форми
                 descriptionTextarea.value = data;
             });
         })
         .catch(error => {
-            console.error('Ошибка при инициализации CKEditor:', error);
+            console.error('Помилка при ініціалізації CKEditor:', error);
         });
 
     // Обработка отправки формы

@@ -1,9 +1,26 @@
 /* Styles for index.html */
 
 body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2c3e50 0%, #bdc3c7 100%);
     min-height: 100vh;
     font-family: 'Arial', sans-serif;
+}
+
+/* Анимации fade-in */
+.fade-in {
+    animation: fadeIn 0.6s ease-in;
+    animation-fill-mode: both;
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(30px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
 }
 
 .welcome-section {
@@ -27,70 +44,409 @@ body {
     line-height: 1.6;
 }
 
-.hero-section {
-    padding: 3rem 0;
-    text-align: center;
+.section-title {
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    margin-bottom: 2rem;
+}
+
+/* Карточки тестов */
+.test-card-wrapper {
+    transition: transform 0.3s ease;
+}
+
+.test-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    transition: all 0.4s ease;
+    cursor: pointer;
+    border: none;
+    height: 100%;
+    min-height: 336px;
+    display: flex;
+    flex-direction: column;
+}
+
+.test-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+/* Активные тесты */
+.test-card.active-test {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
     color: white;
 }
 
-.hero-section h1 {
-    font-size: 3rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+.test-card.active-test .test-title {
+    color: #2c3e50;
 }
 
-.hero-section p {
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-    opacity: 0.9;
+.test-card.active-test .test-meta {
+    color: #6c757d;
 }
 
-.card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+.test-card.active-test .brand-info i,
+.test-card.active-test .test-period i {
+    color: #6c757d;
+}
+
+.test-card.active-test {
+    cursor: pointer;
+}
+
+/* Неактивные тесты */
+.test-card.inactive-test {
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+    color: white;
+}
+
+.test-card.inactive-test .test-title {
+    color: #2c3e50;
+}
+
+.test-card.inactive-test .test-meta {
+    color: #6c757d;
+}
+
+.test-card.inactive-test .brand-info i,
+.test-card.inactive-test .test-period i {
+    color: #6c757d;
+}
+
+.test-card-image {
+    position: relative;
+    height: 224px;
+    overflow: hidden;
+}
+
+.test-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.test-card:hover .test-card-image img {
+    transform: scale(1.1);
+}
+
+.test-status-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.test-card-content {
+    padding: 1rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    color: #2c3e50;
+}
+
+.test-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+    line-height: 1.3;
+    color: #2c3e50;
+}
+
+.test-meta {
+    margin-bottom: 0.6rem;
+    flex-grow: 1;
+    color: #6c757d;
+}
+
+.brand-info,
+.test-period {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+    font-size: 0.7rem;
+    color: #6c757d;
+}
+
+.brand-info i,
+.test-period i {
+    width: 16px;
+    text-align: center;
+    color: #6c757d;
+}
+
+.test-action {
+    margin-top: auto;
+}
+
+.action-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-weight: 600;
+    padding: 8px;
+    border-radius: 6px;
+    background: #2c3e50;
+    color: white;
+    text-align: center;
+    font-size: 0.75rem;
+    transition: background 0.3s ease;
+}
+
+.action-text:hover {
+    background: #34495e;
+}
+
+.action-text.completed {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Модальное окно выбора действия для теста */
+.test-action-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1055;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s ease;
+}
+
+.test-action-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.test-action-modal .modal-dialog {
+    max-width: 500px;
+    width: 90%;
+    margin: 0;
+    transform: scale(0.7) translateY(-50px);
+    transition: transform 0.4s ease;
+}
+
+.test-action-modal.show .modal-dialog {
+    transform: scale(1) translateY(0);
+}
+
+.test-action-modal .modal-content {
     border: none;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.test-action-modal .modal-header {
+    background: #000000;
+    color: white;
+    padding: 1.5rem;
+    border-bottom: none;
+}
+
+.test-action-modal .modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.test-action-modal .btn-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    opacity: 1;
+    transition: background 0.3s ease;
+}
+
+.test-action-modal .btn-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.test-action-modal .btn-close::before {
+    content: '×';
+    font-size: 24px;
+    line-height: 1;
+}
+
+.test-action-modal .modal-body {
+    padding: 2rem;
+    background: white;
+}
+
+.modal-material-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333333;
+    background: #f8f9fa;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border-left: 4px solid #2c3e50;
+}
+
+.action-buttons {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.action-buttons .btn {
+    position: relative;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
     border-radius: 15px;
-}
-
-.card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-}
-
-.card.border-primary {
-    border: 2px solid #007bff !important;
-}
-
-.btn-primary {
-    background: linear-gradient(45deg, #007bff, #0056b3);
-    border: none;
-    padding: 0.75rem 2rem;
-    font-weight: bold;
-    border-radius: 25px;
+    border-width: 2px;
     transition: all 0.3s ease;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    max-width: 200px;
 }
 
-.btn-primary:hover {
-    background: linear-gradient(45deg, #0056b3, #004085);
-    transform: scale(1.05);
+
+
+.action-buttons .btn-outline-primary {
+    border-color: #6c757d;
+    color: #6c757d;
+    background: white;
 }
 
-/* Медиа-запросы для мобильных устройств */
+.action-buttons .btn-outline-primary:hover {
+    background: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(108, 117, 125, 0.3);
+}
+
+.action-buttons .btn-success {
+    background: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.action-buttons .btn-success:hover {
+    background: #218838;
+    border-color: #1e7e34;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
+}
+
+
+
+/* Адаптивность */
 @media (max-width: 768px) {
-    .hero-section h1 {
-        font-size: 2.5rem;
+    .test-card {
+        margin-bottom: 1rem;
+        min-height: 304px;
     }
     
-    .hero-section p {
-        font-size: 1.1rem;
+    .test-card-image {
+        height: 192px;
     }
     
-    .hero-section {
-        padding: 2rem 0;
+    .test-card-content {
+        padding: 0.8rem;
+    }
+    
+    .section-title {
+        font-size: 1.2rem;
+    }
+    
+    .test-action-modal .modal-dialog {
+        width: 95%;
+    }
+    
+    .test-action-modal .modal-body {
+        padding: 1.2rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+    
+    .action-buttons .btn {
+        max-width: none;
     }
 }
 
 @media (max-width: 576px) {
+    .section-title {
+        font-size: 1.2rem;
+        margin-bottom: 1.2rem;
+    }
+    
+    .test-card {
+        min-height: 272px;
+        margin-bottom: 0.8rem;
+    }
+    
+    .test-card-image {
+        height: 128px;
+    }
+    
+    .test-card-content {
+        height: calc(100% - 128px);
+        padding: 0.8rem;
+        gap: 0.6rem;
+    }
+    
+    .test-title {
+        font-size: 0.88rem;
+    }
+    
+    .brand-info, .test-period {
+        font-size: 0.68rem;
+    }
+    
+    .action-text {
+        font-size: 0.72rem;
+        padding: 8px;
+    }
+    
+    .test-status-badge {
+        font-size: 0.6rem;
+        padding: 5px 8px;
+        top: 8px;
+        right: 8px;
+    }
+    
     .hero-section {
         padding: 1.5rem 0;
     }
@@ -105,10 +461,6 @@ body {
         margin-bottom: 1.5rem;
     }
     
-    .card {
-        margin-bottom: 1rem;
-    }
-    
     .btn-primary {
         padding: 0.6rem 1.5rem;
         font-size: 0.9rem;
@@ -116,6 +468,36 @@ body {
 }
 
 @media (max-width: 480px) {
+    .section-title {
+        font-size: 1rem;
+    }
+    
+    .test-card {
+        min-height: 256px;
+    }
+    
+    .test-card-image {
+        height: 112px;
+    }
+    
+    .test-card-content {
+        height: calc(100% - 112px);
+        padding: 0.64rem;
+    }
+    
+    .test-title {
+        font-size: 0.8rem;
+    }
+    
+    .brand-info, .test-period {
+        font-size: 0.64rem;
+    }
+    
+    .action-text {
+        font-size: 0.68rem;
+        padding: 6px;
+    }
+    
     .hero-section {
         padding: 1rem 0;
     }

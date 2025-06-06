@@ -53,10 +53,17 @@
 
         <!-- Кнопка возврата -->
         <div class="back-button-container fade-in">
+            {% if from_admin %}
+            <a href="{{ url_for('manage_materials') }}" class="material-btn btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Повернутись до статистики
+            </a>
+            {% else %}
             <a href="{{ url_for('brand', brand_id=material.brand.id) }}" class="material-btn btn-back">
                 <i class="fas fa-arrow-left"></i>
                 Повернутись до матеріалів
             </a>
+            {% endif %}
         </div>
 
         {% if material.image_path or material.images %}
@@ -160,4 +167,13 @@
 <!-- Подключаем Bootstrap JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/material.js') }}"></script>
+<script src="{{ url_for('static', filename='js/time_tracker.js') }}"></script>
+<script>
+    // Инициализируем отслеживание времени просмотра материала
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if current_user.is_authenticated %}
+        initTimeTracker({{ material.id }});
+        {% endif %}
+    });
+</script>
 {% endblock %} 

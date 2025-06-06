@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}Управление назначениями тестов{% endblock %}
+{% block title %}Управління призначеннями тестів{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">Управление назначениями тестов</h1>
+    <h1 class="mb-4">Управління призначеннями тестів</h1>
     
-    <!-- Форма назначения теста -->
+    <!-- Форма призначення тесту -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0">Назначить новый тест</h5>
+            <h5 class="mb-0">Призначити новий тест</h5>
         </div>
         <div class="card-body">
             <form method="POST" action="{{ url_for('test_assignments') }}">
@@ -41,22 +41,22 @@
         </div>
     </div>
     
-    <!-- Список назначений -->
+    <!-- Список призначень -->
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0">Список назначений</h5>
+            <h5 class="mb-0">Список призначень</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-striped table-hover align-middle">
                     <thead>
                         <tr>
-                            <th>Сотрудник</th>
-                            <th>Материал</th>
-                            <th>Дата начала</th>
-                            <th>Дата окончания</th>
+                            <th>Співробітник</th>
+                            <th>Матеріал</th>
+                            <th>Дата початку</th>
+                            <th>Дата закінчення</th>
                             <th>Статус</th>
-                            <th class="text-center">Действия</th>
+                            <th class="text-center">Дії</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -68,13 +68,13 @@
                             <td>{{ assignment.end_date.strftime('%d.%m.%Y %H:%M') }}</td>
                             <td>
                                 {% if assignment.is_completed %}
-                                    <span class="badge bg-success">Завершен</span>
+                                    <span class="badge bg-success">Завершено</span>
                                 {% elif assignment.end_date < now %}
-                                    <span class="badge bg-danger">Просрочен</span>
+                                    <span class="badge bg-danger">Прострочено</span>
                                 {% elif assignment.start_date <= now %}
-                                    <span class="badge bg-primary">Активен</span>
+                                    <span class="badge bg-primary">Активний</span>
                                 {% else %}
-                                    <span class="badge bg-secondary">Ожидает</span>
+                                    <span class="badge bg-secondary">Очікує</span>
                                 {% endif %}
                             </td>
                             <td class="text-center">

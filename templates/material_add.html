@@ -14,7 +14,9 @@
         {% if show_brand_select %}
         <div class="form-group mb-3">
             <label for="brand_id">Бренд</label>
-            <select class="form-control" id="brand_id" name="brand_id" required>
+            <select class="form-control" id="brand_id" name="brand_id" required 
+                    oninvalid="this.setCustomValidity('Будь ласка, виберіть бренд')" 
+                    oninput="this.setCustomValidity('')">
                 <option value="">Виберіть бренд</option>
                 {% for brand in brands %}
                 <option value="{{ brand.id }}">{{ brand.name }}</option>
@@ -25,7 +27,9 @@
 
         <div class="form-group mb-3">
             <label for="title">Назва матеріалу</label>
-            <input type="text" class="form-control" id="title" name="title" required>
+            <input type="text" class="form-control" id="title" name="title" required
+                   oninvalid="this.setCustomValidity('Будь ласка, введіть назву матеріалу')" 
+                   oninput="this.setCustomValidity('')">
         </div>
 
         <div class="form-group mb-3">
@@ -46,7 +50,9 @@
             </small>
             {% else %}
             <!-- Обычный селект когда категория не предустановлена -->
-            <select class="form-control" id="category_id" name="category_id" required>
+            <select class="form-control" id="category_id" name="category_id" required
+                    oninvalid="this.setCustomValidity('Будь ласка, виберіть категорію')" 
+                    oninput="this.setCustomValidity('')">
                 <option value="">Виберіть категорію</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}">{{ category.name }}</option>

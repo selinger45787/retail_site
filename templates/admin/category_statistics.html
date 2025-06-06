@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Статистика категорії: {{ category.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Детальна статистика категорії</h1>
+            <p class="text-muted mb-0">{{ category.name }}</p>
+        </div>
+        <a href="{{ url_for('manage_categories') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Назад до категорій
+        </a>
+    </div>
+
+    <!-- Загальна статистика -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Всього переглядів</h5>
+                            <h2 class="mb-0">{{ category.get_total_views() }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-eye fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Унікальних відвідувачів</h5>
+                            <h2 class="mb-0">{{ category.get_unique_visitors() }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Загальний час</h5>
+                            <h2 class="mb-0">{{ category.get_formatted_time_spent() }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Матеріалів</h5>
+                            <h2 class="mb-0">{{ category.materials|length }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-file-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Детальна статистика по користувачам -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Статистика по співробітникам</h5>
+        </div>
+        <div class="card-body">
+            {% if user_stats %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Співробітник</th>
+                            <th>Відділ</th>
+                            <th>Посада</th>
+                            <th>Переглядів</th>
+                            <th>Матеріалів переглянуто</th>
+                            <th>Час на сторінках</th>
+                            <th>Середній час на матеріал</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in user_stats %}
+                        <tr>
+                            <td>
+                                <strong>{{ stat.username }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ stat.department }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-outline-primary">{{ stat.position }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ stat.views_count }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ stat.materials_viewed }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning text-dark">{{ stat.time_formatted }}</span>
+                            </td>
+                            <td>
+                                {% if stat.materials_viewed > 0 %}
+                                    {% set avg_seconds = (stat.total_time / stat.materials_viewed)|int %}
+                                    {% if avg_seconds >= 3600 %}
+                                        {% set hours = (avg_seconds // 3600) %}
+                                        {% set minutes = ((avg_seconds % 3600) // 60) %}
+                                        <span class="badge bg-success">{{ hours }}год {{ minutes }}хв</span>
+                                    {% elif avg_seconds >= 60 %}
+                                        {% set minutes = (avg_seconds // 60) %}
+                                        <span class="badge bg-success">{{ minutes }}хв</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ avg_seconds }}с</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">0с</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Немає даних про перегляди матеріалів цієї категорії.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

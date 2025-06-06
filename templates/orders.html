@@ -8,7 +8,7 @@
 
 {% block content %}
 <div class="orders-page-container fade-in">
-    <!-- Заголовок страницы -->
+    <!-- Заголовок сторінки -->
     <div class="orders-page-header">
         <h1>
             <i class="fas fa-file-alt me-3"></i>Службові розпорядження
@@ -20,7 +20,7 @@
         {% endif %}
     </div>
 
-    <!-- Фильтры -->
+    <!-- Фільтри -->
     <div class="filters-section fade-in">
         <div class="row">
             <div class="col-md-3">
@@ -51,7 +51,7 @@
         </div>
     </div>
 
-    <!-- Карточки распоряжений -->
+    <!-- Картки розпоряджень -->
     <div class="orders-grid fade-in">
         {% for order in orders %}
         <div class="order-card" data-status="{{ order.status }}" data-departments="{{ order.departments|join(',') if order.departments else order.department }}">
@@ -120,7 +120,7 @@
     </div>
 </div>
 
-<!-- Модальное окно подтверждения удаления -->
+<!-- Модальне вікно підтвердження видалення -->
 <div class="modal fade" id="deleteOrderModal" tabindex="-1" aria-labelledby="deleteOrderModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -149,7 +149,7 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Подключаем Bootstrap JavaScript -->
+<!-- Підключаємо Bootstrap JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/orders.js') }}?v=4.0"></script>
 {% endblock %} 

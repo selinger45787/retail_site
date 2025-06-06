@@ -370,183 +370,233 @@
 }
 
 @media (max-width: 768px) {
+    /* Уменьшаем все элементы на 30% для мобильных */
+    .dashboard-title {
+        font-size: 1.58rem; /* уменьшено с 2.25rem */
+    }
+    
     .org-level {
-        margin: 1rem 0;
+        margin: 0.7rem 0; /* уменьшено с 1rem */
     }
 
     .org-node {
-        margin: 0.5rem 0;
-        padding: 1rem;
+        margin: 0.35rem 0; /* уменьшено с 0.5rem */
+        padding: 0.7rem; /* уменьшено с 1rem */
     }
 
     .node-title {
-        font-size: 1rem;
+        font-size: 0.7rem; /* уменьшено с 1rem */
+    }
+    
+    .node-subtitle {
+        font-size: 0.56rem; /* уменьшено с 0.8rem */
+    }
+    
+    .node-count {
+        font-size: 0.595rem; /* уменьшено с 0.85rem */
     }
 
     .employee-info {
-        gap: 0.5rem;
+        gap: 0.35rem; /* уменьшено с 0.5rem */
     }
 
     .employee-card {
-        min-width: 120px;
+        min-width: 84px; /* уменьшено с 120px */
+        padding: 7px; /* уменьшено с 10px */
+        margin: 3.5px 0; /* уменьшено с 5px */
+        border-left: 2.8px solid #007bff; /* уменьшено с 4px */
+    }
+    
+    .employee-name {
+        font-size: 0.56rem; /* уменьшено */
+    }
+    
+    .employee-phone {
+        font-size: 0.525rem; /* уменьшено */
     }
 
     .stats-grid {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 0.7rem; /* уменьшено с 1rem */
+    }
+    
+    .stat-item {
+        padding: 17.5px; /* уменьшено с 25px */
+        border-radius: 8.4px; /* уменьшено с 12px */
+    }
+    
+    .stat-number {
+        font-size: 1.75rem; /* уменьшено с 2.5rem */
+    }
+    
+    .stat-label {
+        font-size: 0.77rem; /* уменьшено с 1.1rem */
     }
 
     .positions-grid {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 0.7rem; /* уменьшено с 1rem */
+        padding: 14px; /* уменьшено с 20px */
+    }
+    
+    .department-section {
+        margin-bottom: 21px; /* уменьшено с 30px */
     }
 
+    .department-header {
+        padding: 14px; /* уменьшено с 20px */
+    }
+    
     .department-header h3 {
-        font-size: 1.25rem;
+        font-size: 0.875rem; /* уменьшено с 1.25rem */
+    }
+    
+    .department-stats {
+        font-size: 0.595rem; /* уменьшено с 0.85rem */
     }
 }
 
 @media (max-width: 576px) {
     .container-fluid {
-        padding: 10px;
+        padding: 7px; /* уменьшено с 10px */
     }
     
     .dashboard-title {
-        font-size: 1.75rem;
-        margin-bottom: 1rem;
+        font-size: 1.225rem; /* уменьшено с 1.75rem */
+        margin-bottom: 0.7rem; /* уменьшено с 1rem */
     }
     
     .stats-card {
-        padding: 15px;
-        margin-bottom: 20px;
+        padding: 10.5px; /* уменьшено с 15px */
+        margin-bottom: 14px; /* уменьшено с 20px */
     }
     
     .stats-grid {
         grid-template-columns: 1fr !important;
-        gap: 0.75rem;
+        gap: 0.525rem; /* уменьшено с 0.75rem */
     }
     
     .stat-item {
         text-align: center;
-        padding: 10px;
+        padding: 7px; /* уменьшено с 10px */
     }
     
     .stat-number {
-        font-size: 1.75rem;
+        font-size: 1.225rem; /* уменьшено с 1.75rem */
     }
     
     .stat-label {
-        font-size: 0.85rem;
+        font-size: 0.595rem; /* уменьшено с 0.85rem */
     }
     
     .org-chart {
-        padding: 15px;
+        padding: 10.5px; /* уменьшено с 15px */
     }
     
     .org-level {
-        margin: 0.75rem 0;
+        margin: 0.525rem 0; /* уменьшено с 0.75rem */
     }
     
     .org-node {
-        padding: 15px;
-        margin: 0.5rem auto;
+        padding: 10.5px; /* уменьшено с 15px */
+        margin: 0.35rem auto; /* уменьшено с 0.5rem */
         max-width: 100%;
     }
     
     .node-title {
-        font-size: 0.95rem;
+        font-size: 0.665rem; /* уменьшено с 0.95rem */
         text-align: center;
     }
     
     .node-subtitle {
-        font-size: 0.8rem;
+        font-size: 0.56rem; /* уменьшено с 0.8rem */
     }
     
     .node-count {
-        font-size: 0.85rem;
+        font-size: 0.595rem; /* уменьшено с 0.85rem */
     }
     
     .employee-info {
-        gap: 0.5rem;
+        gap: 0.35rem; /* уменьшено с 0.5rem */
         justify-content: center;
         flex-wrap: wrap;
     }
     
     .employee-card {
-        min-width: 100px;
+        min-width: 70px; /* уменьшено с 100px */
         text-align: center;
     }
     
     .employee-name {
-        font-size: 0.8rem;
+        font-size: 0.56rem; /* уменьшено с 0.8rem */
     }
     
     .employee-phone {
-        font-size: 0.75rem;
+        font-size: 0.525rem; /* уменьшено с 0.75rem */
     }
     
     .department-section {
-        margin-bottom: 15px;
+        margin-bottom: 10.5px; /* уменьшено с 15px */
     }
     
     .department-header {
-        padding: 12px 15px;
+        padding: 8.4px 10.5px; /* уменьшено с 12px 15px */
     }
     
     .department-header h3 {
-        font-size: 1.1rem;
+        font-size: 0.77rem; /* уменьшено с 1.1rem */
     }
     
     .department-stats {
-        font-size: 0.8rem;
+        font-size: 0.56rem; /* уменьшено с 0.8rem */
     }
     
     .positions-grid {
         grid-template-columns: 1fr !important;
-        gap: 0.75rem;
-        padding: 15px;
+        gap: 0.525rem; /* уменьшено с 0.75rem */
+        padding: 10.5px; /* уменьшено с 15px */
     }
     
     .position .node-title {
-        font-size: 0.9rem;
+        font-size: 0.63rem; /* уменьшено с 0.9rem */
     }
 }
 
 @media (max-width: 480px) {
     .container-fluid {
-        padding: 8px;
+        padding: 5.6px; /* уменьшено с 8px */
     }
     
     .dashboard-title {
-        font-size: 1.5rem;
+        font-size: 1.05rem; /* уменьшено с 1.5rem */
     }
     
     .stats-card {
-        padding: 12px;
+        padding: 8.4px; /* уменьшено с 12px */
     }
     
     .stat-number {
-        font-size: 1.5rem;
+        font-size: 1.05rem; /* уменьшено с 1.5rem */
     }
     
     .stat-label {
-        font-size: 0.8rem;
+        font-size: 0.56rem; /* уменьшено с 0.8rem */
     }
     
     .org-chart {
-        padding: 10px;
+        padding: 7px; /* уменьшено с 10px */
     }
     
     .org-node {
-        padding: 12px;
+        padding: 8.4px; /* уменьшено с 12px */
     }
     
     .node-title {
-        font-size: 0.9rem;
+        font-size: 0.63rem; /* уменьшено с 0.9rem */
     }
     
     .node-subtitle {
-        font-size: 0.75rem;
+        font-size: 0.525rem; /* уменьшено с 0.75rem */
     }
     
     .employee-card {

@@ -1,13 +1,13 @@
-// Scripts for users management page
+// Скрипти для сторінки керування користувачами
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация модального окна
+    // Ініціалізація модального вікна
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteUserModal'), {
         backdrop: true,
         keyboard: true
     });
     
-    // Функция для фильтрации таблицы
+    // Функція для фільтрації таблиці
     function filterTable() {
         const searchText = document.getElementById('searchInput').value.toLowerCase();
         const roleFilter = document.getElementById('roleFilter').value.toLowerCase();
@@ -27,17 +27,17 @@ document.addEventListener('DOMContentLoaded', function() {
             row.style.display = matchesSearch && matchesRole && matchesDepartment ? '' : 'none';
         });
         
-        // Обновляем счетчик пользователей
+        // Оновлюємо лічильник користувачів
         const visibleRows = document.querySelectorAll('tbody tr:not([style*="display: none"])').length;
         document.getElementById('userCount').textContent = `Всього: ${visibleRows}`;
     }
     
-    // Обработчики событий для фильтров
+    // Обробники подій для фільтрів
     document.getElementById('searchInput').addEventListener('input', filterTable);
     document.getElementById('roleFilter').addEventListener('change', filterTable);
     document.getElementById('departmentFilter').addEventListener('change', filterTable);
     
-    // Сброс фильтров
+    // Скидання фільтрів
     document.getElementById('resetFilters').addEventListener('click', function() {
         document.getElementById('searchInput').value = '';
         document.getElementById('roleFilter').value = '';
@@ -45,13 +45,13 @@ document.addEventListener('DOMContentLoaded', function() {
         filterTable();
     });
     
-    // Обработчик удаления пользователя
+    // Обробник видалення користувача
     document.querySelectorAll('.delete-user-btn').forEach(button => {
         button.addEventListener('click', function() {
             const userId = this.getAttribute('data-user-id');
             const username = this.getAttribute('data-username');
             
-            // Проверяем зависимости пользователя
+            // Перевіряємо залежності користувача
             fetch(`/admin/users/${userId}/dependencies`, {
                 method: 'GET',
                 headers: {
@@ -64,11 +64,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error(data.error || 'Помилка при перевірці залежностей');
                 }
                 
-                // Очищаем предыдущие предупреждения
+                // Очищуємо попередні попередження
                 const warningsDiv = document.getElementById('deleteWarnings');
                 warningsDiv.innerHTML = '';
                 
-                // Добавляем предупреждения, если есть зависимости
+                // Додаємо попередження, якщо є залежності
                 if (data.test_results_count > 0) {
                     warningsDiv.innerHTML += `<div class="alert alert-warning">У користувача є ${data.test_results_count} результатів тестів, які також будуть видалені.</div>`;
                 }
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Подтверждение удаления
+    // Підтвердження видалення
     document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
         const userId = this.getAttribute('data-user-id');
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Показываем сообщение об успехе
+                // Показуємо повідомлення про успіх
                 const flashContainer = document.createElement('div');
                 flashContainer.className = 'alert alert-success alert-dismissible fade show';
                 flashContainer.innerHTML = `
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 document.querySelector('.container').insertBefore(flashContainer, document.querySelector('.container').firstChild);
                 
-                // Перезагружаем страницу через небольшую задержку
+                // Перезавантажуємо сторінку через невелику затримку
                 setTimeout(() => {
                     window.location.href = data.redirect;
                 }, 1000);

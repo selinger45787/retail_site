@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
-                showError('Произошла ошибка при создании пользователя');
+                showError('Сталася помилка при створенні користувача');
             });
         });
     }
@@ -101,7 +101,7 @@ function expandUserRow(userId) {
                     let html = '<div class="user-details-content">';
                     
                     if (!data.brands || data.brands.length === 0) {
-                        html += '<div class="no-data">У пользователя нет результатов тестов</div>';
+                        html += '<div class="no-data">У користувача немає результатів тестів</div>';
                     } else {
                         data.brands.forEach(brand => {
                             html += `
@@ -132,17 +132,17 @@ function expandUserRow(userId) {
                                 `;
                                 
                                 if (!material.attempts || material.attempts.length === 0) {
-                                    html += '<div class="no-attempts">Нет попыток прохождения теста</div>';
+                                    html += '<div class="no-attempts">Немає спроб проходження тесту</div>';
                                 } else {
                                     html += `
                                         <table class="attempts-table">
                                             <thead>
                                                 <tr>
-                                                    <th>Дата</th>
-                                                    <th class="text-center">Результат</th>
-                                                    <th class="text-center">Время</th>
-                                                    <th class="text-center">Статус</th>
-                                                    <th class="text-center">Действия</th>
+                                                                                                    <th>Дата</th>
+                                                <th class="text-center">Результат</th>
+                                                <th class="text-center">Час</th>
+                                                <th class="text-center">Статус</th>
+                                                <th class="text-center">Дії</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -150,7 +150,7 @@ function expandUserRow(userId) {
                                     
                                     material.attempts.forEach(attempt => {
                                         const statusClass = getScoreBadgeClass(attempt.score);
-                                        const statusText = attempt.score >= 80 ? 'Отлично' : attempt.score >= 60 ? 'Хорошо' : 'Неудовлетворительно';
+                                        const statusText = attempt.score >= 80 ? 'Відмінно' : attempt.score >= 60 ? 'Добре' : 'Незадовільно';
                                         
                                         // Правильное форматирование даты
                                         let formattedDate = 'N/A';
@@ -171,7 +171,7 @@ function expandUserRow(userId) {
                                                 </td>
                                                 <td class="text-center">
                                                     <button class="btn btn-info btn-sm" onclick="toggleAttemptDetails(this)">
-                                                        Показать ответы
+                                                        Показати відповіді
                                                     </button>
                                                 </td>
                                             </tr>
@@ -181,10 +181,10 @@ function expandUserRow(userId) {
                                                         <table class="questions-table">
                                                             <thead>
                                                                 <tr>
-                                                                    <th>Вопрос</th>
-                                                                    <th class="text-center">Ответ пользователя</th>
-                                                                    <th class="text-center">Правильный ответ</th>
-                                                                    <th class="text-center">Результат</th>
+                                                                                                                                    <th>Питання</th>
+                                                                <th class="text-center">Відповідь користувача</th>
+                                                                <th class="text-center">Правильна відповідь</th>
+                                                                <th class="text-center">Результат</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -192,7 +192,7 @@ function expandUserRow(userId) {
                                         
                                         attempt.question_details.forEach(detail => {
                                             const resultClass = detail.is_correct ? 'correct' : 'incorrect';
-                                            const resultText = detail.is_correct ? 'Верно' : 'Неверно';
+                                            const resultText = detail.is_correct ? 'Вірно' : 'Невірно';
                                             
                                             html += `
                                                 <tr class="${resultClass}">
@@ -242,7 +242,7 @@ function expandUserRow(userId) {
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    detailsRow.querySelector('td').innerHTML = '<div class="error-message">Ошибка при загрузке данных</div>';
+                    detailsRow.querySelector('td').innerHTML = '<div class="error-message">Помилка при завантаженні даних</div>';
                 });
         }
     }
@@ -281,10 +281,10 @@ function toggleAttemptDetails(button) {
     
     if (!isVisible) {
         detailsRow.style.display = 'table-row';
-        button.innerHTML = 'Скрыть ответы';
+        button.innerHTML = 'Сховати відповіді';
     } else {
         detailsRow.style.display = 'none';
-        button.innerHTML = 'Показать ответы';
+        button.innerHTML = 'Показати відповіді';
     }
 }
 

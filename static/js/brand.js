@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const categoryFilter = document.getElementById('categoryFilter');
     const sortSelect = document.getElementById('sortBy');
     const resetBtn = document.getElementById('resetFilters');
-    const viewBtns = document.querySelectorAll('.view-btn');
+
     const materialsContainer = document.getElementById('materialsContainer');
     const materialsCount = document.getElementById('materialsCount');
     const noResults = document.getElementById('noResults');
@@ -305,10 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
             resetBtn.addEventListener('click', resetFilters);
         }
         
-        // Переключение видов
-        viewBtns.forEach(btn => {
-            btn.addEventListener('click', () => switchView(btn.dataset.view));
-        });
+
         
         // Обработчики для кнопок действий
         setupActionButtons();
@@ -423,17 +420,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateDisplay();
     }
     
-    // Переключение вида отображения
-    function switchView(view) {
-        viewBtns.forEach(btn => btn.classList.remove('active'));
-        event.target.closest('.view-btn').classList.add('active');
-        
-        if (view === 'list') {
-            materialsContainer.classList.add('list-view');
-        } else {
-            materialsContainer.classList.remove('list-view');
-        }
-    }
+
     
     // Настройка кнопок действий
     function setupActionButtons() {

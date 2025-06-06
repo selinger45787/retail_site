@@ -109,7 +109,7 @@
 .submenu-item {
     display: flex;
     align-items: center;
-    padding: 0.6rem 1rem 0.6rem 2rem;
+    padding: 0.6rem 1rem 0.6rem 1.5rem;
     font-size: 14px;
     color: #444;
     text-decoration: none;
@@ -132,8 +132,36 @@
     margin-right: 0.75rem;
     opacity: 0.7;
     object-fit: contain;
-    border-radius: 4px;
-    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Стили для FontAwesome иконок */
+.submenu-icon.fas {
+    font-size: 16px;
+    text-align: center;
+    line-height: 1;
+}
+
+/* Стили для текстовых иконок (первая буква бренда) */
+.submenu-icon.default-icon {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 32px;
+}
+
+/* Стили для изображений */
+.submenu-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 @keyframes slideIn {
@@ -147,14 +175,18 @@
     .sidebar-container {
         transform: translateX(-100%);
         width: 100%;
-        max-width: 320px;
+        max-width: 224px; /* уменьшено с 320px на 30% */
         z-index: 1100;
         backdrop-filter: blur(10px);
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.99), rgba(255, 255, 255, 0.97)) !important;
-        top: 72px;
+        top: 50px; /* уменьшено с 72px */
         position: fixed;
-        height: calc(100vh - 72px);
+        height: calc(100vh - 50px); /* уменьшено с 72px */
         border-right: 2px solid rgba(108, 117, 125, 0.1);
+    }
+    
+    .sidebar {
+        padding: 0.7rem 0.35rem; /* уменьшено с 1rem 0.5rem */
     }
 
     .sidebar-container.mobile-active {
@@ -165,11 +197,22 @@
     .menu-item {
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95)) !important;
         border: 1px solid rgba(108, 117, 125, 0.05);
+        margin: 0.175rem 0.35rem; /* уменьшено с 0.25rem 0.5rem */
+        border-radius: 7px; /* уменьшено с 10px */
     }
 
     .menu-title {
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95)) !important;
         color: #495057;
+        padding: 0.595rem 0.7rem; /* уменьшено с 0.85rem 1rem */
+        font-size: 10.5px; /* уменьшено с 15px */
+        border-radius: 7px; /* уменьшено с 10px */
+    }
+    
+    .menu-icon {
+        width: 16.8px; /* уменьшено с 24px */
+        height: 16.8px;
+        margin-right: 0.525rem; /* уменьшено с 0.75rem */
     }
 
     .menu-title::after {
@@ -197,18 +240,18 @@
         visibility: hidden;
         transition: max-height 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
         padding: 0;
-        margin: 0 0.5rem;
-        border-radius: 0 0 12px 12px;
-        border-left: 3px solid #6c757d;
+        margin: 0 0.35rem; /* уменьшено с 0.5rem */
+        border-radius: 0 0 8.4px 8.4px; /* уменьшено с 12px */
+        border-left: 2.1px solid #6c757d; /* уменьшено с 3px */
     }
 
     .submenu.open {
-        max-height: 312px !important; /* ТОЧНО 6 элементов: 6 × 52px = 312px */
+        max-height: 218px !important; /* уменьшено с 312px: 6 × 36.4px = 218px */
         opacity: 1 !important;
         visibility: visible !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
-        padding: 0.5rem 0;
+        padding: 0.35rem 0; /* уменьшено с 0.5rem */
     }
 
     .submenu::-webkit-scrollbar {
@@ -234,28 +277,50 @@
     .submenu-item {
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95)) !important;
         backdrop-filter: blur(3px);
-        transform: translateX(-10px);
+        transform: translateX(-7px); /* уменьшено с -10px */
         opacity: 0;
         transition: all 0.3s ease;
-        height: 52px !important; /* Фиксированная высота */
-        min-height: 52px !important;
-        max-height: 52px !important;
+        height: 36.4px !important; /* уменьшено с 52px на 30% */
+        min-height: 36.4px !important;
+        max-height: 36.4px !important;
         display: flex;
         align-items: center;
-        padding: 0 1rem 0 1.5rem;
-        margin: 0 0.5rem 0 0.5rem !important; /* Убрал отступ снизу */
-        border-radius: 8px;
-        border-left: 3px solid transparent;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        padding: 0 0.7rem 0 0.7rem; /* уменьшено с 1rem */
+        margin: 0 0.35rem 0 0.35rem !important; /* уменьшено с 0.5rem */
+        border-radius: 5.6px; /* уменьшено с 8px */
+        border-left: 2.1px solid transparent; /* уменьшено с 3px */
+        box-shadow: 0 1.4px 5.6px rgba(0, 0, 0, 0.03); /* уменьшено */
         cursor: pointer;
         position: relative;
         overflow: hidden;
         box-sizing: border-box;
+        font-size: 9.8px; /* уменьшено с 14px */
     }
 
     .submenu.open .submenu-item {
         transform: translateX(0);
         opacity: 1;
+    }
+    
+    /* Мобильные стили для иконок */
+    .submenu-icon {
+        width: 22.4px; /* уменьшено с 32px на 30% */
+        height: 22.4px;
+        margin-right: 0.525rem; /* уменьшено с 0.75rem */
+    }
+    
+    .submenu-icon.default-icon {
+        width: 19.6px; /* уменьшено с 28px */
+        height: 19.6px;
+        line-height: 19.6px;
+        font-size: 8.4px; /* уменьшено с 12px */
+        border-radius: 2.8px; /* уменьшено с 4px */
+    }
+    
+    .submenu-icon.fas {
+        font-size: 9.8px; /* уменьшено с 14px */
+        width: 19.6px; /* уменьшено с 28px */
+        height: 19.6px;
     }
     
     .main-content {

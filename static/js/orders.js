@@ -1,4 +1,4 @@
-// JavaScript для страницы заказов
+// JavaScript для сторінки замовлень
 console.log('Orders page loaded - full version');
 
 let currentOrderId = null;
@@ -74,18 +74,18 @@ function filterOrders() {
         const cardStatus = card.getAttribute('data-status');
         const cardDepartments = card.getAttribute('data-departments');
         
-        // Поиск по тексту
+        // Пошук за текстом
         const matchesSearch = !searchTerm || 
             title.includes(searchTerm) || 
             description.includes(searchTerm);
         
-        // Фильтр по статусу
+        // Фільтр за статусом
         const matchesStatus = !statusFilter || cardStatus === statusFilter;
         
-        // Фильтр по отделу - проверяем, есть ли выбранный отдел в списке отделов карточки
+        // Фільтр за відділом - перевіряємо, чи є обраний відділ у списку відділів картки
         let matchesDepartment = !departmentFilter;
         if (departmentFilter && cardDepartments) {
-            // Проверяем, содержит ли список отделов выбранный отдел или 'all'
+            // Перевіряємо, чи містить список відділів обраний відділ або 'all'
             const departmentsList = cardDepartments.split(',');
             matchesDepartment = departmentsList.includes('all') || departmentsList.includes(departmentFilter);
         }
@@ -103,7 +103,7 @@ function resetFilters() {
     document.getElementById('statusFilter').value = '';
     document.getElementById('departmentFilter').value = '';
     
-    // Показываем все карточки
+    // Показуємо всі картки
     const orderCards = document.querySelectorAll('.order-card');
     orderCards.forEach(card => {
         card.style.display = 'block';

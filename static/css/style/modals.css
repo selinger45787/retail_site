@@ -19,6 +19,44 @@
     opacity: 1;
 }
 
+/* Дополнительные стили для админских модальных окон */
+#deleteBrandModal, #deleteCategoryModal {
+    display: none !important;
+    position: fixed !important;
+    z-index: 10000 !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+#deleteBrandModal.show, #deleteCategoryModal.show {
+    display: flex !important;
+    opacity: 1 !important;
+}
+
+#deleteBrandModal .modal-box, #deleteCategoryModal .modal-box {
+    background: white !important;
+    padding: 2rem !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+    max-width: 500px !important;
+    width: 90% !important;
+    position: relative !important;
+    transform: scale(1) !important;
+}
+
+/* Центровка текста на кнопках в модальных окнах */
+#deleteBrandModal .btn, #deleteCategoryModal .btn {
+    text-align: center !important;
+    justify-content: center !important;
+    align-items: center !important;
+    display: inline-flex !important;
+}
+
 .modal-box {
     background: #fff;
     padding: 2rem;

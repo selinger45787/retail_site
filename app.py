@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory, jsonify, current_app, session
 import os
 import markupsafe
-from models import db, User, Brand, Material, Category, MaterialImage, Test, TestQuestion, TestAnswer, TestResult, TestQuestionResult, TestAssignment, Order
+from models import db, User, Brand, Material, Category, MaterialImage, Test, TestQuestion, TestAnswer, TestResult, TestQuestionResult, TestAssignment, Order, MaterialView
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
 import logging
@@ -149,21 +149,21 @@ def nl2br(value):
     return markupsafe.Markup(value.replace('\n', '<br>'))
 
 def safe_html(value):
-    """Фильтр для безопасного отображения HTML контента"""
+    """Фільтр для безпечного відображення HTML контенту"""
     if not value:
         return ''
-    # Используем bleach для очистки HTML от опасных тегов
+    # Використовуємо bleach для очищення HTML від небезпечних тегів
     allowed_tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'b', 'i', 'em', 'strong', 'u', 'ul', 'ol', 'li', 'a']
     allowed_attributes = {'a': ['href', 'title']}
     clean_html = bleach.clean(value, tags=allowed_tags, attributes=allowed_attributes, strip=True)
     return markupsafe.Markup(clean_html)
 
 def replace_drive_links_with_images(text):
-    """Фильтр для автоматической замены ссылок Google Drive на изображения"""
+    """Фільтр для автоматичної заміни посилань Google Drive на зображення"""
     if not text:
         return ""
 
-    # Найти все ссылки вида drive.google.com/file/d/FILE_ID/view...
+    # Знайти всі посилання виду drive.google.com/file/d/FILE_ID/view...
     pattern = r'https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\/view[^\s"<]*'
     
     def replacer(match):
@@ -224,7 +224,7 @@ def index():
 def brand(brand_id):
     brand = Brand.query.get_or_404(brand_id)
     page = request.args.get('page', 1, type=int)
-    per_page = 12  # Количество материалов на странице
+    per_page = 12  # Кількість матеріалів на сторінці
     
     # Получаем материалы с пагинацией, сортируем по дате в обратном порядке
     materials_pagination = Material.query.filter_by(brand_id=brand_id)\
@@ -249,6 +249,11 @@ def brand_info(brand_id):
 def brand_history(brand_id):
     brand = Brand.query.get_or_404(brand_id)
     return render_template('brand_history.html', brand=brand)
+
+@app.route('/mission')
+@login_required
+def mission():
+    return render_template('mission.html')
 
 @app.route('/add_material', defaults={'brand_id': None}, methods=['GET', 'POST'])
 @app.route('/brand/<int:brand_id>/add_material', methods=['GET', 'POST'])
@@ -291,7 +296,7 @@ def add_material(brand_id):
             if not description: missing_fields.append('description')
             if not category_id: missing_fields.append('category_id')
             if not brand_id: missing_fields.append('brand_id')
-            logger.error(f"Отсутствуют обязательные поля: {missing_fields}")
+            logger.error(f"Відсутні обов'язкові поля: {missing_fields}")
             if request.headers.get('Accept') == 'application/json':
                 return jsonify({'error': 'Будь ласка, заповніть всі обов\'язкові поля'}), 400
             flash('Будь ласка, заповніть всі обов\'язкові поля', 'error')
@@ -384,9 +389,80 @@ def view_material(material_id):
     material = Material.query.get_or_404(material_id)
     images = MaterialImage.query.filter_by(material_id=material_id).all()
     
+    # Определяем источник перехода
+    from_admin = request.args.get('from') == 'admin'
+    
+    # Отслеживаем просмотр материала (только для авторизованных пользователей)
+    if current_user.is_authenticated:
+        try:
+            # Проверяем, есть ли уже запись о просмотре этого материала этим пользователем сегодня
+            today = datetime.utcnow().date()
+            existing_view = MaterialView.query.filter(
+                MaterialView.material_id == material_id,
+                MaterialView.user_id == current_user.id,
+                db.func.date(MaterialView.viewed_at) == today
+            ).first()
+            
+            if not existing_view:
+                # Создаем новую запись о просмотре
+                view_record = MaterialView(
+                    material_id=material_id,
+                    user_id=current_user.id,
+                    viewed_at=datetime.utcnow(),
+                    page_type='material'
+                )
+                db.session.add(view_record)
+                db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Ошибка при записи просмотра материала: {str(e)}")
+    
     return render_template('material.html', 
                          material=material, 
-                         images=images)
+                         images=images,
+                         from_admin=from_admin)
+
+@app.route('/material/<int:material_id>/update_time', methods=['POST'])
+@login_required
+def update_view_time(material_id):
+    """API для обновления времени просмотра материала"""
+    try:
+        data = request.get_json()
+        time_spent = data.get('time_spent', 0)
+        
+        if time_spent <= 0:
+            return jsonify({'success': False, 'error': 'Invalid time'}), 400
+        
+        # Ищем сегодняшнюю запись просмотра
+        today = datetime.utcnow().date()
+        view_record = MaterialView.query.filter(
+            MaterialView.material_id == material_id,
+            MaterialView.user_id == current_user.id,
+            db.func.date(MaterialView.viewed_at) == today
+        ).first()
+        
+        if view_record:
+            # Обновляем время просмотра
+            view_record.time_spent = time_spent
+            db.session.commit()
+            return jsonify({'success': True})
+        else:
+            # Создаем новую запись, если не найдена
+            view_record = MaterialView(
+                material_id=material_id,
+                user_id=current_user.id,
+                viewed_at=datetime.utcnow(),
+                time_spent=time_spent,
+                page_type='material'
+            )
+            db.session.add(view_record)
+            db.session.commit()
+            return jsonify({'success': True})
+            
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Ошибка при обновлении времени просмотра: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/material/<int:material_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -656,11 +732,14 @@ def add_brand():
     if request.method == 'POST':
         name = request.form.get('name')
         image = request.files.get('image')
+        source = request.form.get('source')
         
         if not name:
             if request.headers.get('Accept') == 'application/json':
                 return jsonify({'error': 'Назва бренду обов\'язкова'}), 400
             flash('Назва бренду обов\'язкова', 'error')
+            if source == 'admin_brands':
+                return redirect(url_for('manage_brands'))
             return redirect(url_for('index'))
         
         # Проверяем, существует ли бренд с таким названием
@@ -669,6 +748,8 @@ def add_brand():
             if request.headers.get('Accept') == 'application/json':
                 return jsonify({'error': 'Бренд з такою назвою вже існує'}), 400
             flash('Бренд з такою назвою вже існує', 'error')
+            if source == 'admin_brands':
+                return redirect(url_for('manage_brands'))
             return redirect(url_for('index'))
         
         # Создаем новый бренд
@@ -701,6 +782,9 @@ def add_brand():
                     'redirect': url_for('index')
                 })
             
+            # Проверяем откуда пришел запрос и перенаправляем соответственно
+            if source == 'admin_brands':
+                return redirect(url_for('manage_brands'))
             return redirect(url_for('index'))
         except Exception as e:
             db.session.rollback()
@@ -708,6 +792,8 @@ def add_brand():
                 return jsonify({'error': 'Помилка при додаванні бренду'}), 500
             flash('Помилка при додаванні бренду', 'error')
             app.logger.error(f'Error adding brand: {str(e)}')
+            if source == 'admin_brands':
+                return redirect(url_for('manage_brands'))
             return redirect(url_for('index'))
 
 @app.route('/login_modal', methods=['POST'])
@@ -1677,7 +1763,7 @@ def serve_static(filename):
 
 @app.errorhandler(Exception)
 def handle_error(error):
-    logger.error(f"Произошла ошибка: {str(error)}")
+    logger.error(f"Сталася помилка: {str(error)}")
     logger.error(traceback.format_exc())
     
     # Если запрос ожидает JSON, возвращаем JSON-ответ
@@ -2141,6 +2227,235 @@ def check_user_dependencies(user_id):
             'success': False,
             'error': 'Помилка при перевірці залежностей'
         }), 500
+
+def get_or_create_default_category():
+    """Получить или создать категорию 'Без категарії'"""
+    from models import Category
+    default_category = Category.query.filter_by(name='Без категарії').first()
+    if not default_category:
+        default_category = Category(name='Без категарії')
+        db.session.add(default_category)
+        db.session.commit()
+        logger.info("Создана категория 'Без категарії'")
+    return default_category
+
+@app.route('/admin/categories')
+@login_required
+@admin_required
+def manage_categories():
+    from models import Category
+    categories = Category.query.all()
+    return render_template('admin/categories.html', categories=categories)
+
+@app.route('/admin/categories/add', methods=['POST'])
+@login_required
+@admin_required
+def add_category():
+    from models import Category
+    try:
+        name = request.form.get('name', '').strip()
+        if not name:
+            flash('Назва категорії обов\'язкова', 'error')
+            return redirect(url_for('manage_categories'))
+        
+        # Проверяем, не существует ли уже такая категория
+        if Category.query.filter_by(name=name).first():
+            flash('Категорія з такою назвою вже існує', 'error')
+            return redirect(url_for('manage_categories'))
+        
+        # Предотвращаем создание дубликатов "Без категарії"
+        if name == 'Без категарії':
+            flash('Категорія "Без категорії" вже існує в системі', 'error')
+            return redirect(url_for('manage_categories'))
+        
+        category = Category(name=name)
+        db.session.add(category)
+        db.session.commit()
+        flash('Категорію успішно додано', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error adding category: {str(e)}")
+        flash('Помилка при додаванні категорії', 'error')
+    
+    return redirect(url_for('manage_categories'))
+
+@app.route('/admin/categories/<int:category_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_category(category_id):
+    from models import Category, Material
+    try:
+        category = Category.query.get_or_404(category_id)
+        
+        # Логируем информацию для отладки
+        logger.info(f"Попытка удаления категории: ID={category.id}, Имя='{category.name}'")
+        
+        # Проверяем, не пытаются ли удалить категорию "Без категарії"
+        if category.name == 'Без категарії':
+            logger.warning(f"Заблокировано удаление системной категории: {category.name}")
+            return jsonify({
+                'error': 'Неможливо видалити категорію "Без категарії". Це системна категорія.'
+            }), 400
+        
+        # Получаем ID категории "Без категарії" напрямую из базы данных
+        from sqlalchemy import text
+        result = db.session.execute(text("SELECT id FROM category WHERE name = 'Без категарії'")).fetchone()
+        
+        if not result:
+            logger.error("Категория 'Без категарії' не найдена!")
+            return jsonify({
+                'error': 'Системна категорія "Без категарії" не знайдена. Неможливо видалити категорію.'
+            }), 500
+        
+        default_category_id = result[0]
+        logger.info(f"ID категории 'Без категарії': {default_category_id}")
+        
+        if not default_category_id:
+            logger.error("ID категории 'Без категарії' равен None!")
+            return jsonify({
+                'error': 'Помилка з ID системної категорії "Без категарії".'
+            }), 500
+        
+        # Переносим все материалы удаляемой категории в "Без категарії" через прямой SQL
+        materials_count_result = db.session.execute(
+            text("SELECT COUNT(*) FROM materials WHERE category_id = :cat_id"),
+            {'cat_id': category.id}
+        ).fetchone()
+        materials_count = materials_count_result[0] if materials_count_result else 0
+        
+        logger.info(f"Найдено {materials_count} материалов для переноса")
+        
+        if materials_count > 0:
+            # Обновляем все материалы одним SQL-запросом
+            logger.info(f"Переносим {materials_count} материалов из категории {category.id} в категорию {default_category_id}")
+            db.session.execute(
+                text("UPDATE materials SET category_id = :new_cat_id WHERE category_id = :old_cat_id"),
+                {'new_cat_id': default_category_id, 'old_cat_id': category.id}
+            )
+        
+        # Удаляем категорию
+        logger.info(f"Удаляем категорию {category.id}")
+        db.session.delete(category)
+        db.session.commit()
+        logger.info("Категория успешно удалена и материалы перенесены")
+        
+        # Формируем flash сообщение
+        if materials_count > 0:
+            flash(f'Категорію "{category.name}" успішно видалено. {materials_count} матеріалів перенесено до категорії "Без категарії".', 'success')
+        else:
+            flash(f'Категорію "{category.name}" успішно видалено.', 'success')
+        
+        return jsonify({
+            'success': True,
+            'redirect': url_for('manage_categories')
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error deleting category: {str(e)}")
+        logger.error(f"Exception type: {type(e).__name__}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({
+            'error': f'Помилка при видаленні категорії: {str(e)}'
+        }), 500
+
+@app.route('/admin/brands')
+@login_required
+@admin_required
+def manage_brands():
+    from models import Brand
+    brands = Brand.query.all()
+    return render_template('admin/brands.html', brands=brands)
+
+@app.route('/admin/brands/<int:brand_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_brand(brand_id):
+    from models import Brand, Material
+    try:
+        brand = Brand.query.get_or_404(brand_id)
+        
+        # Проверяем, есть ли материалы у этого бренда
+        materials_count = Material.query.filter_by(brand_id=brand.id).count()
+        if materials_count > 0:
+            return jsonify({
+                'error': f'Неможливо видалити бренд. Він містить {materials_count} матеріалів.'
+            }), 400
+        
+        # Удаляем изображение бренда, если оно есть
+        if brand.image_path and brand.image_path != 'default.png':
+            image_path = os.path.join(app.static_folder, 'img', 'brands', brand.image_path)
+            if os.path.exists(image_path):
+                try:
+                    os.remove(image_path)
+                    logger.info(f"Removed brand image: {image_path}")
+                except Exception as e:
+                    logger.warning(f"Could not remove brand image: {e}")
+        
+        db.session.delete(brand)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Бренд успішно видалено'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error deleting brand: {str(e)}")
+        return jsonify({
+            'error': 'Помилка при видаленні бренду'
+        }), 500
+
+@app.route('/admin/brands/<int:brand_id>/statistics')
+@login_required
+@admin_required
+def brand_statistics(brand_id):
+    """Детальная статистика по бренду"""
+    from models import Brand
+    brand = Brand.query.get_or_404(brand_id)
+    user_stats = brand.get_user_statistics()
+    
+    return render_template('admin/brand_statistics.html', 
+                         brand=brand, 
+                         user_stats=user_stats)
+
+@app.route('/admin/categories/<int:category_id>/statistics')
+@login_required
+@admin_required
+def category_statistics(category_id):
+    """Детальная статистика по категории"""
+    from models import Category
+    category = Category.query.get_or_404(category_id)
+    user_stats = category.get_user_statistics()
+    
+    return render_template('admin/category_statistics.html', 
+                         category=category, 
+                         user_stats=user_stats)
+
+@app.route('/admin/materials')
+@login_required
+@admin_required
+def manage_materials():
+    """Управление материалами - просмотр и статистика"""
+    from models import Material
+    materials = Material.query.all()
+    return render_template('admin/materials.html', materials=materials)
+
+@app.route('/admin/materials/<int:material_id>/statistics')
+@login_required
+@admin_required
+def material_statistics(material_id):
+    """Детальная статистика по материалу"""
+    from models import Material
+    material = Material.query.get_or_404(material_id)
+    user_stats = material.get_user_statistics()
+    
+    return render_template('admin/material_statistics.html', 
+                         material=material, 
+                         user_stats=user_stats)
 
 @app.route('/company_structure')
 @login_required
@@ -2610,43 +2925,43 @@ def category(category_id):
                          pagination=materials_pagination,
                          brands=brands)
 
-@csrf.exempt  # Исключаем CSRF для загрузки изображений из CKEditor
+@csrf.exempt  # Виключаємо CSRF для завантаження зображень з CKEditor
 @app.route('/upload-image', methods=['POST'])
 def upload_image():
-    """Роут для загрузки изображений из CKEditor"""
+    """Роут для завантаження зображень з CKEditor"""
     try:
-        logger.info("Получен запрос на загрузку изображения")
+        logger.info("Отримано запит на завантаження зображення")
         
         if 'upload' not in request.files:
-            logger.error("Файл не найден в запросе")
+            logger.error("Файл не знайдено в запиті")
             return jsonify({"error": {"message": "No file part"}}), 400
 
         file = request.files['upload']
         if file.filename == '':
-            logger.error("Файл не выбран")
+            logger.error("Файл не обрано")
             return jsonify({"error": {"message": "No selected file"}}), 400
 
         if file:
-            # Генерируем безопасное имя файла
+            # Генеруємо безпечне ім'я файлу
             filename = secure_filename(file.filename)
             
-            # Добавляем временную метку для уникальности
+            # Додаємо часову мітку для унікальності
             timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S_')
             unique_filename = f"{timestamp}{filename}"
             
-            # Путь для сохранения
+            # Шлях для збереження
             upload_folder = os.path.join(app.static_folder, 'uploads')
             filepath = os.path.join(upload_folder, unique_filename)
             
-            # Сохраняем файл
+            # Зберігаємо файл
             file.save(filepath)
-            logger.info(f"Файл сохранен: {filepath}")
+            logger.info(f"Файл збережено: {filepath}")
             
-            # Генерируем URL для изображения
+            # Генеруємо URL для зображення
             file_url = url_for('static', filename=f'uploads/{unique_filename}', _external=True)
-            logger.info(f"URL изображения: {file_url}")
+            logger.info(f"URL зображення: {file_url}")
             
-            # Возвращаем ответ в формате, ожидаемом CKFinder
+            # Повертаємо відповідь у форматі, очікуваному CKFinder
             return jsonify({
                 'uploaded': True,
                 'url': file_url

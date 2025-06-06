@@ -14,7 +14,7 @@
     
     <div class="profile-content">
         <section id="user-info" class="profile-section">
-            <h2>Информация о пользователе</h2>
+            <h2>Інформація про користувача</h2>
             <div class="user-details">
                 <p><strong>Ім'я користувача:</strong> {{ user.username }}</p>
                 <p><strong>Email:</strong> {{ user.email }}</p>
@@ -31,7 +31,7 @@
                     <span class="stat-value">{{ total_tests }}</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Средній бал:</span>
+                    <span class="stat-label">Середній бал:</span>
                     <span class="stat-value">{{ avg_score }}%</span>
                 </div>
                 <div class="stat-item">
@@ -46,7 +46,7 @@
 
             {% if test_results %}
             <div class="test-history">
-                <h3>История тестов</h3>
+                <h3>Історія тестів</h3>
                 <table class="test-table">
                     <thead>
                         <tr>
@@ -83,13 +83,13 @@
 
         {% if current_user.role == 'admin' and all_users_stats %}
         <section id="all-users-statistics" class="profile-section">
-            <h2>Статистика всех пользователей</h2>
+            <h2>Статистика всіх користувачів</h2>
             <table class="users-table">
                 <thead>
                     <tr>
                         <th>Користувач</th>
                         <th>Всього тестів</th>
-                        <th>Средній бал</th>
+                        <th>Середній бал</th>
                         <th>Пройдено</th>
                         <th>Не пройдено</th>
                     </tr>
@@ -120,7 +120,7 @@
         <div class="profile-actions">
             <a href="{{ url_for('my_assignments') }}" class="btn btn-primary">
                 <i class="fas fa-tasks"></i>
-                Мои назначенные тесты
+                Мої призначені тести
             </a>
         </div>
     </div>

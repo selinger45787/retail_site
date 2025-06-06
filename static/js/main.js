@@ -23,7 +23,14 @@ function submitLoginForm() {
     const form = document.getElementById('login-form');
     const formData = new FormData(form);
     const errorDiv = document.getElementById('login-error');
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    
     errorDiv.textContent = '';
+    
+    // Показываем индикатор загрузки
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Вхід...';
     
     fetch('/login_modal', {
         method: 'POST',
@@ -36,14 +43,22 @@ function submitLoginForm() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            window.location.reload();
+            submitButton.innerHTML = '<i class="fas fa-check"></i> Успішно!';
+            submitButton.style.background = 'linear-gradient(145deg, #28a745, #20c997)';
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } else {
             errorDiv.textContent = data.message || 'Помилка входу';
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
         }
     })
     .catch(error => {
         console.error('Error:', error);
         errorDiv.textContent = 'Помилка з\'єднання з сервером. Спробуйте пізніше.';
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
     });
 }
 
@@ -223,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Инициализация TinyMCE для текстовых полей
+// Ініціалізація TinyMCE для текстових полів
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof tinymce !== 'undefined') {
         tinymce.init({

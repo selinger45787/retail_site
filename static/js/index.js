@@ -1,5 +1,8 @@
 // Index page JavaScript
 
+// Переменные для модального окна выбора действия
+let currentMaterialId = null;
+
 function showLoginModal() {
   const modal = document.getElementById('loginModal');
   modal.classList.add('show');
@@ -43,4 +46,51 @@ function submitLoginForm() {
     console.error('Ошибка при отправке формы:', error);
     errorElement.innerText = 'Помилка з\'єднання з сервером. Спробуйте пізніше.';
   });
-} 
+}
+
+// Функции для модального окна выбора действия для теста
+function showTestActionModal(materialId, materialTitle) {
+  currentMaterialId = materialId;
+  const modal = document.getElementById('testActionModal');
+  const titleElement = modal.querySelector('.modal-material-title');
+  
+  // Устанавливаем название материала
+  titleElement.textContent = `Матеріал: ${materialTitle}`;
+  
+  // Показываем модальное окно с плавной анимацией
+  modal.style.display = 'flex';
+  setTimeout(() => modal.classList.add('show'), 10);
+}
+
+function closeTestActionModal() {
+  const modal = document.getElementById('testActionModal');
+  modal.classList.remove('show');
+  setTimeout(() => {
+    modal.style.display = 'none';
+    currentMaterialId = null;
+  }, 400);
+}
+
+function viewMaterial() {
+  if (currentMaterialId) {
+    window.location.href = `/material/${currentMaterialId}`;
+  }
+}
+
+function startTest() {
+  if (currentMaterialId) {
+    window.location.href = `/material/${currentMaterialId}/test`;
+  }
+}
+
+// Закрытие модального окна при клике на backdrop
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('testActionModal');
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeTestActionModal();
+      }
+    });
+  }
+}); 

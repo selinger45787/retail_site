@@ -74,6 +74,29 @@
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    animation: fadeInBtn 0.6s ease-out;
+    animation-fill-mode: both;
+    opacity: 0;
+}
+
+.material-actions .material-btn:nth-child(1) { animation-delay: 0.3s; }
+.material-actions .material-btn:nth-child(2) { animation-delay: 0.4s; }
+.material-actions .material-btn:nth-child(3) { animation-delay: 0.5s; }
+.material-actions .material-btn:nth-child(4) { animation-delay: 0.6s; }
+
+.back-button-container .material-btn {
+    animation-delay: 0.2s;
+}
+
+@keyframes fadeInBtn {
+    from { 
+        opacity: 0; 
+        transform: translateY(15px) scale(0.9); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
 }
 
 .material-btn::before {
@@ -163,7 +186,21 @@
     height: auto;
     object-fit: contain;
     transition: all 0.3s ease;
-    opacity: 1;
+    opacity: 0;
+    animation: fadeInImage 1.0s ease-out;
+    animation-delay: 0.35s;
+    animation-fill-mode: both;
+}
+
+@keyframes fadeInImage {
+    from { 
+        opacity: 0; 
+        transform: scale(0.9) translateY(20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
 }
 
 .main-image:hover {
@@ -192,6 +229,27 @@
     overflow: hidden;
     cursor: pointer;
     transition: all 0.3s ease;
+    animation: fadeInItem 0.6s ease-out;
+    animation-fill-mode: both;
+    opacity: 0;
+}
+
+.thumbnail-item:nth-child(1) { animation-delay: 0.4s; }
+.thumbnail-item:nth-child(2) { animation-delay: 0.5s; }
+.thumbnail-item:nth-child(3) { animation-delay: 0.6s; }
+.thumbnail-item:nth-child(4) { animation-delay: 0.7s; }
+.thumbnail-item:nth-child(5) { animation-delay: 0.8s; }
+.thumbnail-item:nth-child(6) { animation-delay: 0.9s; }
+
+@keyframes fadeInItem {
+    from { 
+        opacity: 0; 
+        transform: translateY(20px) scale(0.8); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
 }
 
 .thumbnail-item:hover {
@@ -417,17 +475,40 @@
 
 /* Анимации */
 .fade-in {
-    animation: fadeIn 0.6s ease-in;
+    animation: fadeIn 0.8s ease-out;
+    animation-fill-mode: both;
+    opacity: 0;
+}
+
+/* Различные задержки для элементов */
+.material-header.fade-in {
+    animation-delay: 0.1s;
+}
+
+.back-button-container.fade-in {
+    animation-delay: 0.2s;
+}
+
+.gallery-section.fade-in {
+    animation-delay: 0.3s;
+}
+
+.content-section.fade-in {
+    animation-delay: 0.4s;
+}
+
+.additional-images-section.fade-in {
+    animation-delay: 0.5s;
 }
 
 @keyframes fadeIn {
     from { 
         opacity: 0; 
-        transform: translateY(30px); 
+        transform: translateY(40px) scale(0.95); 
     }
     to { 
         opacity: 1; 
-        transform: translateY(0); 
+        transform: translateY(0) scale(1); 
     }
 }
 

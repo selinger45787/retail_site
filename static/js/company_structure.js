@@ -1,13 +1,17 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация состояния отделов (все развернуты по умолчанию)
+    // Инициализация состояния отделов (все свернуты по умолчанию)
     const departments = document.querySelectorAll('.department-section');
     departments.forEach(dept => {
         const content = dept.querySelector('.department-content');
         const header = dept.querySelector('.department-header');
+        const icon = header.querySelector('.toggle-icon i');
         
-        // По умолчанию все отделы развернуты
-        content.classList.remove('collapsed');
-        header.classList.remove('collapsed');
+        // По умолчанию все отделы свернуты
+        content.classList.add('collapsed');
+        header.classList.add('collapsed');
+        if (icon) {
+            icon.className = 'fas fa-chevron-right';
+        }
     });
 
     // Добавляем интерактивность для узлов организационной структуры
@@ -50,7 +54,17 @@ document.addEventListener('DOMContentLoaded', function() {
 function toggleDepartment(deptCode) {
     const content = document.getElementById(`content-${deptCode}`);
     const header = document.querySelector(`#dept-${deptCode} .department-header`);
+    const departmentSection = document.getElementById(`dept-${deptCode}`);
+    const departmentCard = document.querySelector(`.org-node.department[onclick="toggleDepartment('${deptCode}')"]`);
     const icon = header.querySelector('.toggle-icon i');
+    
+    // Добавляем визуальную обратную связь для карточки отдела
+    if (departmentCard) {
+        departmentCard.style.transform = 'translateY(-5px) scale(0.98)';
+        setTimeout(() => {
+            departmentCard.style.transform = 'translateY(0) scale(1)';
+        }, 150);
+    }
     
     if (content.classList.contains('collapsed')) {
         // Разворачиваем
@@ -60,6 +74,22 @@ function toggleDepartment(deptCode) {
         
         // Убираем inline стили, чтобы работали CSS правила
         content.style.maxHeight = '';
+        
+        // Прокручиваем к развернутому отделу с небольшой задержкой для анимации
+        setTimeout(() => {
+            const headerHeight = 72; // Высота фиксированного хедера
+            const elementTop = departmentSection.getBoundingClientRect().top + window.pageYOffset;
+            const offsetPosition = elementTop - headerHeight - 20; // 20px дополнительного отступа
+            
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }, 300);
+        
+        // Показываем уведомление о развертывании
+        showNotification(`Відділ "${departmentSection.querySelector('h3 span').textContent.trim()}" розгорнуто`, 'success');
+        
     } else {
         // Сворачиваем
         content.classList.add('collapsed');
@@ -68,6 +98,9 @@ function toggleDepartment(deptCode) {
         
         // Убираем inline стили, чтобы работали CSS правила
         content.style.maxHeight = '';
+        
+        // Показываем уведомление о свертывании
+        showNotification(`Відділ "${departmentSection.querySelector('h3 span').textContent.trim()}" згорнуто`, 'info');
     }
 }
 

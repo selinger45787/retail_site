@@ -17,6 +17,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    {% if current_user.is_authenticated %}
     <header>
         <div class="header-content">
             <div class="header-logo-container">
@@ -28,18 +29,14 @@
                 </a>
             </div>
             <div class="auth-buttons">
-                {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('user_profile', user_id=None) }}" class="user-info">
-                        {% if current_user.first_name and current_user.last_name %}
-                            {{ current_user.first_name }} {{ current_user.last_name }}
-                        {% else %}
-                            {{ current_user.username }}
-                        {% endif %}
-                    </a>
-                    <a href="{{ url_for('logout') }}" class="logout-btn">Вийти</a>
-                {% else %}
-                    <button onclick="showLoginModal()" class="login-btn">Увійти</button>
-                {% endif %}
+                <a href="{{ url_for('user_profile', user_id=None) }}" class="user-info">
+                    {% if current_user.first_name and current_user.last_name %}
+                        {{ current_user.first_name }} {{ current_user.last_name }}
+                    {% else %}
+                        {{ current_user.username }}
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('logout') }}" class="logout-btn">Вийти</a>
             </div>
         </div>
     </header>
@@ -55,20 +52,32 @@
                     </div>
                     <div class="submenu">
                         <a href="{{ url_for('admin_dashboard') }}" class="submenu-item">
-                            <i class="fas fa-tachometer-alt submenu-icon"></i>
-                            <span class="submenu-text">Панель адміністратора</span>
+                            <i class="fas fa-chart-bar submenu-icon"></i>
+                            <span class="submenu-text">Статистика</span>
                         </a>
                         <a href="{{ url_for('add_user') }}" class="submenu-item">
                             <i class="fas fa-users-cog submenu-icon"></i>
                             <span class="submenu-text">Управління користувачами</span>
                         </a>
-                        <a href="{{ url_for('add_material') }}" class="submenu-item">
-                            <i class="fas fa-plus-circle submenu-icon"></i>
-                            <span class="submenu-text">Додати матеріал</span>
+                        <a href="{{ url_for('manage_categories') }}" class="submenu-item">
+                            <i class="fas fa-folder-open submenu-icon"></i>
+                            <span class="submenu-text">Управління категоріями</span>
+                        </a>
+                        <a href="{{ url_for('manage_brands') }}" class="submenu-item">
+                            <i class="fas fa-tags submenu-icon"></i>
+                            <span class="submenu-text">Управління брендами</span>
+                        </a>
+                        <a href="{{ url_for('manage_materials') }}" class="submenu-item">
+                            <i class="fas fa-file-alt submenu-icon"></i>
+                            <span class="submenu-text">Управління матеріалами</span>
                         </a>
                         <a href="{{ url_for('test_assignments') }}" class="submenu-item">
                             <i class="fas fa-tasks submenu-icon"></i>
                             <span class="submenu-text">Управління тестами</span>
+                        </a>
+                        <a href="{{ url_for('add_material') }}" class="submenu-item">
+                            <i class="fas fa-plus-circle submenu-icon"></i>
+                            <span class="submenu-text">Додати матеріал</span>
                         </a>
                     </div>
                 </div>
@@ -116,17 +125,13 @@
 
                 <div class="menu-item">
                     <div class="menu-title">
-                        <img src="{{ url_for('static', filename='img/sidebar_left/history-icon.svg') }}" alt="Історія" class="menu-icon">
-                        Історія Abrams
+                        <img src="{{ url_for('static', filename='img/sidebar_left/history-icon.svg') }}" alt="Місія" class="menu-icon">
+                        Місія та цінності
                     </div>
                     <div class="submenu">
-                        <a href="#" class="submenu-item">
+                        <a href="{{ url_for('mission') }}" class="submenu-item">
                             <img src="{{ url_for('static', filename='img/sidebar_left/history-icon.svg') }}" alt="icon" class="submenu-icon">
                             <span class="submenu-text">Про компанію</span>
-                        </a>
-                        <a href="#" class="submenu-item">
-                            <img src="{{ url_for('static', filename='img/sidebar_left/history-icon.svg') }}" alt="icon" class="submenu-icon">
-                            <span class="submenu-text">Місія та цінності</span>
                         </a>
                     </div>
                 </div>
@@ -167,29 +172,51 @@
             </div>
         </main>
     </div>
+    {% else %}
+    <!-- Показываем только модальное окно входа для неавторизованных пользователей -->
+    <div class="login-only-container">
+        <div class="login-background">
+            <div class="login-overlay">
+                <div class="company-logo">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Логотип компанії">
+                    <h1>Навчальна платформа Abrams</h1>
+                    <p>Для доступу до платформи необхідно увійти в систему</p>
+                    <button onclick="showLoginModal()" class="login-main-button">
+                        <i class="fas fa-sign-in-alt"></i> Увійти
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <div id="loginModal" class="modal">
         <div class="modal-box">
+            {% if current_user.is_authenticated %}
             <button class="close" onclick="closeLoginModal()">&times;</button>
-            <h2>Вхід</h2>
+            {% endif %}
+            <h2 style="text-align: center;">Вхід</h2>
             <form id="login-form" onsubmit="event.preventDefault(); submitLoginForm();">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
-                    <input type="text" name="username" placeholder="Логін" required>
+                    <input type="text" name="username" placeholder="Логін" required 
+                           oninvalid="this.setCustomValidity('Будь ласка, введіть логін')" 
+                           oninput="this.setCustomValidity('')">
                 </div>
                 <div class="form-group">
-                    <input type="password" name="password" placeholder="Пароль" required>
+                    <input type="password" name="password" placeholder="Пароль" required 
+                           oninvalid="this.setCustomValidity('Будь ласка, введіть пароль')" 
+                           oninput="this.setCustomValidity('')">
                 </div>
                 <div id="login-error" class="error-text"></div>
-                <button type="submit" class="btn btn-primary">Увійти</button>
-                <div class="text-center mt-3">
-                    <a href="{{ url_for('register') }}">Зареєструватися</a>
+                <div style="text-align: center;">
+                    <button type="submit" class="btn btn-primary">Увійти</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Модальное окно для добавления бренда -->
+    <!-- Модальне вікно для додавання бренду -->
     <div id="addBrandModal" class="modal">
         <div class="modal-box">
             <button class="close" onclick="closeModal('addBrandModal')">&times;</button>
@@ -198,7 +225,9 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <label for="brandName">Назва бренду:</label>
-                    <input type="text" id="brandName" name="name" required>
+                    <input type="text" id="brandName" name="name" required 
+                           oninvalid="this.setCustomValidity('Будь ласка, введіть назву бренду')" 
+                           oninput="this.setCustomValidity('')">
                 </div>
                 <div class="form-group">
                     <label for="brandImage">Зображення бренду:</label>
@@ -212,7 +241,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно подтверждения удаления материала -->
+    <!-- Модальне вікно підтвердження видалення матеріалу -->
     <div id="deleteMaterialModal" class="modal">
         <div class="modal-box">
             <h3>Підтвердження видалення</h3>

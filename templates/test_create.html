@@ -42,31 +42,41 @@
                         <div class="mb-3">
                             <label class="form-label">Питання</label>
                             <input type="text" class="form-control" name="questions[]" required
-                                   value="{{ questions_data[i] }}">
+                                   value="{{ questions_data[i] }}"
+                                   oninvalid="this.setCustomValidity('Будь ласка, введіть текст питання')" 
+                                   oninput="this.setCustomValidity('')">
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Правильна відповідь</label>
                             <input type="text" class="form-control" name="correct_answers[]" required
-                                   value="{{ correct_answers[i] }}">
+                                   value="{{ correct_answers[i] }}"
+                                   oninvalid="this.setCustomValidity('Будь ласка, введіть правильну відповідь')" 
+                                   oninput="this.setCustomValidity('')">
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Неправильна відповідь 1</label>
                             <input type="text" class="form-control" name="wrong_answers_1[]" required
-                                   value="{{ wrong_answers_1[i] }}">
+                                   value="{{ wrong_answers_1[i] }}"
+                                   oninvalid="this.setCustomValidity('Будь ласка, введіть неправильну відповідь')" 
+                                   oninput="this.setCustomValidity('')">
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Неправильна відповідь 2</label>
                             <input type="text" class="form-control" name="wrong_answers_2[]" required
-                                   value="{{ wrong_answers_2[i] }}">
+                                   value="{{ wrong_answers_2[i] }}"
+                                   oninvalid="this.setCustomValidity('Будь ласка, введіть неправильну відповідь')" 
+                                   oninput="this.setCustomValidity('')">
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Неправильна відповідь 3</label>
                             <input type="text" class="form-control" name="wrong_answers_3[]" required
-                                   value="{{ wrong_answers_3[i] }}">
+                                   value="{{ wrong_answers_3[i] }}"
+                                   oninvalid="this.setCustomValidity('Будь ласка, введіть неправильну відповідь')" 
+                                   oninput="this.setCustomValidity('')">
                         </div>
                     </div>
                 </div>
@@ -85,31 +95,41 @@
                         <div class="mb-3">
                             <label class="form-label">Питання</label>
                             <input type="text" class="form-control" name="questions[]" required
-                                   value="{{ question.text }}">
+                                   value="{{ question.text }}"
+                                   oninvalid="this.setCustomValidity('Будь ласка, введіть текст питання')" 
+                                   oninput="this.setCustomValidity('')">
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Правильна відповідь</label>
                             <input type="text" class="form-control" name="correct_answers[]" required
-                                   value="{{ question.correct_answer }}">
+                                   value="{{ question.correct_answer }}"
+                                   oninvalid="this.setCustomValidity('Будь ласка, введіть правильну відповідь')" 
+                                   oninput="this.setCustomValidity('')">
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Неправильна відповідь 1</label>
                             <input type="text" class="form-control" name="wrong_answers_1[]" required
-                                   value="{{ question.answers[1].text if question.answers|length > 1 else '' }}">
+                                   value="{{ question.answers[1].text if question.answers|length > 1 else '' }}"
+                                   oninvalid="this.setCustomValidity('Будь ласка, введіть неправильну відповідь')" 
+                                   oninput="this.setCustomValidity('')">
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Неправильна відповідь 2</label>
                             <input type="text" class="form-control" name="wrong_answers_2[]" required
-                                   value="{{ question.answers[2].text if question.answers|length > 2 else '' }}">
+                                   value="{{ question.answers[2].text if question.answers|length > 2 else '' }}"
+                                   oninvalid="this.setCustomValidity('Будь ласка, введіть неправильну відповідь')" 
+                                   oninput="this.setCustomValidity('')">
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Неправильна відповідь 3</label>
                             <input type="text" class="form-control" name="wrong_answers_3[]" required
-                                   value="{{ question.answers[3].text if question.answers|length > 3 else '' }}">
+                                   value="{{ question.answers[3].text if question.answers|length > 3 else '' }}"
+                                   oninvalid="this.setCustomValidity('Будь ласка, введіть неправильну відповідь')" 
+                                   oninput="this.setCustomValidity('')">
                         </div>
                     </div>
                 </div>

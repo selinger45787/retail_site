@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Вход{% endblock %}
+{% block title %}Вхід{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style/login.css') }}">
@@ -42,9 +42,6 @@
                             {{ form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
-                </div>
-                <div class="card-footer text-center">
-                    <p class="mb-0">Немає акаунту? <a href="{{ url_for('register') }}">Зареєструватися</a></p>
                 </div>
             </div>
         </div>

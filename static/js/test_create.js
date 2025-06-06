@@ -12,7 +12,7 @@ function showFlashMessage(message, type = 'danger') {
     `;
     flashContainer.appendChild(alertDiv);
     
-    // Автоматически скрываем сообщение через 5 секунд
+    // Автоматично сховаємо повідомлення через 5 секунд
     setTimeout(() => {
         alertDiv.remove();
     }, 5000);
@@ -23,20 +23,20 @@ function checkDuplicateQuestions() {
     const questionValues = Array.from(questions).map(q => q.value.trim().toLowerCase());
     const duplicates = new Set();
     
-    // Находим дубликаты
+    // Знаходимо дублікати
     questionValues.forEach((value, index) => {
         if (value && questionValues.indexOf(value) !== questionValues.lastIndexOf(value)) {
             duplicates.add(value);
         }
     });
     
-    // Сбрасываем предыдущие стили
+    // Скидаємо попередні стилі
     questions.forEach(q => {
         q.classList.remove('is-invalid');
         q.classList.remove('duplicate-question');
     });
     
-    // Подсвечиваем дубликаты
+    // Підсвічуємо дублікати
     if (duplicates.size > 0) {
         questions.forEach(q => {
             if (duplicates.has(q.value.trim().toLowerCase())) {
@@ -65,19 +65,19 @@ function checkDuplicateAnswers(questionDiv) {
 function validateForm() {
     const questions = document.querySelectorAll('.card');
     
-    // Проверка минимального количества вопросов
+    // Проверка мінімальної кількості питань
     if (questions.length < 5) {
         showFlashMessage('Тест повинен містити мінімум 5 питань');
         return false;
     }
     
-    // Проверка дубликатов вопросов
+    // Проверка дублікатів питань
     if (!checkDuplicateQuestions()) {
         showFlashMessage('Знайдено дублікати питань. Будь ласка, перевірте червоні поля.');
         return false;
     }
     
-    // Проверка уникальности ответов для каждого вопроса
+    // Проверка унікальності відповідей для кожного питання
     for (const question of questions) {
         if (!checkDuplicateAnswers(question)) {
             showFlashMessage('Всі відповіді на одне питання повинні бути унікальними');
@@ -105,27 +105,37 @@ function addQuestion() {
             
             <div class="mb-3">
                 <label class="form-label">Питання</label>
-                <input type="text" class="form-control" name="questions[]" required>
+                <input type="text" class="form-control" name="questions[]" required
+                       oninvalid="this.setCustomValidity('Будь ласка, введіть текст питання')" 
+                       oninput="this.setCustomValidity('')">
             </div>
             
             <div class="mb-3">
                 <label class="form-label">Правильна відповідь</label>
-                <input type="text" class="form-control" name="correct_answers[]" required>
+                <input type="text" class="form-control" name="correct_answers[]" required
+                       oninvalid="this.setCustomValidity('Будь ласка, введіть правильну відповідь')" 
+                       oninput="this.setCustomValidity('')">
             </div>
             
             <div class="mb-3">
                 <label class="form-label">Неправильна відповідь 1</label>
-                <input type="text" class="form-control" name="wrong_answers_1[]" required>
+                <input type="text" class="form-control" name="wrong_answers_1[]" required
+                       oninvalid="this.setCustomValidity('Будь ласка, введіть неправильну відповідь')" 
+                       oninput="this.setCustomValidity('')">
             </div>
             
             <div class="mb-3">
                 <label class="form-label">Неправильна відповідь 2</label>
-                <input type="text" class="form-control" name="wrong_answers_2[]" required>
+                <input type="text" class="form-control" name="wrong_answers_2[]" required
+                       oninvalid="this.setCustomValidity('Будь ласка, введіть неправильну відповідь')" 
+                       oninput="this.setCustomValidity('')">
             </div>
             
             <div class="mb-3">
                 <label class="form-label">Неправильна відповідь 3</label>
-                <input type="text" class="form-control" name="wrong_answers_3[]" required>
+                <input type="text" class="form-control" name="wrong_answers_3[]" required
+                       oninvalid="this.setCustomValidity('Будь ласка, введіть неправильну відповідь')" 
+                       oninput="this.setCustomValidity('')">
             </div>
         </div>
     `;
@@ -146,14 +156,14 @@ function updateQuestionNumbers() {
     });
 }
 
-// Добавляем первый вопрос при загрузке страницы, если нет сохраненных данных
+// Добавляємо перший питання при завантаженні сторінки, якщо немає збережених даних
 document.addEventListener('DOMContentLoaded', function() {
-    // Добавляем первый вопрос при загрузке страницы, если нет сохраненных данных
+    // Добавляємо перший питання при завантаженні сторінки, якщо немає збережених даних
     if (document.querySelectorAll('.card').length === 0) {
         addQuestion();
     }
 
-    // Добавляем контейнер для flash-сообщений, если его нет
+    // Добавляємо контейнер для flash-повідомлень, якщо його немає
     if (!document.getElementById('flash-messages')) {
         const flashContainer = document.createElement('div');
         flashContainer.id = 'flash-messages';
@@ -161,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelector('form').insertAdjacentElement('beforebegin', flashContainer);
     }
     
-    // Добавляем обработчик отправки формы
+    // Добавляємо обробник відправки форми
     const form = document.getElementById('testForm');
     const submitButton = form.querySelector('button[type="submit"]');
     let isSubmitting = false;
@@ -174,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (validateForm()) {
-            // Если форма валидна, отправляем её
+            // Якщо форма валідна, відправляємо її
             isSubmitting = true;
             this.submit();
         }

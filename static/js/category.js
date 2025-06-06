@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const brandFilter = document.getElementById('brandFilter');
     const sortSelect = document.getElementById('sortBy');
     const resetBtn = document.getElementById('resetFilters');
-    const viewBtns = document.querySelectorAll('.view-btn');
+
     const materialsContainer = document.getElementById('materialsContainer');
     const materialsCount = document.getElementById('materialsCount');
     const noResults = document.getElementById('noResults');
@@ -240,10 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Reset button listener added');
         }
         
-        // Переключение видов
-        viewBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => switchView(e.target.closest('.view-btn').dataset.view));
-        });
+
         
         // Обработчики для кнопок действий
         setupActionButtons();
@@ -337,12 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    function switchView(view) {
-        viewBtns.forEach(btn => btn.classList.remove('active'));
-        document.querySelector(`[data-view="${view}"]`).classList.add('active');
-        
-        materialsContainer.className = view === 'list' ? 'materials-list' : 'materials-grid';
-    }
+
     
     function setupActionButtons() {
         // Кнопки редактирования

@@ -93,6 +93,101 @@ class Brand(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     materials = db.relationship('Material', backref='brand', lazy=True)
 
+    def get_total_views(self):
+        """Получает общее количество просмотров всех материалов бренда"""
+        from sqlalchemy import func
+        total_views = db.session.query(func.count(MaterialView.id))\
+            .join(Material, MaterialView.material_id == Material.id)\
+            .filter(Material.brand_id == self.id).scalar()
+        return total_views or 0
+    
+    def get_unique_visitors(self):
+        """Получает количество уникальных посетителей всех материалов бренда"""
+        from sqlalchemy import func
+        unique_visitors = db.session.query(func.count(func.distinct(MaterialView.user_id)))\
+            .join(Material, MaterialView.material_id == Material.id)\
+            .filter(Material.brand_id == self.id).scalar()
+        return unique_visitors or 0
+    
+    def get_total_time_spent(self):
+        """Получает общее время, проведенное на материалах бренда (в секундах)"""
+        from sqlalchemy import func
+        total_time = db.session.query(func.sum(MaterialView.time_spent))\
+            .join(Material, MaterialView.material_id == Material.id)\
+            .filter(Material.brand_id == self.id).scalar()
+        return total_time or 0
+    
+    def get_formatted_time_spent(self):
+        """Возвращает отформатированное время просмотра"""
+        total_seconds = self.get_total_time_spent()
+        
+        if total_seconds <= 0:
+            return "0 хв"
+        
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        
+        if hours > 0:
+            return f"{hours}год {minutes}хв"
+        elif minutes > 0:
+            return f"{minutes}хв"
+        else:
+            return f"{total_seconds}с"
+    
+    def get_user_statistics(self):
+        """Получает детальную статистику по пользователям для всех материалов бренда"""
+        from sqlalchemy import func
+        
+        # Получаем статистику по пользователям
+        user_stats = db.session.query(
+            User.id,
+            User.username,
+            User.department,
+            User.position,
+            func.count(MaterialView.id).label('views_count'),
+            func.sum(MaterialView.time_spent).label('total_time'),
+            func.count(func.distinct(MaterialView.material_id)).label('materials_viewed')
+        ).join(
+            MaterialView, MaterialView.user_id == User.id
+        ).join(
+            Material, MaterialView.material_id == Material.id
+        ).filter(
+            Material.brand_id == self.id
+        ).group_by(
+            User.id, User.username, User.department, User.position
+        ).order_by(
+            func.sum(MaterialView.time_spent).desc()
+        ).all()
+        
+        # Форматируем результаты
+        formatted_stats = []
+        for stat in user_stats:
+            total_seconds = stat.total_time or 0
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            
+            if hours > 0:
+                time_formatted = f"{hours}год {minutes}хв"
+            elif minutes > 0:
+                time_formatted = f"{minutes}хв"
+            elif total_seconds > 0:
+                time_formatted = f"{total_seconds}с"
+            else:
+                time_formatted = "0с"
+            
+            formatted_stats.append({
+                'user_id': stat.id,
+                'username': stat.username,
+                'department': User.DEPARTMENTS.get(stat.department, stat.department),
+                'position': User.POSITIONS.get(stat.position, stat.position),
+                'views_count': stat.views_count,
+                'total_time': total_seconds,
+                'time_formatted': time_formatted,
+                'materials_viewed': stat.materials_viewed
+            })
+        
+        return formatted_stats
+
     def __repr__(self):
         return f'<Brand {self.name}>'
 
@@ -135,6 +230,94 @@ class Material(db.Model):
         
         return result
     
+    def get_total_views(self):
+        """Возвращает общее количество просмотров материала"""
+        from sqlalchemy import func
+        return db.session.query(func.count(MaterialView.id)).filter(
+            MaterialView.material_id == self.id
+        ).scalar() or 0
+    
+    def get_unique_visitors(self):
+        """Возвращает количество уникальных посетителей материала"""
+        from sqlalchemy import func
+        return db.session.query(func.count(func.distinct(MaterialView.user_id))).filter(
+            MaterialView.material_id == self.id
+        ).scalar() or 0
+    
+    def get_total_time_spent(self):
+        """Возвращает общее время просмотра материала в секундах"""
+        from sqlalchemy import func
+        return db.session.query(func.sum(MaterialView.time_spent)).filter(
+            MaterialView.material_id == self.id
+        ).scalar() or 0
+    
+    def get_formatted_time_spent(self):
+        """Возвращает отформатированное время просмотра"""
+        total_seconds = self.get_total_time_spent()
+        
+        if total_seconds <= 0:
+            return "0 хв"
+        
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        
+        if hours > 0:
+            return f"{hours}год {minutes}хв"
+        elif minutes > 0:
+            return f"{minutes}хв"
+        else:
+            return f"{total_seconds}с"
+    
+    def get_user_statistics(self):
+        """Получает детальную статистику по пользователям для материала"""
+        from sqlalchemy import func
+        
+        # Получаем статистику по пользователям
+        user_stats = db.session.query(
+            User.id,
+            User.username,
+            User.department,
+            User.position,
+            func.count(MaterialView.id).label('views_count'),
+            func.sum(MaterialView.time_spent).label('total_time')
+        ).join(
+            MaterialView, MaterialView.user_id == User.id
+        ).filter(
+            MaterialView.material_id == self.id
+        ).group_by(
+            User.id, User.username, User.department, User.position
+        ).order_by(
+            func.sum(MaterialView.time_spent).desc()
+        ).all()
+        
+        # Форматируем результаты
+        formatted_stats = []
+        for stat in user_stats:
+            total_seconds = stat.total_time or 0
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            
+            if hours > 0:
+                time_formatted = f"{hours}год {minutes}хв"
+            elif minutes > 0:
+                time_formatted = f"{minutes}хв"
+            elif total_seconds > 0:
+                time_formatted = f"{total_seconds}с"
+            else:
+                time_formatted = "0с"
+            
+            formatted_stats.append({
+                'user_id': stat.id,
+                'username': stat.username,
+                'department': User.DEPARTMENTS.get(stat.department, stat.department),
+                'position': User.POSITIONS.get(stat.position, stat.position),
+                'views_count': stat.views_count,
+                'total_time': total_seconds,
+                'time_formatted': time_formatted
+            })
+        
+        return formatted_stats
+
     def __repr__(self):
         return f'<Material {self.title}>'
 
@@ -144,6 +327,101 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     materials = db.relationship('Material', backref='category', lazy=True)
+
+    def get_total_views(self):
+        """Получает общее количество просмотров всех материалов категории"""
+        from sqlalchemy import func
+        total_views = db.session.query(func.count(MaterialView.id))\
+            .join(Material, MaterialView.material_id == Material.id)\
+            .filter(Material.category_id == self.id).scalar()
+        return total_views or 0
+    
+    def get_unique_visitors(self):
+        """Получает количество уникальных посетителей всех материалов категории"""
+        from sqlalchemy import func
+        unique_visitors = db.session.query(func.count(func.distinct(MaterialView.user_id)))\
+            .join(Material, MaterialView.material_id == Material.id)\
+            .filter(Material.category_id == self.id).scalar()
+        return unique_visitors or 0
+    
+    def get_total_time_spent(self):
+        """Получает общее время, проведенное на материалах категории (в секундах)"""
+        from sqlalchemy import func
+        total_time = db.session.query(func.sum(MaterialView.time_spent))\
+            .join(Material, MaterialView.material_id == Material.id)\
+            .filter(Material.category_id == self.id).scalar()
+        return total_time or 0
+    
+    def get_formatted_time_spent(self):
+        """Возвращает отформатированное время просмотра"""
+        total_seconds = self.get_total_time_spent()
+        
+        if total_seconds <= 0:
+            return "0 хв"
+        
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        
+        if hours > 0:
+            return f"{hours}год {minutes}хв"
+        elif minutes > 0:
+            return f"{minutes}хв"
+        else:
+            return f"{total_seconds}с"
+    
+    def get_user_statistics(self):
+        """Получает детальную статистику по пользователям для всех материалов категории"""
+        from sqlalchemy import func
+        
+        # Получаем статистику по пользователям
+        user_stats = db.session.query(
+            User.id,
+            User.username,
+            User.department,
+            User.position,
+            func.count(MaterialView.id).label('views_count'),
+            func.sum(MaterialView.time_spent).label('total_time'),
+            func.count(func.distinct(MaterialView.material_id)).label('materials_viewed')
+        ).join(
+            MaterialView, MaterialView.user_id == User.id
+        ).join(
+            Material, MaterialView.material_id == Material.id
+        ).filter(
+            Material.category_id == self.id
+        ).group_by(
+            User.id, User.username, User.department, User.position
+        ).order_by(
+            func.sum(MaterialView.time_spent).desc()
+        ).all()
+        
+        # Форматируем результаты
+        formatted_stats = []
+        for stat in user_stats:
+            total_seconds = stat.total_time or 0
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            
+            if hours > 0:
+                time_formatted = f"{hours}год {minutes}хв"
+            elif minutes > 0:
+                time_formatted = f"{minutes}хв"
+            elif total_seconds > 0:
+                time_formatted = f"{total_seconds}с"
+            else:
+                time_formatted = "0с"
+            
+            formatted_stats.append({
+                'user_id': stat.id,
+                'username': stat.username,
+                'department': User.DEPARTMENTS.get(stat.department, stat.department),
+                'position': User.POSITIONS.get(stat.position, stat.position),
+                'views_count': stat.views_count,
+                'total_time': total_seconds,
+                'time_formatted': time_formatted,
+                'materials_viewed': stat.materials_viewed
+            })
+        
+        return formatted_stats
 
     def __repr__(self):
         return f'<Category {self.name}>'
@@ -317,3 +595,21 @@ class Order(db.Model):
     
     def __repr__(self):
         return f'<Order {self.number}: {self.title}>'
+
+class MaterialView(db.Model):
+    """Модель для отслеживания просмотров материалов"""
+    __tablename__ = 'material_views'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    material_id = db.Column(db.Integer, db.ForeignKey('materials.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    viewed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    time_spent = db.Column(db.Integer, default=0)  # Время просмотра в секундах
+    page_type = db.Column(db.String(50), default='material')  # 'material', 'category', 'brand'
+    
+    # Связи
+    material = db.relationship('Material', backref=db.backref('views', lazy=True))
+    user = db.relationship('User', backref=db.backref('material_views', lazy=True))
+    
+    def __repr__(self):
+        return f'<MaterialView {self.user_id} -> {self.material_id}>'
