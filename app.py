@@ -2199,7 +2199,8 @@ def my_assignments():
 def before_request():
     try:
         # Проверяем состояние сессии
-        db.session.execute('SELECT 1')
+        from sqlalchemy import text
+        db.session.execute(text('SELECT 1'))
     except Exception as e:
         db.session.rollback()
         logger.error(f"Database session error: {str(e)}")
