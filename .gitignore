@@ -44,6 +44,10 @@ instance/
 # Environment variables
 .env
 .env.*
+.flaskenv
+
+# Sensitive files
+database.py
 
 # OS generated files
 .DS_Store

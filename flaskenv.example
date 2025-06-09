@@ -1,0 +1,20 @@
+# Flask Environment Configuration
+# Copy this file to .flaskenv and fill in your actual values
+
+FLASK_APP=app.py
+FLASK_ENV=development
+FLASK_DEBUG=True
+SECRET_KEY=your-secret-key-here
+DATABASE_URL=postgresql://username:password@localhost:5432/database_name
+WERKZEUG_RELOADER_TYPE=watchdog
+FLASK_RUN_EXTRA_FILES=static/css/style/*.css,templates/*.html
+FLASK_RUN_RELOAD=True
+FLASK_RUN_DEBUG=True
+
+# Production Environment Variables (for Heroku or other deployments)
+# SECRET_KEY=your-production-secret-key
+# DATABASE_URL=postgresql://prod_user:prod_password@host:port/prod_database
+# WTF_CSRF_SECRET_KEY=your-csrf-secret-key
+# CLOUDINARY_CLOUD_NAME=your-cloudinary-name
+# CLOUDINARY_API_KEY=your-api-key
+# CLOUDINARY_API_SECRET=your-api-secret 
