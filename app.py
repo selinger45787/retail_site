@@ -17,6 +17,7 @@ import decimal
 from forms import AddUserForm, LoginForm, TestAssignmentForm, EditTestAssignmentForm, EditUserForm
 from functools import wraps
 import re
+from security_utils import validate_image_file, generate_secure_filename
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -306,7 +307,7 @@ def add_material(brand_id):
             # Сохраняем главное изображение
             main_image_path = None
             if main_image and main_image.filename:
-                filename = secure_filename(main_image.filename)
+                filename = generate_secure_filename(main_image.filename)
                 image_path = os.path.join(app.static_folder, 'img', 'materials', filename)
                 main_image.save(image_path)
                 main_image_path = filename
@@ -337,7 +338,7 @@ def add_material(brand_id):
             # Сохраняем дополнительные изображения
             for image in additional_images:
                 if image and image.filename:
-                    filename = secure_filename(image.filename)
+                    filename = generate_secure_filename(image.filename)
                     image_path = os.path.join(app.static_folder, 'img', 'materials', filename)
                     image.save(image_path)
                     
@@ -489,7 +490,7 @@ def edit_material(material_id):
             if 'image' in request.files:
                 file = request.files['image']
                 if file and file.filename:
-                    filename = secure_filename(file.filename)
+                    filename = generate_secure_filename(file.filename)
                     file_path = os.path.join(app.static_folder, 'img', 'materials', filename)
                     file.save(file_path)
                     material.image_path = filename
@@ -499,7 +500,7 @@ def edit_material(material_id):
                 files = request.files.getlist('additional_images')
                 for file in files:
                     if file and file.filename:
-                        filename = secure_filename(file.filename)
+                        filename = generate_secure_filename(file.filename)
                         file_path = os.path.join(app.static_folder, 'img', 'materials', filename)
                         file.save(file_path)
                         
@@ -2001,7 +2002,7 @@ def test_assignments():
     # Словарь перевода отделов
     department_names = {
         'founders': 'Засновники компанії',
-        'general_director': 'Генеральний директор',
+        'general_director': 'Директор',
         'accounting': 'Відділ Бухгалтерії',
         'marketing': 'Відділ Маркетингу',
         'online_sales': 'Відділ Онлайн продажу',
@@ -2016,7 +2017,7 @@ def test_assignments():
     # Словарь перевода должностей
     position_names = {
         'founder': 'Засновник',
-        'general_director': 'Генеральний директор',
+        'general_director': 'Директор',
         'accountant': 'Бухгалтер',
         'chief_accountant': 'Головний бухгалтер',
         'department_head': 'Начальник відділу',
@@ -2215,6 +2216,36 @@ def after_request(response):
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error in after_request: {str(e)}")
+    
+    # Добавляем заголовки безопасности
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # Только для HTTPS в продакшене
+    if not app.debug:
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    # CSP заголовок для дополнительной защиты от XSS  
+    csp = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+        "img-src 'self' data: https: blob:; "
+        "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
+        "connect-src 'self'; "
+        "media-src 'self'; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self';"
+    )
+    # Временно отключаем CSP для отладки стилей
+    # if app.debug:
+    #     response.headers['Content-Security-Policy-Report-Only'] = csp
+    # else:
+    #     response.headers['Content-Security-Policy'] = csp
+    
     return response
 
 @app.teardown_appcontext
@@ -3132,12 +3163,22 @@ def category(category_id):
                          pagination=materials_pagination,
                          brands=brands)
 
-@csrf.exempt  # Виключаємо CSRF для завантаження зображень з CKEditor
 @app.route('/upload-image', methods=['POST'])
+@login_required
 def upload_image():
     """Роут для завантаження зображень з CKEditor"""
     try:
         logger.info("Отримано запит на завантаження зображення")
+        
+        # Проверяем CSRF токен вручную
+        try:
+            validate_csrf(request.form.get('csrf_token', ''))
+        except:
+            # Если CSRF токен в форме не найден, пробуем в заголовках
+            csrf_token = request.headers.get('X-CSRFToken') or request.headers.get('X-Requested-With')
+            if not csrf_token:
+                logger.error("CSRF токен не знайдено")
+                return jsonify({"error": {"message": "CSRF token missing"}}), 403
         
         if 'upload' not in request.files:
             logger.error("Файл не знайдено в запиті")
@@ -3149,12 +3190,14 @@ def upload_image():
             return jsonify({"error": {"message": "No selected file"}}), 400
 
         if file:
-            # Генеруємо безпечне ім'я файлу
-            filename = secure_filename(file.filename)
+            # Используем нашу комплексную валидацию файла
+            is_valid, error_message = validate_image_file(file)
+            if not is_valid:
+                logger.error(f"Файл не прошел валидацию: {error_message}")
+                return jsonify({"error": {"message": error_message}}), 400
             
-            # Додаємо часову мітку для унікальності
-            timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S_')
-            unique_filename = f"{timestamp}{filename}"
+            # Генерируем безопасное имя файла
+            unique_filename = generate_secure_filename(file.filename)
             
             # Шлях для збереження
             upload_folder = os.path.join(app.static_folder, 'uploads')

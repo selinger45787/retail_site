@@ -16,6 +16,22 @@ import psycopg2
 import decimal
 from forms import AddUserForm, LoginForm, TestAssignmentForm, EditTestAssignmentForm, EditUserForm
 from functools import wraps
+import uuid
+
+def generate_unique_filename(original_filename):
+    """Генерирует уникальное имя файла с сохранением расширения"""
+    if not original_filename:
+        return None
+    
+    # Получаем расширение файла
+    _, ext = os.path.splitext(original_filename)
+    
+    # Генерируем уникальное имя: timestamp + uuid + оригинальное_имя + расширение
+    timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+    unique_id = str(uuid.uuid4())[:8]  # Первые 8 символов UUID
+    secure_name = secure_filename(os.path.splitext(original_filename)[0])  # Имя без расширения
+    
+    return f"{timestamp}_{unique_id}_{secure_name}{ext}"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -257,7 +273,7 @@ def add_material(brand_id):
             # Сохраняем главное изображение
             main_image_path = None
             if main_image and main_image.filename:
-                filename = secure_filename(main_image.filename)
+                filename = generate_unique_filename(main_image.filename)
                 image_path = os.path.join(app.static_folder, 'img', 'materials', filename)
                 main_image.save(image_path)
                 main_image_path = filename
@@ -288,7 +304,7 @@ def add_material(brand_id):
             # Сохраняем дополнительные изображения
             for image in additional_images:
                 if image and image.filename:
-                    filename = secure_filename(image.filename)
+                    filename = generate_unique_filename(image.filename)
                     image_path = os.path.join(app.static_folder, 'img', 'materials', filename)
                     image.save(image_path)
                     
@@ -359,7 +375,7 @@ def edit_material(material_id):
             if 'image' in request.files:
                 file = request.files['image']
                 if file and file.filename:
-                    filename = secure_filename(file.filename)
+                    filename = generate_unique_filename(file.filename)
                     file_path = os.path.join(app.static_folder, 'img', 'materials', filename)
                     file.save(file_path)
                     material.image_path = filename
@@ -369,7 +385,7 @@ def edit_material(material_id):
                 files = request.files.getlist('additional_images')
                 for file in files:
                     if file and file.filename:
-                        filename = secure_filename(file.filename)
+                        filename = generate_unique_filename(file.filename)
                         file_path = os.path.join(app.static_folder, 'img', 'materials', filename)
                         file.save(file_path)
                         
@@ -2397,7 +2413,7 @@ def add_material_to_category(category_id):
             # Сохраняем главное изображение
             main_image_path = None
             if main_image and main_image.filename:
-                filename = secure_filename(main_image.filename)
+                filename = generate_unique_filename(main_image.filename)
                 image_path = os.path.join(app.static_folder, 'img', 'materials', filename)
                 main_image.save(image_path)
                 main_image_path = filename
@@ -2417,7 +2433,7 @@ def add_material_to_category(category_id):
             # Сохраняем дополнительные изображения
             for image in additional_images:
                 if image and image.filename:
-                    filename = secure_filename(image.filename)
+                    filename = generate_unique_filename(image.filename)
                     image_path = os.path.join(app.static_folder, 'img', 'materials', filename)
                     image.save(image_path)
                     
