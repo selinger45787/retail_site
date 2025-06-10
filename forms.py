@@ -21,7 +21,7 @@ class AddUserForm(FlaskForm):
     department = SelectField('Відділ',
                            choices=[
                                ('founders', 'Засновники компанії'),
-                               ('general_director', 'Генеральний директор'),
+                               ('general_director', 'Директор'),
                                ('accounting', 'Відділ Бухгалтерії'),
                                ('marketing', 'Відділ Маркетингу'),
                                ('online_sales', 'Відділ Онлайн продажу'),
@@ -36,7 +36,7 @@ class AddUserForm(FlaskForm):
     position = SelectField('Посада',
                          choices=[
                              ('founder', 'Засновник'),
-                             ('general_director', 'Генеральний директор'),
+                             ('general_director', 'Директор'),
                              ('department_head', 'Керівник відділу'),
                              ('accountant', 'Бухгалтер'),
                              ('photographer', 'Фотограф'),
@@ -116,7 +116,7 @@ class EditUserForm(FlaskForm):
     department = SelectField('Відділ',
                            choices=[
                                ('founders', 'Засновники компанії'),
-                               ('general_director', 'Генеральний директор'),
+                               ('general_director', 'Директор'),
                                ('accounting', 'Відділ Бухгалтерії'),
                                ('marketing', 'Відділ Маркетингу'),
                                ('online_sales', 'Відділ Онлайн продажу'),
@@ -131,7 +131,7 @@ class EditUserForm(FlaskForm):
     position = SelectField('Посада',
                          choices=[
                              ('founder', 'Засновник'),
-                             ('general_director', 'Генеральний директор'),
+                             ('general_director', 'Директор'),
                              ('department_head', 'Керівник відділу'),
                              ('accountant', 'Бухгалтер'),
                              ('photographer', 'Фотограф'),

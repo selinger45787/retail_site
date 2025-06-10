@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
             { value: 'founder', label: 'Засновник' }
         ],
         'general_director': [
-            { value: 'general_director', label: 'Генеральний директор' }
+            { value: 'general_director', label: 'Директор' }
         ],
         'accounting': [
             { value: 'department_head', label: 'Керівник відділу' },

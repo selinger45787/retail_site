@@ -24,7 +24,7 @@ class User(UserMixin, db.Model):
     # Словарь соответствия кодов отделов и их названий
     DEPARTMENTS = {
         'founders': 'Засновники компанії',
-        'general_director': 'Генеральний директор',
+        'general_director': 'Директор',
         'accounting': 'Відділ Бухгалтерії',
         'marketing': 'Відділ Маркетингу',
         'online_sales': 'Відділ Онлайн продажу',
@@ -39,7 +39,7 @@ class User(UserMixin, db.Model):
     # Словарь соответствия кодов должностей и их названий
     POSITIONS = {
         'founder': 'Засновник',
-        'general_director': 'Генеральний директор',
+        'general_director': 'Директор',
         'department_head': 'Керівник відділу',
         'accountant': 'Бухгалтер',
         'photographer': 'Фотограф',
