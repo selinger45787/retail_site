@@ -775,13 +775,29 @@ def login():
         return redirect(url_for('index'))
     
     form = LoginForm()
+    logger.info(f"=== LOGIN ATTEMPT ===")
+    logger.info(f"Method: {request.method}")
+    logger.info(f"Form data: {request.form}")
+    
     if form.validate_on_submit():
+        logger.info(f"Form validation passed")
+        logger.info(f"Username: {form.username.data}")
+        
         user = User.query.filter_by(username=form.username.data).first()
+        logger.info(f"User found: {user.username if user else 'None'}")
+        
         if user and user.check_password(form.password.data):
+            logger.info(f"Password check passed, logging in user")
             login_user(user)
+            logger.info(f"User logged in successfully: {current_user.is_authenticated}")
             flash('Ви успішно увійшли в систему', 'success')
             return redirect(url_for('index'))
+        else:
+            logger.info(f"Password check failed or user not found")
         flash('Невірний логін або пароль', 'error')
+    else:
+        logger.info(f"Form validation failed")
+        logger.info(f"Form errors: {form.errors}")
     
     return render_template('login.html', form=form)
 
@@ -916,18 +932,31 @@ def login_modal():
         username = request.form.get('username')
         password = request.form.get('password')
         
+        app.logger.info(f"LOGIN TRY: {username}")
+        
         if not username or not password:
+            app.logger.info("MISSING DATA")
             return jsonify({'success': False, 'message': 'Будь ласка, заповніть всі поля'})
         
+        app.logger.info(f"DATABASE URL: {app.config['SQLALCHEMY_DATABASE_URI']}")
         user = User.query.filter_by(username=username).first()
+        app.logger.info(f"USER FOUND: {user.username if user else 'None'}")
+        
+        # Покажем всех пользователей
+        all_users = User.query.all()
+        app.logger.info(f"ALL USERS COUNT: {len(all_users)}")
+        app.logger.info(f"ALL USERS: {[u.username for u in all_users[:5]]}")
         
         if user and user.check_password(password):
+            app.logger.info("PASSWORD OK - LOGGING IN")
             login_user(user)
+            app.logger.info(f"USER LOGGED IN: {current_user.is_authenticated}")
             return jsonify({'success': True})
         
+        app.logger.info("LOGIN FAILED")
         return jsonify({'success': False, 'message': 'Невірний логін або пароль'})
     except Exception as e:
-        logger.error(f"Error in login_modal: {str(e)}")
+        app.logger.error(f"ERROR: {str(e)}")
         return jsonify({'success': False, 'message': 'Помилка сервера. Спробуйте пізніше'})
 
 @app.route('/create_test/<int:material_id>', methods=['GET', 'POST'])

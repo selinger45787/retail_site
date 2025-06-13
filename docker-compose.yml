@@ -1,0 +1,36 @@
+services:
+  # Основное приложение
+  retail-app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - DATABASE_URL=postgresql://postgres:4578736@host.docker.internal:5432/postgres
+    volumes:
+      - .:/app
+    depends_on:
+      - crm-service
+    networks:
+      - retail-network
+
+  # CRM микросервис  
+  crm-service:
+    build:
+      context: ./crm_service
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env.crm
+    volumes:
+      - ./crm_service:/app
+    networks:
+      - retail-network
+
+networks:
+  retail-network:
+    driver: bridge 

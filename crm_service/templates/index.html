@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM - Звіт по залишках товарів</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .button-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        #loadReport {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        #loadReport:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.6);
+        }
+        
+        #loadReport:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        
+        .status.loading {
+            background: #e8f4fd;
+            color: #2980b9;
+            border: 2px solid #3498db;
+        }
+        
+        .status.error {
+            background: #fadbd8;
+            color: #c0392b;
+            border: 2px solid #e74c3c;
+        }
+        
+        .status.success {
+            background: #d5f4e6;
+            color: #27ae60;
+            border: 2px solid #2ecc71;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        th {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 3px solid #3498db;
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #ecf0f1;
+            vertical-align: top;
+        }
+        
+        /* Стили для группировки по датам */
+        .group-date {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .group-date:hover {
+            background: linear-gradient(45deg, #2980b9, #3498db);
+            transform: scale(1.01);
+        }
+        
+        .data-row:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .data-row:hover {
+            background: #e3f2fd;
+            transition: all 0.2s ease;
+        }
+        
+        .toggle-icon {
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        .hidden-group {
+            display: none;
+        }
+        
+        .number {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        
+        .positive {
+            color: #27ae60;
+        }
+        
+        .negative {
+            color: #e74c3c;
+        }
+        
+        .date {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 CRM Система</h1>
+            <p>Звіт по залишках і рухах товарів</p>
+        </div>
+        
+        <div class="content">
+            <div class="button-container">
+                <button id="loadReport">📈 Завантажити звіт</button>
+            </div>
+            
+            <div id="status" class="status hidden"></div>
+            <div id="spinner" class="spinner hidden"></div>
+            
+            <div id="tableContainer" class="table-container hidden">
+                <table id="reportTable">
+                    <thead>
+                        <tr>
+                            <th>📅 Дата</th>
+                            <th>🔄 Остаток на початок</th>
+                            <th>🛒 Продаж покупцю</th>
+                            <th>🛍️ Звіт про роздрібні продажі</th>
+                            <th>📦 Поступление товаров</th>
+                            <th>🔄 Перемещение товаров</th>
+                            <th>📋 Реализация товаров</th>
+                            <th>🗑️ Списание товаров</th>
+                            <th>📋 Инвентаризация</th>
+                            <th>💰 Общее движение</th>
+                            <th>📊 Остаток на кінець</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loadReport').addEventListener('click', loadInventoryReport);
+
+        async function loadInventoryReport() {
+            const button = document.getElementById('loadReport');
+            const status = document.getElementById('status');
+            const spinner = document.getElementById('spinner');
+            const tableContainer = document.getElementById('tableContainer');
+            
+            // Показываем загрузку
+            button.disabled = true;
+            status.className = 'status loading';
+            status.textContent = '⏳ Завантаження даних...';
+            status.classList.remove('hidden');
+            spinner.classList.remove('hidden');
+            tableContainer.classList.add('hidden');
+            
+            try {
+                const response = await fetch('/api/inventory-report');
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Помилка завантаження');
+                }
+                
+                // Показываем успех
+                status.className = 'status success';
+                status.textContent = `✅ Завантажено ${data.records.length} записів`;
+                spinner.classList.add('hidden');
+                
+                // Заполняем таблицу
+                fillTable(data.records);
+                tableContainer.classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                status.className = 'status error';
+                status.textContent = `❌ Помилка: ${error.message}`;
+                spinner.classList.add('hidden');
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function fillTable(records) {
+            const tbody = document.getElementById('reportBody');
+            tbody.innerHTML = '';
+            
+            // Создаем простые строки - по одной на дату
+            records.forEach((record, index) => {
+                const row = createDataRow(record, index);
+                tbody.appendChild(row);
+            });
+        }
+
+        function formatNumber(num) {
+            if (num === null || num === undefined || num === '') return '0.00';
+            const numValue = Number(num);
+            if (isNaN(numValue)) return '0.00';
+            return numValue.toLocaleString('uk-UA', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('uk-UA');
+        }
+        
+        function getNumberClass(num) {
+            const numValue = Number(num);
+            if (numValue > 0) return 'number positive';
+            if (numValue < 0) return 'number negative';
+            return 'number';
+        }
+
+        function createDataRow(record, index) {
+            const row = document.createElement('tr');
+            row.className = 'data-row';
+            
+            // Добавляем стили для четных/нечетных строк
+            if (index % 2 === 0) {
+                row.style.backgroundColor = '#f8f9fa';
+            }
+            
+            row.innerHTML = `
+                <td class="date" style="font-weight: bold; color: #2c3e50;">${formatDate(record.Дата)}</td>
+                <td class="${getNumberClass(record.Остаток_на_начало)}">${formatNumber(record.Остаток_на_начало)}</td>
+                <td class="${getNumberClass(record.Продаж_покупцю)}">${formatNumber(record.Продаж_покупцю)}</td>
+                <td class="${getNumberClass(record.Звіт_про_роздрібні_продажі)}">${formatNumber(record.Звіт_про_роздрібні_продажі)}</td>
+                <td class="${getNumberClass(record.Поступление_товаров)}">${formatNumber(record.Поступление_товаров)}</td>
+                <td class="${getNumberClass(record.Перемещение_товаров)}">${formatNumber(record.Перемещение_товаров)}</td>
+                <td class="${getNumberClass(record.Реализация_товаров)}">${formatNumber(record.Реализация_товаров)}</td>
+                <td class="${getNumberClass(record.Списание_товаров)}">${formatNumber(record.Списание_товаров)}</td>
+                <td class="${getNumberClass(record.Инвентаризация)}">${formatNumber(record.Инвентаризация)}</td>
+                <td class="${getNumberClass(record.Общее_движение)}" style="font-weight: bold;">${formatNumber(record.Общее_движение)}</td>
+                <td class="${getNumberClass(record.Остаток_на_конец)}" style="font-weight: bold; background: #e8f5e8;">${formatNumber(record.Остаток_на_конец)}</td>
+            `;
+            return row;
+        }
+    </script>
+</body>
+</html> 

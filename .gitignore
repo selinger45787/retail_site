@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -16,19 +15,31 @@ lib64/
 parts/
 sdist/
 var/
+wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual Environment
+# Virtual environments
+.env
+.venv
+env/
 venv/
 ENV/
+env.bak/
+venv.bak/
 
 # IDE
-.idea/
 .vscode/
+.idea/
 *.swp
 *.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Flask
 instance/
@@ -36,10 +47,30 @@ instance/
 
 # Database
 *.db
+*.sqlite
 *.sqlite3
 
 # Logs
 *.log
+
+# CRM sensitive data
+crm_service/.env
+crm_service/config.py
+*.env.local
+*.env.production
+
+# Docker
+.docker/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Secrets and credentials
+secrets/
+credentials/
+.env.*
+!.env.example
 
 # Environment variables
 .env

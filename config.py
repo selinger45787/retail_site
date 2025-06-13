@@ -9,8 +9,9 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key-change-in-production')
     DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
     
-    # Настройки базы данных
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    # Настройки базы данных - ПРИНУДИТЕЛЬНО POSTGRESQL!
+    DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://localhost/postgres')
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
@@ -26,9 +27,10 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     
     # Настройки безопасности
-    SESSION_COOKIE_SECURE = not DEBUG
+    SESSION_COOKIE_SECURE = False  # Отключаем для разработки
     SESSION_COOKIE_HTTPONLY = True
-    REMEMBER_COOKIE_SECURE = not DEBUG
+    SESSION_COOKIE_SAMESITE = 'Lax'  # Более мягкие настройки
+    REMEMBER_COOKIE_SECURE = False
     REMEMBER_COOKIE_HTTPONLY = True
 
 class DevelopmentConfig(Config):
